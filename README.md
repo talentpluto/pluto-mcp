@@ -1,24 +1,27 @@
-# Pluto marketplace
+# Pluto MCP
 
-Install Pluto in Codex to discover candidates through TalentPluto's read-only
-MCP server.
+Install the Pluto MCP plugin in Codex to discover candidates through
+TalentPluto's read-only MCP server.
 
 ## Install
 
 Add the TalentPluto marketplace:
 
 ```bash
-codex plugin marketplace add talentpluto/pluto-marketplace
+codex plugin marketplace add talentpluto/pluto-mcp
 ```
 
-Install Pluto:
+Install Pluto and authenticate the MCP server:
 
 ```bash
 codex plugin add pluto@talentpluto
+codex mcp login pluto --scopes candidates:read,offline_access
 ```
 
-Complete the TalentPluto OAuth flow when prompted. Your TalentPluto account
-must belong to an organization with Candidate MCP access enabled.
+Complete the TalentPluto OAuth flow when prompted by `codex mcp login`, then
+restart Codex or start a fresh task so the Pluto tools are loaded. Your
+TalentPluto account must belong to an organization with Candidate MCP access
+enabled.
 
 ## Use
 
