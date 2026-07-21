@@ -1,0 +1,33 @@
+{
+  "name": "pluto",
+  "version": "0.1.0",
+  "description": "Discover candidates through Pluto using natural-language search.",
+  "author": {
+    "name": "Pluto"
+  },
+  "keywords": [
+    "candidates",
+    "recruiting",
+    "pluto",
+    "mcp"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Pluto",
+    "shortDescription": "Discover candidates through Pluto.",
+    "longDescription": "Search Pluto's authorized candidate network with natural-language queries through its read-only MCP server.",
+    "developerName": "Pluto",
+    "category": "Productivity",
+    "capabilities": [
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Find senior account executives in New York with SaaS experience.",
+      "Find former SDRs who became account executives.",
+      "Find sales leaders with MEDDICC experience."
+    ],
+    "brandColor": "#2563EB",
+    "composerIcon": "./assets/pluto_sparkles.svg",
+    "logo": "./assets/pluto_sparkles.svg"
+  }
+}

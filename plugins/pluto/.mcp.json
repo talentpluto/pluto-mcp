@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "pluto": {
+      "type": "http",
+      "url": "https://app.talentpluto.com/api/mcp",
+      "oauth_resource": "https://app.talentpluto.com/api/mcp"
+    }
+  }
+}
