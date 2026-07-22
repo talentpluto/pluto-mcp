@@ -24,22 +24,21 @@ saved OAuth grant includes `candidates:outbound`.
 If the tool is absent or unusable, fail closed:
 
 - If Pluto requests authentication or is disconnected, ask the user to connect
-  Pluto, fully restart the desktop app, and start a new task. Do not log out
-  first.
-- If Pluto failed to initialize, ask the user to restart Codex and start a new
-  task. Diagnose credentials only when Codex identifies an authentication
-  problem.
-- If Pluto is healthy but the tool is absent, say that candidate interest needs
-  Pluto 0.1.7 or newer. Ask the user to update Pluto, fully restart Codex, and
-  start a new task.
+  Pluto and start a new task. Do not log out first.
+- If Pluto failed to initialize, ask the user to start a fresh task and restart
+  Codex only if the error persists. Diagnose credentials only when Codex
+  identifies an authentication problem.
+- If Pluto is connected and healthy but the tool is absent, ask the user to
+  start one fresh task to refresh the live tool catalog. If it remains absent,
+  report that candidate interest is currently unavailable; do not recommend
+  upgrading, reinstalling, or reconnecting Pluto.
 - If the tool or OAuth response reports missing `candidates:outbound`
-  permission, explain that an older grant cannot gain the new scope through a
-  refresh token. After updating Pluto, the user must deliberately reset only
-  Pluto's saved authorization with `codex mcp logout pluto`, run
-  `codex mcp login pluto`, approve the new permission, restart Codex, and start
-  a new task.
+  permission, explain that the saved grant cannot gain the scope through a
+  refresh token. The user must deliberately reset only Pluto's saved
+  authorization with `codex mcp logout pluto`, run `codex mcp login pluto`,
+  approve the permission, and start a new task.
 
-Never run `codex mcp logout pluto` automatically. The one-time scope migration
+Never run `codex mcp logout pluto` automatically. Reauthorizing a missing scope
 is a user-directed permission decision, not a normal startup or retry step.
 
 ## Preserve the selected candidate

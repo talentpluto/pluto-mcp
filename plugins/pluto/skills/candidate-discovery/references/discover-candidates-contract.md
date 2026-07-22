@@ -48,9 +48,9 @@ or use private criteria.
 Public discovery results can contain a candidate's name, headline, current
 title, current company, location, profile link, recorded sales context, fit
 score, match reasons, network and qualification labels, candidate-reported
-highlights, client-connected fit evidence, unverified criteria, and opaque
-candidate-selection handles. They do not contain a complete dated work-history
-ledger.
+highlights, candidate-reported and unverified `fitEvidence`, unverified
+criteria, and opaque candidate-selection handles. They do not contain a
+complete dated work-history ledger.
 
 Years of experience are therefore often verification-only. Pluto supports a
 minimum total-sales-experience filter only for explicit sales searches; it does
@@ -66,9 +66,9 @@ an exhaustive search.
 
 `fitScore` measures discovery relevance. `matchReasons` are evidence only for
 what they explicitly state. `candidateReportedHighlights` and `fitEvidence` are
-candidate-reported supporting context, not independent verification. Every
-`unverifiedCriteria` item is an explicit evidence gap and must not be described
-as satisfied.
+candidate-reported, unverified supporting context, not independent
+verification. Every `unverifiedCriteria` item is an explicit evidence gap and
+must not be described as satisfied.
 
 `networkStatus` is TalentPluto membership, not raw provider provenance: present
 `in_network`, `out_of_network`, and `unknown` as In network, Out of network, and

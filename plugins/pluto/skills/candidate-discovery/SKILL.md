@@ -27,15 +27,16 @@ MCP endpoint directly, or imply that a search ran. Report the applicable state
 and recovery step concisely:
 
 - If Codex requests authentication or reports Pluto as disconnected, say that
-  Pluto authentication is required. Ask the user to connect Pluto, fully restart
-  the desktop app, and start a new task.
+  Pluto authentication is required. Ask the user to connect Pluto, then start a
+  new task.
 - If Pluto reports an initialization error, say that Pluto failed to initialize.
-  Ask the user to restart Codex after installation or upgrade and start a new
-  task. Reconnect only when Codex reports that the saved authorization is
+  Ask the user to start a fresh task and restart Codex only if the error
+  persists. Reconnect only when Codex reports that the saved authorization is
   missing, expired, revoked, invalid, or no longer authorized.
-- If Pluto was just installed or upgraded and no explicit error is available,
-  ask the user to fully restart the desktop app or start a fresh task before
-  diagnosing credentials.
+- If Pluto is connected and no explicit error is available, ask the user to
+  start one fresh task to refresh the live tool catalog. If the tool remains
+  absent, report that candidate discovery is currently unavailable; do not
+  recommend upgrading, reinstalling, or reconnecting Pluto.
 
 Never run `codex mcp logout pluto` automatically. A logout/login reset is a
 user-directed last resort for genuinely invalid credentials, not a normal
@@ -100,9 +101,9 @@ Review every response component:
   recommendation.
 - Use `matchReasons` only for criteria they explicitly address.
 - Treat every `unverifiedCriteria` entry as an evidence gap that is not
-  satisfied. Candidate-reported highlights and `fitEvidence` are supporting
-  context only: use relevant items and label them candidate-reported and
-  unverified.
+  satisfied. Treat candidate-reported highlights and `fitEvidence` as
+  candidate-reported, unverified supporting context only, and use only relevant
+  items.
 - Use recorded `salesSegments` and `totalYearsSalesExperience` only as the
   professional context they state. An empty segment list or null experience is
   unavailable, not zero or evidence of a mismatch.
@@ -160,10 +161,10 @@ candidate, show identity and current role details, the explicit network and
 qualification labels, evidence for required and preferred criteria, every
 missing or unverified criterion, relevance score as supporting context, and
 profile link when available. Use relevant `candidateReportedHighlights` and
-`fitEvidence` only as clearly labeled, candidate-reported context. Give each
-candidate a "Why this person" sentence with at least one candidate-specific
-evidence point, plus an "Evidence gaps" sentence whenever `missingCriteria` or
-`unverifiedCriteria` is non-empty.
+`fitEvidence` only as clearly labeled, candidate-reported and unverified
+context. Give each candidate a "Why this person" sentence with at least one
+candidate-specific evidence point, plus an "Evidence gaps" sentence whenever
+`missingCriteria` or `unverifiedCriteria` is non-empty.
 
 Present at least ten distinct candidates whenever Pluto returns ten or more.
 Use exact matches first, then provisional matches, then near matches if needed
