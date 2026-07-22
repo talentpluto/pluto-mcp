@@ -93,11 +93,22 @@ Review every response component:
 - Relay limits from `status: partial` and `notices`.
 - Treat response `status` as source-execution coverage, not candidate
   qualification. Read each candidate's `qualificationStatus` separately.
-- Show `networkStatus` as In network, Out of network, or Network unknown for
-  every candidate without inferring source provenance from it.
-- Only `qualificationStatus: verified` may be described as an exact match.
-  Every provisional candidate has a visible evidence gap.
-- Treat `fitScore` as a relevance heuristic, not proof or a hiring
+- Present `networkStatus: in_network`, `out_of_network`, and `unknown` as In
+  network, Out of network, and Network unknown. Do not infer provider
+  provenance from network membership.
+- Present `qualificationStatus: verified` and `provisional` as Verified match
+  and Provisional match. Only a verified candidate may be called an exact
+  match, and every provisional candidate has a visible evidence gap.
+- Resolve a candidate's display URL only from that candidate's non-empty
+  returned `profileUrl` or `linkedinUrl`. Never construct, search for, or infer
+  a LinkedIn URL. If neither field contains a URL, treat the response as a
+  server/plugin contract mismatch and report it concisely instead of rendering
+  an unlinked candidate or silently omitting the result.
+- Do not display `fitScore`, "Relevance 100," a percentage, or any other
+  numeric relevance score by default. A legacy `fitScore` is only hidden
+  context for understanding the server's returned order. Mention it only when
+  the user explicitly asks about scoring, and then describe it as a discovery
+  relevance heuristic rather than qualification proof or a hiring
   recommendation.
 - Use `matchReasons` only for criteria they explicitly address.
 - Treat every `unverifiedCriteria` entry as an evidence gap that is not
@@ -110,10 +121,11 @@ Review every response component:
 - Keep `nearMatches` separate and name their `missingCriteria`.
 - Offer `broadeningSuggestions`; never apply them automatically.
 
-Rank verified candidates before provisional candidates, then prefer fewer
-`missingCriteria` and `unverifiedCriteria` gaps, then client-specific evidence,
-and only then `fitScore`. Do not call someone a strong match when a required
-criterion is unverified.
+Present the server's exact, provisional, and near-match groups in that order.
+Within each group, preserve the server's returned candidate order exactly. Do
+not create a replacement ranking formula or reorder by network membership,
+evidence richness, gap count, `fitScore`, or any other client-side preference.
+Do not call someone a strong match when a required criterion is unverified.
 
 Use `verified`, `does not match`, or `unverified` for each requirement. Avoid
 guesses such as `likely` or `roughly`, and do not infer one fact from an
@@ -157,20 +169,44 @@ claim results from a failed call.
 ## Present the shortlist
 
 Lead with what Pluto actually searched and any coverage limitation. For each
-candidate, show identity and current role details, the explicit network and
-qualification labels, evidence for required and preferred criteria, every
-missing or unverified criterion, relevance score as supporting context, and
-profile link when available. Use relevant `candidateReportedHighlights` and
-`fitEvidence` only as clearly labeled, candidate-reported and unverified
-context. Give each candidate a "Why this person" sentence with at least one
-candidate-specific evidence point, plus an "Evidence gaps" sentence whenever
-`missingCriteria` or `unverifiedCriteria` is non-empty.
+candidate, make the candidate's name a Markdown link to the returned
+`profileUrl` or `linkedinUrl`, followed immediately by the network and compact
+qualification labels. Use this default shape, omitting only unavailable role or
+location fields and the evidence-gap line when there are no gaps:
+
+```markdown
+[Candidate name](returned-profile-url) — In network · Verified match
+Current title at Current company · Location
+
+Why Candidate stands out: Candidate-specific evidence tied to the request.
+Evidence gaps: Missing: criterion; unverified: criterion.
+```
+
+Never add a numeric relevance score to that default format. If the user
+explicitly asks about scoring, keep any returned legacy `fitScore` subordinate
+to the same network, qualification, evidence, and gap labels.
+
+Give every candidate a concise, candidate-specific "Why this person"
+explanation. Select the most differentiating relevant evidence in this order:
+
+1. client-specific `fitEvidence`;
+2. relevant `candidateReportedHighlights`;
+3. recorded `totalYearsSalesExperience` and `salesSegments`; then
+4. `matchReasons`, current role, company, and location.
+
+Whenever the explanation uses `fitEvidence` or
+`candidateReportedHighlights`, label that evidence candidate-reported and
+unverified in the sentence itself. For in-network candidates, prioritize the
+richer TalentPluto evidence and explain what distinguishes the individual; do
+not repeat only that each person matches the same title and location. Never
+turn a `missingCriteria` or `unverifiedCriteria` gap into a positive claim.
+Show every such gap in an "Evidence gaps" sentence.
 
 Present at least ten distinct candidates whenever Pluto returns ten or more.
 Use exact matches first, then provisional matches, then near matches if needed
-to reach ten, while keeping those groups visibly separate and naming every near
-match's missing criteria. Do not hide returned candidates merely because their
-scores are lower than the leaders.
+to reach ten, while keeping those groups visibly separate, retaining their
+returned order, and naming every near match's missing criteria. Do not hide a
+returned candidate merely because an older server supplied a lower score.
 
 If Pluto returns fewer than ten candidates across those groups, present every
 distinct candidate it returned and state why the shortlist is short. End with
