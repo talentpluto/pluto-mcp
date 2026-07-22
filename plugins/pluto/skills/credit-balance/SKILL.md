@@ -20,20 +20,17 @@ from prior searches, or imply that a lookup ran. Report the applicable state and
 recovery step concisely:
 
 - If Codex requests authentication or reports Pluto as disconnected, say that
-  Pluto authentication is required. Ask the user to connect Pluto, fully restart
-  the desktop app, and start a new task.
+  Pluto authentication is required. Ask the user to connect Pluto, then start a
+  new task.
 - If Pluto reports an initialization error, say that Pluto failed to initialize.
-  Ask the user to restart Codex after installation or upgrade and start a new
-  task. Reconnect only when Codex reports that the saved authorization is
+  Ask the user to start a fresh task and restart Codex only if the error
+  persists. Reconnect only when Codex reports that the saved authorization is
   missing, expired, revoked, invalid, or no longer authorized.
 - If Pluto is connected and otherwise healthy but does not expose
-  `get_credit_balance`, say that credit balance is unavailable in the current
-  Pluto version. Ask the user to update Pluto, fully restart the desktop app,
-  and start a new task. Do not misreport this version mismatch as an
-  authentication failure.
-- If Pluto was just installed or upgraded and no explicit error is available,
-  ask the user to fully restart the desktop app or start a fresh task before
-  diagnosing credentials.
+  `get_credit_balance`, ask the user to start one fresh task to refresh the live
+  tool catalog. If it remains absent, report that credit balance is currently
+  unavailable; do not recommend upgrading, reinstalling, or reconnecting Pluto,
+  and do not misreport it as an authentication failure.
 
 Never run `codex mcp logout pluto` automatically. A logout/login reset is a
 user-directed last resort for genuinely invalid credentials, not a normal

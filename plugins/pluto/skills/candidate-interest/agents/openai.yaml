@@ -1,7 +1,7 @@
 interface:
-  display_name: "Pluto credit balance"
-  short_description: "Check monthly Pluto credits"
-  default_prompt: "Use $credit-balance to check my remaining Pluto credits and reset date."
+  display_name: "Pluto candidate interest"
+  short_description: "Act on an explicitly selected candidate"
+  default_prompt: "Use $candidate-interest to express interest in the candidate I explicitly selected from my Pluto results."
 
 dependencies:
   tools:

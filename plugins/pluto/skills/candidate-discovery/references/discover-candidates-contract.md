@@ -46,8 +46,11 @@ or use private criteria.
 ## Evidence rules
 
 Public discovery results can contain a candidate's name, headline, current
-title, current company, location, profile link, fit score, and match reasons.
-They do not contain a complete dated work-history ledger.
+title, current company, location, profile link, recorded sales context, fit
+score, match reasons, network and qualification labels, candidate-reported
+highlights, candidate-reported and unverified `fitEvidence`, unverified
+criteria, and opaque candidate-selection handles. They do not contain a
+complete dated work-history ledger.
 
 Years of experience are therefore often verification-only. Pluto supports a
 minimum total-sales-experience filter only for explicit sales searches; it does
@@ -62,6 +65,33 @@ may verify it for an individual returned candidate. Such post-filtering is not
 an exhaustive search.
 
 `fitScore` measures discovery relevance. `matchReasons` are evidence only for
-what they explicitly state. A partial status qualifies source coverage, near
-matches are missing at least one searchable criterion, and broadening
-suggestions do not authorize changing the request.
+what they explicitly state. `candidateReportedHighlights` and `fitEvidence` are
+candidate-reported, unverified supporting context, not independent
+verification. Every `unverifiedCriteria` item is an explicit evidence gap and
+must not be described as satisfied.
+
+`networkStatus` is TalentPluto membership, not raw provider provenance: present
+`in_network`, `out_of_network`, and `unknown` as In network, Out of network, and
+Network unknown. `qualificationStatus: verified` means the requested criteria
+have TalentPluto matching evidence and is the only state that may be called an
+exact match. `qualificationStatus: provisional` always carries a missing or
+unverified criterion. A partial top-level status qualifies source coverage, not
+candidate qualification. Near matches are missing at least one searchable
+criterion, and broadening suggestions do not authorize changing the request.
+Present every candidate with one candidate-specific "Why this person" sentence
+and an "Evidence gaps" sentence whenever `missingCriteria` or
+`unverifiedCriteria` is non-empty.
+
+## Candidate-interest boundary
+
+Every returned candidate has a `candidateRef` and short-lived
+`selectionToken`. Keep the two handles paired and return them unchanged only
+when the user later explicitly selects that candidate and asks Pluto to express
+interest. Do not inspect, alter, persist, mix, or treat either handle as
+qualification evidence.
+
+Discovery never authorizes an interest action by itself. Do not call
+`express_candidate_interest` because a candidate ranked highly, looks
+promising, or was included in the shortlist. The user must make a clear
+selection and ask Pluto to act; the candidate-interest skill governs that
+separate, non-idempotent workflow.
