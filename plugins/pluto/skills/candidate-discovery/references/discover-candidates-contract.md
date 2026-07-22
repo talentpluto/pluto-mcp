@@ -45,11 +45,18 @@ or use private criteria.
 
 ## Evidence rules
 
-Public discovery results can contain a candidate's name, headline, current
-title, current company, location, profile link, recorded sales context, fit
-score, match reasons, network and qualification labels, candidate-reported
-highlights, candidate-reported and unverified `fitEvidence`, unverified
-criteria, and opaque candidate-selection handles. They do not contain a
+Every discovery result must contain a confirmed LinkedIn profile URL in its
+`profileUrl` or `linkedinUrl` field. Use only the URL returned for that
+candidate, and render the candidate's name as its Markdown link. Never
+construct or infer a LinkedIn URL. A result without either URL is a
+server/plugin contract mismatch that must be reported rather than silently
+omitted or presented without a link.
+
+Public discovery results can also contain a candidate's headline, current
+title, current company, location, recorded sales context, match reasons,
+network and qualification labels, candidate-reported highlights,
+candidate-reported and unverified `fitEvidence`, unverified criteria, opaque
+candidate-selection handles, and a legacy fit score. They do not contain a
 complete dated work-history ledger.
 
 Years of experience are therefore often verification-only. Pluto supports a
@@ -64,23 +71,37 @@ A current-employer requirement is not searchable, although `currentCompany`
 may verify it for an individual returned candidate. Such post-filtering is not
 an exhaustive search.
 
-`fitScore` measures discovery relevance. `matchReasons` are evidence only for
-what they explicitly state. `candidateReportedHighlights` and `fitEvidence` are
-candidate-reported, unverified supporting context, not independent
-verification. Every `unverifiedCriteria` item is an explicit evidence gap and
-must not be described as satisfied.
+`matchReasons` are evidence only for what they explicitly state.
+`candidateReportedHighlights` and `fitEvidence` are candidate-reported,
+unverified supporting context, not independent verification. Every
+`unverifiedCriteria` item is an explicit evidence gap and must not be described
+as satisfied.
 
-`networkStatus` is TalentPluto membership, not raw provider provenance: present
+`networkStatus` is TalentPluto membership, not raw provider provenance. Present
 `in_network`, `out_of_network`, and `unknown` as In network, Out of network, and
-Network unknown. `qualificationStatus: verified` means the requested criteria
-have TalentPluto matching evidence and is the only state that may be called an
-exact match. `qualificationStatus: provisional` always carries a missing or
-unverified criterion. A partial top-level status qualifies source coverage, not
-candidate qualification. Near matches are missing at least one searchable
-criterion, and broadening suggestions do not authorize changing the request.
-Present every candidate with one candidate-specific "Why this person" sentence
-and an "Evidence gaps" sentence whenever `missingCriteria` or
-`unverifiedCriteria` is non-empty.
+Network unknown immediately beside the linked candidate name.
+`qualificationStatus: verified` and `provisional` map to Verified match and
+Provisional match. Only a verified candidate may be called an exact match, and
+a provisional candidate always has a missing or unverified criterion.
+
+Keep the server's exact, provisional, and near-match groups separate, and
+preserve the returned order within every group. Do not create a replacement
+ranking formula. A legacy `fitScore` is a discovery relevance heuristic that
+may be used only as hidden context for the returned ordering. Do not display it
+or another numeric relevance score unless the user explicitly asks about
+scoring, and never treat a score as qualification proof or a hiring
+recommendation.
+
+A partial top-level status qualifies source coverage, not candidate
+qualification. Near matches are missing at least one searchable criterion, and
+broadening suggestions do not authorize changing the request. Present every
+candidate with one concise, candidate-specific explanation based first on
+relevant client-specific `fitEvidence`, then relevant
+`candidateReportedHighlights`, recorded sales experience and segments, and
+finally `matchReasons`, current role, company, and location. Label all
+candidate-reported evidence as unverified, prefer richer differentiating
+TalentPluto evidence for in-network candidates, and show every
+`missingCriteria` and `unverifiedCriteria` item as an evidence gap.
 
 ## Candidate-interest boundary
 
