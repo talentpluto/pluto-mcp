@@ -900,7 +900,9 @@ export function assertSourceContract(contract) {
   assert.match(contract.creditSkill, /update Pluto/iu);
   assert.match(contract.creditSkill, /Never run `codex mcp logout pluto` automatically/iu);
 
-  assert.match(contract.readme, /mcp_oauth_credentials_store\s*=\s*"keyring"/u);
+  assert.match(contract.readme, /default `auto` credential store/iu);
+  assert.match(contract.readme, /OS keyring/iu);
+  assert.match(contract.readme, /no\s+credential-store setting is normally needed/iu);
   assert.match(contract.readme, /https:\/\/app\.talentpluto\.com\/api\/mcp/u);
   assert.match(contract.readme, /candidates:read/u);
   assert.match(contract.readme, /offline_access/u);
@@ -908,6 +910,7 @@ export function assertSourceContract(contract) {
   assert.match(contract.readme, /monthlyCredits/u);
   assert.match(contract.readme, /codex mcp logout pluto/u);
   assert.match(contract.readme, /codex mcp login pluto/u);
+  assert.match(contract.readme, /Do not log out first/iu);
 
   return {
     pluginVersion: contract.plugin.version,
