@@ -69,6 +69,10 @@ maximum. Never lower the limit below ten to make a search faster. Keep research
 notes, candidate summaries, and answer-format instructions out of the request.
 Pluto owns provider coordination, deduplication, and ranking.
 
+Each discovery call is metered and non-idempotent. Do not retry a timeout or an
+ambiguous failure automatically; the server may retain the reservation to avoid
+double-spending the user's allowance.
+
 When a required criterion is not searchable:
 
 1. Explain that Pluto cannot enforce it.

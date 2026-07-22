@@ -104,11 +104,12 @@ node scripts/check-pluto-integration.mjs source
 ```
 
 This credential-free check validates consistency among marketplace metadata,
-plugin metadata, `.mcp.json`, skill dependency metadata, and recovery
+plugin metadata, `.mcp.json`, both skill dependencies, and recovery
 documentation. It also asserts that `.mcp.json` does not contain
 `required: true`. This is deliberate: a globally required Pluto server would
 block unrelated tasks and the tasks needed to recover from an outage. The
-candidate-discovery skill fails closed when its Pluto tool is missing instead.
+candidate-discovery and credit-balance skills fail closed when their Pluto tools
+are missing instead.
 
 ### Clean installation and missing authentication
 
@@ -129,10 +130,10 @@ node scripts/check-pluto-integration.mjs clean-install \
 ```
 
 The mode checks the installed version, `ON_INSTALL` policy, MCP URL and
-compatibility header, parsed skill dependency, and fresh-task behavior without
-credentials. The CLI reports the install-time authentication policy but does
-not open the interactive OAuth flow itself. Authenticate the isolated install
-separately:
+compatibility header, both parsed skill dependencies, and fresh-task behavior
+without credentials. The CLI reports the install-time authentication policy but
+does not open the interactive OAuth flow itself. Authenticate the isolated
+install separately:
 
 ```bash
 CODEX_HOME=/absolute/path/to/pluto-clean-home \
@@ -165,7 +166,7 @@ PLUTO_MCP_ACCESS_TOKEN=... \
 node scripts/check-pluto-integration.mjs upgrade \
   --codex-home /absolute/path/to/older-pluto-home \
   --marketplace talentpluto \
-  --expected-version 0.1.5
+  --expected-version 0.1.6
 ```
 
 The isolated home must begin with an older installed Pluto version and valid
@@ -211,7 +212,7 @@ The automated coverage includes:
 - source metadata and version consistency;
 - a clean plugin install into an isolated Codex home;
 - the `ON_INSTALL` authentication policy and terminal missing-login state;
-- parsing the candidate-discovery MCP dependency;
+- parsing the candidate-discovery and credit-balance MCP dependencies;
 - fresh-task Pluto startup and actual host tool enumeration;
 - tool metadata preservation;
 - app-server restart with the same isolated credential store;

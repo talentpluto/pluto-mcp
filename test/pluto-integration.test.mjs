@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  assertRequiredPlutoTools,
   assertSourceContract,
   collectPaginatedHostStatuses,
   collectPaginatedTools,
@@ -86,6 +87,22 @@ function hostToolFrom(remote, overrides = {}) {
     ...overrides,
   };
 }
+
+test("assertRequiredPlutoTools accepts required tools plus future additions", () => {
+  assert.doesNotThrow(() =>
+    assertRequiredPlutoTools(
+      ["future_server_tool", "get_credit_balance", "discover_candidates"],
+      "Test inventory",
+    ),
+  );
+});
+
+test("assertRequiredPlutoTools rejects a stale inventory", () => {
+  assert.throws(
+    () => assertRequiredPlutoTools(["discover_candidates"], "Test inventory"),
+    /Test inventory is missing required Pluto tool get_credit_balance/u,
+  );
+});
 
 test("collectPaginatedTools exhausts every page and preserves opaque cursors", async () => {
   const opaqueCursor = "opaque:+/= ?#%E2%98%83";

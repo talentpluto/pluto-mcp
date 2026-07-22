@@ -1,12 +1,13 @@
 {
   "name": "pluto",
-  "version": "0.1.5",
-  "description": "Discover candidates through Pluto using natural-language search.",
+  "version": "0.1.6",
+  "description": "Discover candidates and check monthly credit balances through Pluto.",
   "author": {
     "name": "Pluto"
   },
   "keywords": [
     "candidates",
+    "credits",
     "recruiting",
     "pluto",
     "mcp"
@@ -15,8 +16,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Pluto",
-    "shortDescription": "Discover candidates through Pluto.",
-    "longDescription": "Search Pluto's authorized candidate network with natural-language queries through its read-only MCP server.",
+    "shortDescription": "Discover candidates and check credits.",
+    "longDescription": "Run metered searches across Pluto's authorized candidate network and check your exact monthly credit balance through its MCP server.",
     "developerName": "Pluto",
     "category": "Productivity",
     "capabilities": [
@@ -25,7 +26,8 @@
     "defaultPrompt": [
       "Find senior account executives in New York with SaaS experience.",
       "Find former SDRs who became account executives.",
-      "Find sales leaders with MEDDICC experience."
+      "Find sales leaders with MEDDICC experience.",
+      "How many Pluto credits do I have left, and when do they reset?"
     ],
     "brandColor": "#2563EB",
     "composerIcon": "./assets/pluto_sparkles.svg",

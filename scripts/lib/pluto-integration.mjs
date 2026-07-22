@@ -10,6 +10,10 @@ export const PLUTO_COMPATIBILITY_HEADER = {
   "x-talentpluto-codex-oauth-compatibility": "missing-callback-issuer-v1",
 };
 export const MCP_PROTOCOL_VERSION = "2025-06-18";
+export const REQUIRED_PLUTO_TOOL_NAMES = [
+  "discover_candidates",
+  "get_credit_balance",
+];
 
 const TOOL_METADATA_FIELDS = [
   "title",
@@ -28,7 +32,7 @@ const RESERVED_CONNECTOR_META_KEYS = new Set([
 ]);
 
 const PLUTO_PLUGIN_DISPLAY_NAME = "Pluto";
-const EXPECTED_SKILL_METADATA = `interface:
+const EXPECTED_CANDIDATE_DISCOVERY_SKILL_METADATA = `interface:
   display_name: "Pluto candidate discovery"
   short_description: "Find and assess candidates with Pluto"
   default_prompt: "Use $candidate-discovery to find and assess candidates with Pluto."
@@ -37,7 +41,21 @@ dependencies:
   tools:
     - type: "mcp"
       value: "pluto"
-      description: "Pluto's authenticated, read-only candidate discovery MCP server"
+      description: "Pluto's authenticated, metered candidate discovery MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"
+`;
+
+const EXPECTED_CREDIT_BALANCE_SKILL_METADATA = `interface:
+  display_name: "Pluto credit balance"
+  short_description: "Check monthly Pluto credits"
+  default_prompt: "Use $credit-balance to check my remaining Pluto credits and reset date."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated, metered discovery and read-only credit balance MCP server"
       transport: "streamable_http"
       url: "https://app.talentpluto.com/api/mcp"
 `;
@@ -55,6 +73,17 @@ export class McpAuthenticationError extends Error {
 function assertNonEmptyString(value, label) {
   assert.equal(typeof value, "string", `${label} must be a string`);
   assert.notEqual(value.trim(), "", `${label} must not be empty`);
+}
+
+export function assertRequiredPlutoTools(toolNames, inventoryLabel) {
+  assert.ok(Array.isArray(toolNames), `${inventoryLabel} tool names must be an array`);
+  const availableToolNames = new Set(toolNames);
+  for (const toolName of REQUIRED_PLUTO_TOOL_NAMES) {
+    assert.ok(
+      availableToolNames.has(toolName),
+      `${inventoryLabel} is missing required Pluto tool ${toolName}`,
+    );
+  }
 }
 
 function jsonRpcMessagesFromPayload(payload) {
@@ -723,33 +752,56 @@ export async function readSourceContract(repoRoot) {
   const files = {
     marketplace: path.join(repoRoot, ".agents/plugins/marketplace.json"),
     mcp: path.join(repoRoot, "plugins/pluto/.mcp.json"),
-    openai: path.join(
+    candidateOpenai: path.join(
       repoRoot,
       "plugins/pluto/skills/candidate-discovery/agents/openai.yaml",
     ),
+    creditOpenai: path.join(
+      repoRoot,
+      "plugins/pluto/skills/credit-balance/agents/openai.yaml",
+    ),
     plugin: path.join(repoRoot, "plugins/pluto/.codex-plugin/plugin.json"),
     readme: path.join(repoRoot, "README.md"),
-    skill: path.join(repoRoot, "plugins/pluto/skills/candidate-discovery/SKILL.md"),
+    candidateSkill: path.join(
+      repoRoot,
+      "plugins/pluto/skills/candidate-discovery/SKILL.md",
+    ),
+    creditSkill: path.join(
+      repoRoot,
+      "plugins/pluto/skills/credit-balance/SKILL.md",
+    ),
   };
 
-  const [marketplaceText, mcpText, openaiText, pluginText, readme, skill] =
-    await Promise.all([
-      readFile(files.marketplace, "utf8"),
-      readFile(files.mcp, "utf8"),
-      readFile(files.openai, "utf8"),
-      readFile(files.plugin, "utf8"),
-      readFile(files.readme, "utf8"),
-      readFile(files.skill, "utf8"),
-    ]);
+  const [
+    marketplaceText,
+    mcpText,
+    candidateOpenaiText,
+    creditOpenaiText,
+    pluginText,
+    readme,
+    candidateSkill,
+    creditSkill,
+  ] = await Promise.all([
+    readFile(files.marketplace, "utf8"),
+    readFile(files.mcp, "utf8"),
+    readFile(files.candidateOpenai, "utf8"),
+    readFile(files.creditOpenai, "utf8"),
+    readFile(files.plugin, "utf8"),
+    readFile(files.readme, "utf8"),
+    readFile(files.candidateSkill, "utf8"),
+    readFile(files.creditSkill, "utf8"),
+  ]);
 
   return {
+    candidateOpenaiText,
+    candidateSkill,
+    creditOpenaiText,
+    creditSkill,
     files,
     marketplace: JSON.parse(marketplaceText),
     mcp: JSON.parse(mcpText),
-    openaiText,
     plugin: JSON.parse(pluginText),
     readme,
-    skill,
   };
 }
 
@@ -760,6 +812,18 @@ export function assertSourceContract(contract) {
   assert.equal(contract.plugin.mcpServers, "./.mcp.json");
   assert.equal(contract.plugin.skills, "./skills/");
   assert.equal(contract.plugin.interface?.displayName, PLUTO_PLUGIN_DISPLAY_NAME);
+  assert.match(contract.plugin.description, /credit balances/iu);
+  assert.match(contract.plugin.interface?.shortDescription ?? "", /credits/iu);
+  assert.match(
+    contract.plugin.interface?.longDescription ?? "",
+    /monthly credit balance/iu,
+  );
+  assert.ok(
+    contract.plugin.interface?.defaultPrompt?.some((prompt) =>
+      /credits.*reset/iu.test(prompt),
+    ),
+    "Plugin default prompts must include a credit-balance example",
+  );
 
   const marketplaceMatches = (contract.marketplace.plugins ?? []).filter(
     (plugin) => plugin.name === PLUTO_SERVER_NAME,
@@ -799,20 +863,41 @@ export function assertSourceContract(contract) {
   );
 
   assert.equal(
-    contract.openaiText,
-    EXPECTED_SKILL_METADATA,
+    contract.candidateOpenaiText,
+    EXPECTED_CANDIDATE_DISCOVERY_SKILL_METADATA,
     "Candidate-discovery metadata must match the supported Pluto MCP dependency schema",
   );
+  assert.equal(
+    contract.creditOpenaiText,
+    EXPECTED_CREDIT_BALANCE_SKILL_METADATA,
+    "Credit-balance metadata must match the supported Pluto MCP dependency schema",
+  );
 
-  assert.match(contract.skill, /confirm that the current\s+task exposes Pluto's `discover_candidates` MCP tool/iu);
-  assert.match(contract.skill, /Pluto authentication is required/iu);
-  assert.match(contract.skill, /Pluto failed to initialize/iu);
-  assert.match(contract.skill, /Never run `codex mcp logout pluto` automatically/iu);
+  assert.match(contract.candidateSkill, /confirm that the current\s+task exposes Pluto's `discover_candidates` MCP tool/iu);
+  assert.match(contract.candidateSkill, /Pluto authentication is required/iu);
+  assert.match(contract.candidateSkill, /Pluto failed to initialize/iu);
+  assert.match(contract.candidateSkill, /Never run `codex mcp logout pluto` automatically/iu);
+
+  assert.match(contract.creditSkill, /name:\s*credit-balance/iu);
+  assert.match(contract.creditSkill, /current credit balance, or reset date/iu);
+  assert.match(contract.creditSkill, /confirm that the current task\s+exposes Pluto's `get_credit_balance` MCP tool/iu);
+  assert.match(contract.creditSkill, /Call `get_credit_balance` exactly once/iu);
+  assert.match(contract.creditSkill, /Pass no arguments/iu);
+  assert.match(contract.creditSkill, /exact `monthlyCredits`, `remainingCredits`, and `resetsAt`/iu);
+  assert.match(contract.creditSkill, /do not.*estimate/isu);
+  assert.match(contract.creditSkill, /Never expose user IDs,\s+organization IDs/iu);
+  assert.match(contract.creditSkill, /Pluto authentication is required/iu);
+  assert.match(contract.creditSkill, /Pluto failed to initialize/iu);
+  assert.match(contract.creditSkill, /unavailable in the current\s+Pluto version/iu);
+  assert.match(contract.creditSkill, /update Pluto/iu);
+  assert.match(contract.creditSkill, /Never run `codex mcp logout pluto` automatically/iu);
 
   assert.match(contract.readme, /mcp_oauth_credentials_store\s*=\s*"keyring"/u);
   assert.match(contract.readme, /https:\/\/app\.talentpluto\.com\/api\/mcp/u);
   assert.match(contract.readme, /candidates:read/u);
   assert.match(contract.readme, /offline_access/u);
+  assert.match(contract.readme, /get_credit_balance/u);
+  assert.match(contract.readme, /monthlyCredits/u);
   assert.match(contract.readme, /codex mcp logout pluto/u);
   assert.match(contract.readme, /codex mcp login pluto/u);
 
