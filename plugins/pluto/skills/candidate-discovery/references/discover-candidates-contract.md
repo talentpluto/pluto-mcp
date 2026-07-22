@@ -133,10 +133,14 @@ exactly these columns:
 | --- | --- | --- | --- | --- | --- | --- |
 ```
 
-Each candidate name must be a Markdown link using only its returned
-`profileUrl` or `linkedinUrl`. Use the exact network and match labels defined
-above. Build Current role only from returned current-title and current-company
-data, and do not infer unavailable role or location values.
+Before creating a Markdown link, validate that the candidate's returned
+`profileUrl` or `linkedinUrl` is an absolute HTTPS URL whose hostname is
+`linkedin.com`, `linkedin.cn`, or a subdomain of either. Use only that validated
+returned URL for the candidate's linked name. A missing or invalid URL is a
+server/plugin contract mismatch and must not be rendered as a link. Use the
+exact network and match labels defined above. Build Current role only from
+returned current-title and current-company data, and do not infer unavailable
+role or location values.
 
 Give every candidate one concise, candidate-specific `Why this person` cell.
 Prefer relevant client-specific `fitEvidence`, then relevant

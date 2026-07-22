@@ -132,8 +132,10 @@ Pluto does not calculate usage or balance from result counts or provider
 pricing; it reports usage or balance only when the server returns authoritative
 values.
 
-Candidate interest runs only after an explicit selection. For an internal
-candidate, it can add or reuse the candidate in the selected role's normal
+Candidate interest runs only after the user explicitly selects a returned
+candidate and explicitly asks Pluto to act. Selection alone is insufficient and
+does not authorize `express_candidate_interest`. For an internal candidate, the
+operation can add or reuse the candidate in the selected role's normal
 prospecting flow, send the normal reconfirm-interest message, and mark them for
 automatic sharing after Ready to Submit. For an external candidate, it omits
 project selection, runs fresh professional enrichment, commits the disclosure,

@@ -107,9 +107,10 @@ Review every response component:
   match, and every provisional candidate has a visible evidence gap.
 - Resolve a candidate's display URL only from that candidate's non-empty
   returned `profileUrl` or `linkedinUrl`. Never construct, search for, or infer
-  a LinkedIn URL. If neither field contains a URL, the response cannot satisfy
-  the complete shortlist contract. Report the server/plugin contract mismatch
-  and do not present a partial table as though it were the complete result.
+  a LinkedIn URL. If neither field contains a URL or the returned value fails
+  the rendering validation below, the response cannot satisfy the complete
+  shortlist contract. Report the server/plugin contract mismatch and do not
+  present a partial table as though it were the complete result.
 - Do not display `fitScore`, "Relevance 100," a percentage, or any other
   numeric relevance score by default. A legacy `fitScore` is only hidden
   context for understanding the server's returned order. Mention it only when
@@ -207,8 +208,11 @@ Use exactly these columns for every non-empty table:
 
 Build each row as follows:
 
-- Make the candidate's name a Markdown link using only that candidate's
-  returned `profileUrl` or `linkedinUrl`.
+- Before creating a Markdown link, validate that the candidate's returned
+  `profileUrl` or `linkedinUrl` is an absolute HTTPS URL whose hostname is
+  `linkedin.com`, `linkedin.cn`, or a subdomain of either. Use only that
+  validated returned URL for the candidate's linked name; otherwise report a
+  server/plugin contract mismatch.
 - Use only In network, Out of network, or Network unknown in `Network`.
 - Use Verified match for a verified result, Provisional match for a provisional
   result, and Near match for every result from `nearMatches`.
