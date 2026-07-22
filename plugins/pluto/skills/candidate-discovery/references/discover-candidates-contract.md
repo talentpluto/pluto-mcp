@@ -18,6 +18,15 @@ Alternatives inside one filter group are supported. Different filter groups are
 combined as requirements. Non-numeric professional performance evidence is a
 soft ranking signal rather than a hard eligibility filter.
 
+## Result quantity
+
+Every search must request a `limit` of at least `10`, or the user's larger
+requested count up to the schema maximum. The limit is a requested maximum, not
+a guarantee that ten eligible candidates exist. If Pluto returns fewer than ten
+distinct candidates across exact, provisional, and near matches, report the
+shortfall rather than duplicating candidates, inventing results, using an
+unauthorized source, or silently broadening the request.
+
 ## Unsupported criteria
 
 Pluto cannot faithfully search:
