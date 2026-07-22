@@ -15,13 +15,14 @@ Install Pluto and authenticate the MCP server:
 
 ```bash
 codex plugin add pluto@talentpluto
-codex mcp login pluto --scopes candidates:read,offline_access
+codex mcp login pluto
 ```
 
 Complete the TalentPluto OAuth flow when prompted by `codex mcp login`, then
 restart Codex or start a fresh task so the Pluto tools are loaded. Your
 TalentPluto account must belong to an organization with Candidate MCP access
-enabled.
+enabled. Pluto requests `candidates:read` and `offline_access`, allowing Codex
+to refresh expiring access tokens without repeating the browser OAuth flow.
 
 ## Use
 
