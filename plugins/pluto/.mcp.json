@@ -3,6 +3,10 @@
     "pluto": {
       "type": "http",
       "url": "https://app.talentpluto.com/api/mcp",
+      "scopes": [
+        "candidates:read",
+        "offline_access"
+      ],
       "oauth_resource": "https://app.talentpluto.com/api/mcp",
       "http_headers": {
         "x-talentpluto-codex-oauth-compatibility": "missing-callback-issuer-v1"
