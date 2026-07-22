@@ -16,6 +16,31 @@ Read [Discover candidates contract](references/discover-candidates-contract.md)
 before the first tool call and whenever classifying an unsupported or
 verification-only requirement.
 
+## Confirm Pluto is available
+
+Before promising or attempting candidate discovery, confirm that the current
+task exposes Pluto's `discover_candidates` MCP tool. Loading this skill alone
+does not prove that Pluto initialized successfully.
+
+If the tool is absent, do not search through another candidate source, call the
+MCP endpoint directly, or imply that a search ran. Report the applicable state
+and recovery step concisely:
+
+- If Codex requests authentication or reports Pluto as disconnected, say that
+  Pluto authentication is required. Ask the user to connect Pluto, fully restart
+  the desktop app, and start a new task.
+- If Pluto reports an initialization error, say that Pluto failed to initialize.
+  Ask the user to restart Codex after installation or upgrade and start a new
+  task. Reconnect only when Codex reports that the saved authorization is
+  missing, expired, revoked, invalid, or no longer authorized.
+- If Pluto was just installed or upgraded and no explicit error is available,
+  ask the user to fully restart the desktop app or start a fresh task before
+  diagnosing credentials.
+
+Never run `codex mcp logout pluto` automatically. A logout/login reset is a
+user-directed last resort for genuinely invalid credentials, not a normal
+startup step.
+
 ## Plan the search
 
 Turn the request into a constraint ledger:

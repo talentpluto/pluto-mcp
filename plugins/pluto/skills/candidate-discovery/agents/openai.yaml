@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto candidate discovery"
+  short_description: "Find and assess candidates with Pluto"
+  default_prompt: "Use $candidate-discovery to find and assess candidates with Pluto."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated, read-only candidate discovery MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"
