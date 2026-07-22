@@ -78,6 +78,33 @@ new task.
 @pluto Find account executives in New York with at least three years of experience.
 ```
 
+Pluto presents the returned shortlist in separate Verified matches,
+Provisional matches, and Near matches tables. It reports exact network counts
+above the tables and uses this compact shape:
+
+```markdown
+1 in network · 1 out of network · 1 network unknown
+In-network shortfall: 1 returned, 4 short of five.
+
+### Verified matches
+
+| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- | --- |
+| [Alex Rivera](returned-profile-url) | In network | Verified match | Account Executive at Example Co. | New York | Eight years of recorded enterprise sales experience. | None |
+
+### Provisional matches
+
+| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- | --- |
+| [Jordan Lee](returned-profile-url) | Out of network | Provisional match | Account Executive at Sample Co. | New York | Currently an Account Executive at Sample Co. in New York. | Unverified: minimum sales experience |
+
+### Near matches
+
+| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- | --- |
+| [Casey Morgan](returned-profile-url) | Network unknown | Near match | Sales Manager at Demo Co. | New York | Sales Manager at Demo Co. with recorded enterprise sales context. | Missing: requested Account Executive title |
+```
+
 ### Check credits
 
 ```text
@@ -86,26 +113,36 @@ new task.
 
 ### Express candidate interest
 
-After choosing one candidate from Pluto's results:
+After choosing an in-network candidate for a role:
 
 ```text
-@pluto Express interest in Jordan Lee from the Pluto results for the Senior Account Executive role.
+@pluto Express interest in Alex Rivera from the Pluto results for the Senior Account Executive role.
+```
+
+After choosing an out-of-network candidate, do not select a role or project:
+
+```text
+@pluto Get the available professional email for Jordan Lee, the out-of-network candidate from my Pluto results.
 ```
 
 Candidate discovery consumes monthly credits. Credit-balance lookup calls
 `get_credit_balance` without a user or organization ID and reports the exact
 `monthlyCredits`, `remainingCredits`, and `resetsAt` values returned by Pluto.
+Pluto does not calculate usage or balance from result counts or provider
+pricing; it reports usage or balance only when the server returns authoritative
+values.
 
 Candidate interest runs only after an explicit selection. For an internal
 candidate, it can add or reuse the candidate in the selected role's normal
 prospecting flow, send the normal reconfirm-interest message, and mark them for
-automatic sharing after Ready to Submit. For an external candidate, it can run
-a fresh professional contact lookup, store the committed disclosure, and return
-that one email to the authorized user. It does not create or send an outreach
-campaign, start onboarding, or return phone numbers.
+automatic sharing after Ready to Submit. For an external candidate, it omits
+project selection, runs fresh professional enrichment, commits the disclosure,
+and returns the stored email to the authorized user when one is available. It
+does not add the candidate to a role, create or send an outreach campaign,
+start onboarding, contact the candidate, or return phone numbers.
 
 The underlying action is `express_candidate_interest`. It is non-idempotent, so
-Pluto does not automatically retry an ambiguous failure.
+Pluto does not retry an ambiguous failure.
 
 Pluto does not expose private notes, resumes, transcripts, account identifiers,
 authentication metadata, raw provider data, or uncommitted contact results. Its

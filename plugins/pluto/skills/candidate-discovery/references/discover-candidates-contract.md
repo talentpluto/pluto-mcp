@@ -23,9 +23,29 @@ soft ranking signal rather than a hard eligibility filter.
 Every search must request a `limit` of at least `10`, or the user's larger
 requested count up to the schema maximum. The limit is a requested maximum, not
 a guarantee that ten eligible candidates exist. If Pluto returns fewer than ten
-distinct candidates across exact, provisional, and near matches, report the
+distinct candidates across verified, provisional, and near matches, report the
 shortfall rather than duplicating candidates, inventing results, using an
 unauthorized source, or silently broadening the request.
+
+The schema-valid `limit` sent to the server is the effective requested result
+count. Present every distinct result the server returns up to that count. Do not
+stop after ten, suppress a lower-ranked result, or use near matches only as
+filler. Count network membership across every displayed group. If fewer than
+five distinct in-network candidates were returned, state the exact count and
+shortfall from five without inventing candidates, broadening the search, or
+relabeling near matches as exact matches.
+
+## Metering and credit reporting
+
+`discover_candidates` is metered and non-idempotent. Call it once for a
+faithful request and never retry a timeout or ambiguous failure. Report the
+uncertainty and stop. Do not use another external candidate source to replace,
+supplement, or bypass Pluto discovery.
+
+Never calculate credit usage or balance client-side from request shape, result
+counts, provider prices, or prior calls. Display authoritative usage or balance
+information concisely only when the server returns it; otherwise do not infer
+or mention an amount.
 
 ## Unsupported criteria
 
@@ -48,9 +68,10 @@ or use private criteria.
 Every discovery result must contain a confirmed LinkedIn profile URL in its
 `profileUrl` or `linkedinUrl` field. Use only the URL returned for that
 candidate, and render the candidate's name as its Markdown link. Never
-construct or infer a LinkedIn URL. A result without either URL is a
-server/plugin contract mismatch that must be reported rather than silently
-omitted or presented without a link.
+construct, search for, or infer a LinkedIn URL. If any result lacks both URLs,
+the response cannot satisfy the complete presentation contract. Report the
+server/plugin contract mismatch and do not present a partial table as though it
+were the complete shortlist.
 
 Public discovery results can also contain a candidate's headline, current
 title, current company, location, recorded sales context, match reasons,
@@ -79,37 +100,61 @@ as satisfied.
 
 `networkStatus` is TalentPluto membership, not raw provider provenance. Present
 `in_network`, `out_of_network`, and `unknown` as In network, Out of network, and
-Network unknown immediately beside the linked candidate name.
-`qualificationStatus: verified` and `provisional` map to Verified match and
-Provisional match. Only a verified candidate may be called an exact match, and
-a provisional candidate always has a missing or unverified criterion.
-
-Keep the server's exact, provisional, and near-match groups separate, and
-preserve the returned order within every group. Do not create a replacement
-ranking formula. A legacy `fitScore` is a discovery relevance heuristic that
-may be used only as hidden context for the returned ordering. Do not display it
-or another numeric relevance score unless the user explicitly asks about
-scoring, and never treat a score as qualification proof or a hiring
-recommendation.
+Network unknown. `qualificationStatus: verified` maps to Verified match and is
+the only state that may be called an exact match. `qualificationStatus:
+provisional` maps to Provisional match and always carries a missing or
+unverified criterion. Every result from `nearMatches` maps to Near match.
 
 A partial top-level status qualifies source coverage, not candidate
 qualification. Near matches are missing at least one searchable criterion, and
-broadening suggestions do not authorize changing the request. Present every
-candidate with one concise, candidate-specific explanation based first on
-relevant client-specific `fitEvidence`, then relevant
+broadening suggestions do not authorize changing the request. Keep the
+server's verified, provisional, and near-match groups separate, and preserve
+the returned order within every group. Do not create a replacement ranking
+formula. A legacy `fitScore` is a discovery relevance heuristic that may be
+used only as hidden context for understanding the returned order. Do not
+display it or another numeric relevance score unless the user explicitly asks
+about scoring, and never treat a score as qualification proof or a hiring
+recommendation.
+
+## Presentation contract
+
+Immediately above the result tables, state the exact In network and Out of
+network counts across all distinct displayed results. State the Network unknown
+count when nonzero so the total reconciles, and state the exact in-network
+shortfall when the in-network count is below five.
+
+Render separate Verified matches, Provisional matches, and Near matches
+sections in that order. Use a compact Markdown table for every non-empty
+section and say none were returned for an empty section. Every table must use
+exactly these columns:
+
+```markdown
+| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- | --- |
+```
+
+Each candidate name must be a Markdown link using only its returned
+`profileUrl` or `linkedinUrl`. Use the exact network and match labels defined
+above. Build Current role only from returned current-title and current-company
+data, and do not infer unavailable role or location values.
+
+Give every candidate one concise, candidate-specific `Why this person` cell.
+Prefer relevant client-specific `fitEvidence`, then relevant
 `candidateReportedHighlights`, recorded sales experience and segments, and
 finally `matchReasons`, current role, company, and location. Label all
-candidate-reported evidence as unverified, prefer richer differentiating
-TalentPluto evidence for in-network candidates, and show every
-`missingCriteria` and `unverifiedCriteria` item as an evidence gap.
+candidate-reported evidence as unverified. Put every `missingCriteria` and every
+`unverifiedCriteria` item in `Evidence gaps`, labeling the two kinds separately;
+use None only when both lists are empty. Escape table-breaking Markdown in
+returned text. Never expose `candidateRef` or `selectionToken` in the displayed
+shortlist.
 
 ## Candidate-interest boundary
 
 Every returned candidate has a `candidateRef` and short-lived
 `selectionToken`. Keep the two handles paired and return them unchanged only
 when the user later explicitly selects that candidate and asks Pluto to express
-interest. Do not inspect, alter, persist, mix, or treat either handle as
-qualification evidence.
+interest. Do not inspect, alter, persist, mix, display, or treat either handle
+as qualification evidence.
 
 Discovery never authorizes an interest action by itself. Do not call
 `express_candidate_interest` because a candidate ranked highly, looks

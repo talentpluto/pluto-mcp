@@ -28,8 +28,8 @@ capability is not currently available through Pluto.
 A lookup or discovery result does not authorize a later action. Before a paid,
 non-idempotent, external, or state-changing tool call, make sure the user has
 clearly requested that exact action and supplied or selected the required
-target. Ask one focused question when the action, target, role, or material
-input is ambiguous.
+target. Ask one focused question when the action, target, or required material
+input is ambiguous. Defer candidate role routing to the feature-specific skill.
 
 Do not automatically retry an ambiguous failure from a paid, non-idempotent, or
 state-changing call; the first call may have completed. Report the uncertainty
