@@ -877,6 +877,14 @@ export function assertSourceContract(contract) {
   assert.match(contract.candidateSkill, /Pluto authentication is required/iu);
   assert.match(contract.candidateSkill, /Pluto failed to initialize/iu);
   assert.match(contract.candidateSkill, /Never run `codex mcp logout pluto` automatically/iu);
+  assert.match(
+    contract.candidateSkill,
+    /Each\s+discovery\s+call\s+is\s+metered\s+and\s+non-idempotent/iu,
+  );
+  assert.match(
+    contract.candidateSkill,
+    /Do\s+not\s+retry\s+a\s+timeout\s+or\s+an\s+ambiguous\s+failure\s+automatically/iu,
+  );
 
   assert.match(contract.creditSkill, /name:\s*credit-balance/iu);
   assert.match(contract.creditSkill, /current credit balance, or reset date/iu);

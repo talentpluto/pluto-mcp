@@ -100,9 +100,12 @@ pipelines, resumes, transcripts, account identifiers, or authentication
 metadata.
 
 The candidate-discovery and credit-balance skills check that their respective
-Pluto MCP tools are present before making a call. If Pluto is unavailable, they
-report that authentication is required or initialization failed. They do not
-silently use another source or estimate a credit balance.
+Pluto MCP tools are present before making a call. If the Pluto server is
+unavailable, they report that authentication is required or initialization
+failed. If Pluto is connected but does not expose `get_credit_balance`, the
+credit-balance skill instead treats that as version skew and asks the user to
+update Pluto and start a fresh task. They do not silently use another source or
+estimate a credit balance.
 
 Pluto is deliberately not marked `required: true` in `.mcp.json`. Making the
 server globally required would prevent every Codex task from starting or
