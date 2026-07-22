@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto credit balance"
+  short_description: "Check monthly Pluto credits"
+  default_prompt: "Use $credit-balance to check my remaining Pluto credits and reset date."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated, metered discovery and read-only credit balance MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"

@@ -1,7 +1,7 @@
 # Pluto MCP
 
-Install the Pluto plugin in Codex to discover candidates through TalentPluto's
-read-only MCP server.
+Install the Pluto plugin in Codex to discover candidates and check your monthly
+credit balance through TalentPluto's MCP server.
 
 ## Install and connect
 
@@ -73,24 +73,44 @@ with Codex's stable host-status inventory after a fresh task initializes.
 
 ## Use
 
+### Discover candidates
+
 Mention Pluto in Codex and describe the candidates you want to find:
 
 ```text
 @pluto Find account executives in New York with at least three years of experience.
 ```
 
-Pluto exposes read-only candidate discovery. It does not expose contact
-details, private recruiting notes, project pipelines, resumes, or transcripts.
+### Check credits
 
-The candidate-discovery skill checks that Pluto's MCP tool is present before it
-attempts a search. If Pluto is unavailable, it reports that authentication is
-required or initialization failed and does not silently use another candidate
-source.
+Ask Pluto for your authenticated monthly credit balance:
+
+```text
+@pluto How many credits do I have left, and when do they reset?
+```
+
+The credit-balance skill calls `get_credit_balance` once without accepting a
+user or organization ID, then reports the exact `monthlyCredits`,
+`remainingCredits`, and `resetsAt` values returned by Pluto.
+
+Pluto does not modify candidate data. Candidate discovery is metered against
+the authenticated user's monthly allowance; credit-balance lookup is read-only.
+Pluto does not expose contact details, private recruiting notes, project
+pipelines, resumes, transcripts, account identifiers, or authentication
+metadata.
+
+The candidate-discovery and credit-balance skills check that their respective
+Pluto MCP tools are present before making a call. If the Pluto server is
+unavailable, they report that authentication is required or initialization
+failed. If Pluto is connected but does not expose `get_credit_balance`, the
+credit-balance skill instead treats that as version skew and asks the user to
+update Pluto and start a fresh task. They do not silently use another source or
+estimate a credit balance.
 
 Pluto is deliberately not marked `required: true` in `.mcp.json`. Making the
 server globally required would prevent every Codex task from starting or
 resuming while Pluto is unavailable, including unrelated work and recovery
-tasks. Candidate discovery instead fails closed at the skill boundary without
+tasks. Both Pluto skills instead fail closed at the skill boundary without
 making the rest of Codex unusable.
 
 ## Recovery

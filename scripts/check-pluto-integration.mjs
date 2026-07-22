@@ -19,6 +19,7 @@ import {
   PLUTO_COMPATIBILITY_HEADER,
   PLUTO_MCP_URL,
   PLUTO_SERVER_NAME,
+  assertRequiredPlutoTools,
   assertSourceContract,
   compareToolInventories,
   getPlutoHostStatus,
@@ -252,7 +253,7 @@ function findInstalledPluto(pluginList) {
   return matches[0];
 }
 
-async function assertInstalledSkillDependency(client) {
+async function assertInstalledSkillDependencies(client) {
   const response = await client.request("skills/list", {
     cwds: [repoRoot],
     forceReload: true,
@@ -262,21 +263,28 @@ async function assertInstalledSkillDependency(client) {
   assert.deepEqual(errors, [], "Codex reported an error while loading installed skills");
 
   const skills = entries.flatMap((entry) => entry.skills ?? []);
-  const matches = skills.filter(
-    (skill) =>
-      skill.name === "candidate-discovery" ||
-      skill.name.endsWith(":candidate-discovery"),
-  );
-  assert.equal(matches.length, 1, "Codex did not load exactly one candidate-discovery skill");
+  for (const skillName of ["candidate-discovery", "credit-balance"]) {
+    const matches = skills.filter(
+      (skill) => skill.name === skillName || skill.name.endsWith(`:${skillName}`),
+    );
+    assert.equal(
+      matches.length,
+      1,
+      `Codex did not load exactly one ${skillName} skill`,
+    );
 
-  const tools = matches[0].dependencies?.tools ?? [];
-  const dependency = tools.find(
-    (tool) => tool.type === "mcp" && tool.value === PLUTO_SERVER_NAME,
-  );
-  assert.ok(dependency, "Codex did not parse the candidate-discovery Pluto dependency");
-  assert.equal(dependency.transport, "streamable_http");
-  assert.equal(dependency.url, PLUTO_MCP_URL);
-  assert.ok(dependency.description, "Pluto skill dependency needs a description");
+    const tools = matches[0].dependencies?.tools ?? [];
+    const dependency = tools.find(
+      (tool) => tool.type === "mcp" && tool.value === PLUTO_SERVER_NAME,
+    );
+    assert.ok(
+      dependency,
+      `Codex did not parse the ${skillName} Pluto dependency`,
+    );
+    assert.equal(dependency.transport, "streamable_http");
+    assert.equal(dependency.url, PLUTO_MCP_URL);
+    assert.ok(dependency.description, "Pluto skill dependency needs a description");
+  }
 }
 
 async function openAppServer({ codexBin, codexHome }) {
@@ -288,7 +296,7 @@ async function openAppServer({ codexBin, codexHome }) {
   });
   try {
     await client.initialize();
-    await assertInstalledSkillDependency(client);
+    await assertInstalledSkillDependencies(client);
     return client;
   } catch (error) {
     await client.close();
@@ -313,6 +321,7 @@ async function runOneHealthyBoot({ codexBin, codexHome, remoteTools }) {
       "Healthy Pluto host status must use stored OAuth",
     );
     assert.ok(host.serverInfo, "Healthy Pluto initialization is missing serverInfo");
+    assertRequiredPlutoTools(Object.keys(host.tools), "Codex host inventory");
     const comparison = compareToolInventories(remoteTools, host.tools);
     return { comparison, serverInfo: host.serverInfo, threadId };
   } finally {
@@ -323,7 +332,7 @@ async function runOneHealthyBoot({ codexBin, codexHome, remoteTools }) {
 async function sourceMode(contract) {
   const summary = assertSourceContract(contract);
   console.log(
-    `Source contract is consistent for Pluto ${summary.pluginVersion}; no canonical tool-name list is stored locally.`,
+    `Source contract is consistent for Pluto ${summary.pluginVersion}; live checks enforce the required tool baseline while allowing future additions.`,
   );
 }
 
@@ -400,7 +409,7 @@ async function cleanInstallMode({ codexBin, codexHome, marketplaceSource }, cont
   }
 
   console.log(
-    `Clean install passed on Codex ${codexVersion}: version ${contract.plugin.version}, ON_INSTALL auth policy, parsed skill dependency, fresh-task missing-authentication state, and no tools before login.`,
+    `Clean install passed on Codex ${codexVersion}: version ${contract.plugin.version}, ON_INSTALL auth policy, parsed skill dependencies, fresh-task missing-authentication state, and no tools before login.`,
   );
 }
 
@@ -411,7 +420,10 @@ async function liveMode({ accessToken, codexBin, codexHome }) {
   );
   const codexVersion = await assertSupportedCodex(codexBin, codexHome);
   const remoteTools = await listAllRemoteTools({ accessToken });
-  assert.ok(remoteTools.length > 0, "The authenticated Pluto server advertised no tools");
+  assertRequiredPlutoTools(
+    remoteTools.map((tool) => tool.name),
+    "Authenticated remote inventory",
+  );
 
   const first = await runOneHealthyBoot({
     codexBin,
@@ -500,6 +512,10 @@ async function upgradeMode(
   assert.equal(findInstalledPluto(afterList).version, expectedVersion);
 
   const remoteTools = await listAllRemoteTools({ accessToken });
+  assertRequiredPlutoTools(
+    remoteTools.map((tool) => tool.name),
+    "Authenticated remote inventory",
+  );
   await runOneHealthyBoot({ codexBin, codexHome, remoteTools });
   console.log(
     `Marketplace and plugin upgrade passed: ${before.version} -> ${expectedVersion}, followed by healthy fresh-task startup and a matching host-status inventory.`,
