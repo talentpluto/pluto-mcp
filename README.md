@@ -1,20 +1,19 @@
 # Pluto MCP
 
-Install the Pluto plugin in Codex to discover candidates and check your monthly
-credit balance through TalentPluto's MCP server.
+Pluto adds candidate discovery and monthly credit-balance lookup to Codex
+through TalentPluto.
 
-## Install and connect
+## Install
 
-The normal setup path is:
+### Codex desktop
 
-1. Add the TalentPluto marketplace.
-2. Install Pluto.
-3. Authenticate once.
-4. Restart the desktop app or start a fresh task.
-5. Confirm Pluto initialized and that its complete tool inventory is available.
-6. Let Codex refresh the OAuth session with the saved refresh credential.
+Add the `talentpluto/pluto-mcp` marketplace, install **Pluto**, and complete the
+TalentPluto sign-in when prompted. Then fully quit and reopen Codex and start a
+new task.
 
-For the Codex CLI, run:
+### Codex CLI
+
+Run these commands once:
 
 ```bash
 codex plugin marketplace add talentpluto/pluto-mcp
@@ -22,60 +21,18 @@ codex plugin add pluto@talentpluto
 codex mcp login pluto
 ```
 
-The desktop app should request authentication during installation because the
-marketplace declares `authentication: ON_INSTALL`. The CLI install command
-does not start that browser flow, so CLI users must run `codex mcp login pluto`
-explicitly. Complete the TalentPluto OAuth flow with an account belonging to an
-organization that has Candidate MCP access enabled.
+Then start a new Codex session. The TalentPluto account used to sign in must
+belong to an organization with Candidate MCP access enabled.
 
-Pluto requests `candidates:read` and `offline_access`. The latter lets Codex use
-the saved refresh credential when an access token expires instead of requiring
-a browser login for every session.
-
-After installation, authentication, an upgrade, or a reconnect, restart Codex
-or start a fresh task. If an existing task still lacks Pluto tools, fully quit
-and reopen the ChatGPT/Codex desktop app and start a new task. A plugin appearing
-in configuration does not prove that its MCP server initialized or that its
-tools were mounted into an already-running task.
-
-## Persist OAuth credentials
-
-Codex supports an OS keyring for persistent MCP OAuth credentials. In managed
-or local installations, set this in the user's Codex configuration:
-
-```toml
-# ~/.codex/config.toml
-mcp_oauth_credentials_store = "keyring"
-```
-
-The plugin does not edit `~/.codex/config.toml` and never logs out Pluto during
-installation or startup. Reauthenticate only when the saved refresh credential
-is missing, expired, revoked, invalid, or no longer authorized.
-
-## Verify the connection
-
-First confirm the expected plugin version is installed and enabled:
-
-```bash
-codex plugin list
-```
-
-Then use a fresh task to confirm that the `pluto` MCP server reaches a ready
-state and that Codex exposes the server's actual tool inventory. Do not use the
-`Auth` column from `codex mcp list` as the sole health signal: it describes
-configuration or stored authorization, not successful MCP initialization or
-tool discovery.
-
-Maintainers can run the source-to-host inventory comparison documented in
-[Integration health check](docs/integration-health-check.md). It initializes
-the remote server, follows every `tools/list` page, and compares that inventory
-with Codex's stable host-status inventory after a fresh task initializes.
+That is the complete normal setup. Pluto requests `candidates:read` and
+`offline_access`, so Codex can refresh expired access tokens without asking you
+to sign in again. Codex's default `auto` credential store uses the OS keyring
+when available and otherwise falls back to its persistent credential file; no
+credential-store setting is normally needed.
 
 ## Use
 
 ### Discover candidates
-
-Mention Pluto in Codex and describe the candidates you want to find:
 
 ```text
 @pluto Find account executives in New York with at least three years of experience.
@@ -83,78 +40,52 @@ Mention Pluto in Codex and describe the candidates you want to find:
 
 ### Check credits
 
-Ask Pluto for your authenticated monthly credit balance:
-
 ```text
 @pluto How many credits do I have left, and when do they reset?
 ```
 
-The credit-balance skill calls `get_credit_balance` once without accepting a
-user or organization ID, then reports the exact `monthlyCredits`,
-`remainingCredits`, and `resetsAt` values returned by Pluto.
+Candidate discovery consumes monthly credits. Credit-balance lookup calls
+`get_credit_balance` without a user or organization ID and reports the exact
+`monthlyCredits`, `remainingCredits`, and `resetsAt` values returned by Pluto.
 
-Pluto does not modify candidate data. Candidate discovery is metered against
-the authenticated user's monthly allowance; credit-balance lookup is read-only.
-Pluto does not expose contact details, private recruiting notes, project
-pipelines, resumes, transcripts, account identifiers, or authentication
-metadata.
+Pluto does not modify candidate data or expose contact details, private notes,
+resumes, transcripts, account identifiers, or authentication metadata. Its
+skills fail closed when their tools are unavailable and do not block unrelated
+Codex tasks.
 
-The candidate-discovery and credit-balance skills check that their respective
-Pluto MCP tools are present before making a call. If the Pluto server is
-unavailable, they report that authentication is required or initialization
-failed. If Pluto is connected but does not expose `get_credit_balance`, the
-credit-balance skill instead treats that as version skew and asks the user to
-update Pluto and start a fresh task. They do not silently use another source or
-estimate a credit balance.
+## If Pluto is unavailable
 
-Pluto is deliberately not marked `required: true` in `.mcp.json`. Making the
-server globally required would prevent every Codex task from starting or
-resuming while Pluto is unavailable, including unrelated work and recovery
-tasks. Both Pluto skills instead fail closed at the skill boundary without
-making the rest of Codex unusable.
+Use the first step that matches what Codex reports:
 
-## Recovery
+1. **Pluto was just installed, upgraded, or reconnected:** fully quit and
+   reopen Codex, then start a new task.
+2. **Codex asks you to sign in or reconnect:** run `codex mcp login pluto`, then
+   restart Codex and start a new task. Do not log out first.
+3. **Codex says a Pluto tool is unavailable in the current version:** run the
+   commands below, then restart Codex and start a new task.
 
-If Pluto was just installed, upgraded, or reconnected, restart the desktop app
-and start a fresh task before diagnosing the saved credentials.
+   ```bash
+   codex plugin marketplace upgrade talentpluto
+   codex plugin add pluto@talentpluto
+   ```
 
-If the plugin may be stale, inspect `codex plugin list` and compare its installed
-version with the current marketplace version. Only when it is stale or damaged,
-refresh the marketplace and reinstall the plugin:
+4. **A normal login still fails because the saved grant is invalid or revoked:**
+   reset only Pluto's saved authorization, then restart Codex and start a new
+   task.
 
-```bash
-codex plugin marketplace upgrade talentpluto
-codex plugin add pluto@talentpluto
-```
+   ```bash
+   codex mcp logout pluto
+   codex mcp login pluto
+   ```
 
-If Codex reports that authentication is missing or needs reconnection, begin
-with a normal login without logging out first. This avoids deleting the saved
-state before a replacement authorization succeeds:
+Never automate logout during installation, startup, or upgrade. Most connection
+problems do not require deleting the saved authorization.
 
-```bash
-codex mcp login pluto
-```
+## Maintainers
 
-Use a Pluto-only hard reset only when its saved credentials are genuinely
-invalid, revoked, or no longer authorized and a normal login does not recover
-them:
+The [integration health check](docs/integration-health-check.md) covers clean
+installation, tool discovery, app-server restart, plugin upgrade, and invalid
+credential behavior against an isolated Codex home.
 
-```bash
-codex mcp logout pluto
-codex mcp login pluto
-```
-
-After either reconnect path, fully quit and reopen the ChatGPT/Codex desktop
-app and start a new task. Never automate the logout step as part of normal
-installation, startup, or upgrade.
-
-## Connection
-
-The plugin connects to:
-
-```text
-https://app.talentpluto.com/api/mcp
-```
-
-Authentication uses OAuth. This repository contains no credentials or API
-keys.
+Pluto connects to `https://app.talentpluto.com/api/mcp` with OAuth. This
+repository contains no credentials or API keys.

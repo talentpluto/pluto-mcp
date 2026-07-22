@@ -62,8 +62,10 @@ mcp_oauth_credentials_store = "file"
 ```
 
 The file store makes an isolated test home portable and observable across two
-app-server process launches. It is not production guidance. Real managed and
-local installations should prefer the OS keyring:
+app-server process launches. It is not production guidance. Codex's default
+`auto` mode already uses the OS keyring when available and otherwise falls back
+to its persistent credential file. Environments that require keyring-only
+storage can set:
 
 ```toml
 mcp_oauth_credentials_store = "keyring"
