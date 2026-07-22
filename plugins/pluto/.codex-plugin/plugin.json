@@ -1,13 +1,14 @@
 {
   "name": "pluto",
-  "version": "0.1.6",
-  "description": "Discover candidates and check monthly credit balances through Pluto.",
+  "version": "0.1.7",
+  "description": "Discover candidates, check monthly credit balances, and act on explicit candidate interest through Pluto.",
   "author": {
     "name": "Pluto"
   },
   "keywords": [
     "candidates",
     "credits",
+    "candidate interest",
     "recruiting",
     "pluto",
     "mcp"
@@ -16,18 +17,20 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Pluto",
-    "shortDescription": "Discover candidates and check credits.",
-    "longDescription": "Run metered searches across Pluto's authorized candidate network and check your exact monthly credit balance through its MCP server.",
+    "shortDescription": "Discover candidates, check credits, and express interest.",
+    "longDescription": "Run metered candidate searches, check your exact monthly credit balance, and act on a candidate you explicitly select. Internal selections enter TalentPluto's prospecting flow; external selections can reveal a freshly enriched, committed professional email without sending outreach.",
     "developerName": "Pluto",
     "category": "Productivity",
     "capabilities": [
-      "Read"
+      "Read",
+      "Write"
     ],
     "defaultPrompt": [
       "Find senior account executives in New York with SaaS experience.",
       "Find former SDRs who became account executives.",
       "Find sales leaders with MEDDICC experience.",
-      "How many Pluto credits do I have left, and when do they reset?"
+      "How many Pluto credits do I have left, and when do they reset?",
+      "Express interest in the candidate I selected from the Pluto results for the role I chose."
     ],
     "brandColor": "#2563EB",
     "composerIcon": "./assets/pluto_sparkles.svg",
