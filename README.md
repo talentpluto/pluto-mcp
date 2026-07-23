@@ -42,9 +42,11 @@ TalentPluto MCP server. They do not require users to upgrade or reinstall the
 plugin, log out, or repeat OAuth consent.
 
 A versioned change to Pluto's bundled client guidance is the narrow exception:
-the server cannot replace a skill already installed on the user's machine. The
-open-world discovery contract in Pluto 0.1.9 requires the one-time plugin
-refresh below, but it does not change the connection or permission boundary.
+the server cannot replace a skill already installed on the user's machine.
+Pluto 0.1.10 coordinates the shared-credit, four-group discovery, and dedicated
+email-enrichment contract; Pluto 0.1.9 introduced open-world discovery. These
+skill updates require the one-time plugin refreshes below, but they do not
+change the connection or permission boundary.
 
 Keep using Pluto normally after an update. A task that was already open may
 retain its original tool catalog; if a newly deployed capability is not visible,
@@ -52,6 +54,28 @@ start a fresh task. Restart Codex only when Codex reports an initialization or
 cache problem. Reconnect only when Codex explicitly reports that Pluto's saved
 authorization is missing, expired, revoked, invalid, or lacks a newly required
 permission.
+
+### One-time billing and enrichment skill refresh from 0.1.9 or earlier
+
+Pluto 0.1.10 supplies a UUID for each metered search, reads the server's shared
+organization credit accounting, renders the four discovery result groups
+separately, and uses `enrich_candidate_email` for an explicitly selected
+out-of-network candidate. Refresh the TalentPluto marketplace, install the new
+Pluto plugin, and start a fresh task so Codex loads the coordinated skill and
+live tool catalog.
+
+In Codex desktop, refresh the `talentpluto/pluto-mcp` marketplace and install or
+update **Pluto**, then start a fresh task. For the CLI, run:
+
+```bash
+codex plugin marketplace upgrade talentpluto
+codex plugin add pluto@talentpluto
+```
+
+Do not log out, reconnect, or repeat OAuth consent for this update. Pluto 0.1.10
+keeps the existing `candidates:read`, `candidates:outbound`, and
+`offline_access` scopes. Users upgrading from 0.1.8 or earlier receive the
+0.1.9 open-world discovery guidance in the same plugin update.
 
 ### One-time discovery skill refresh from 0.1.8 or earlier
 
@@ -113,26 +137,43 @@ Pluto also preserves novel professional criteria and Boolean grouping:
 @pluto Find either (platform engineers in NYC who use Kafka) or (SREs in Chicago who hold CKA certification), excluding current Acme employees.
 ```
 
-Pluto preserves the server's ordered candidate list even when verified and
-provisional results are interleaved, then presents Near matches separately. It
-reports exact network counts above the tables and uses this compact shape:
+Pluto supplies a fresh private request ID for each deliberate search, reports
+the exact organization credits used and remaining, and preserves the order of
+each server-owned result group. Rich in-network results are presented in three
+separate evidence-qualified sections:
 
 ```markdown
-1 in network · 1 out of network · 1 network unknown
+2 credits used · 4,998 organization credits remaining
+3 in network · 1 out of network · 1 network status unavailable
 
-### Candidates
+### Verified in-network matches
 
-| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
-| --- | --- | --- | --- | --- | --- | --- |
-| [Alex Rivera](returned-profile-url) | In network | Verified match | Account Executive at Example Co. | New York | Eight years of recorded enterprise sales experience. | None |
-| [Jordan Lee](returned-profile-url) | Out of network | Provisional match | Account Executive at Sample Co. | New York | Currently an Account Executive at Sample Co. in New York. | Unverified: minimum sales experience |
+| Candidate | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- |
+| [Alex Rivera](returned-profile-url) | Verified match | Account Executive at Example Co. | New York | Returned evidence verifies eight years of enterprise sales experience. | None |
 
-### Near matches
+### In-network candidates needing verification
 
-| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
-| --- | --- | --- | --- | --- | --- | --- |
-| [Casey Morgan](returned-profile-url) | Network unknown | Near match | Sales Manager at Demo Co. | New York | Sales Manager at Demo Co. with recorded enterprise sales context. | Missing: requested Account Executive title |
+| Candidate | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- |
+| [Jordan Lee](returned-profile-url) | Needs verification | Account Executive at Sample Co. | New York | Returned evidence verifies the current role and location. | Unknown: minimum sales experience |
+
+### In-network near matches
+
+| Candidate | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- |
+| [Casey Morgan](returned-profile-url) | Near match | Sales Manager at Demo Co. | New York | Returned evidence verifies enterprise sales context. | Does not match: requested Account Executive title |
+
+### Out-of-network profiles
+
+| Candidate | Network | Current role | Location | Headline |
+| --- | --- | --- | --- | --- |
+| [Morgan Chen](returned-profile-url) | Out of network | Account Executive at Outside Co. | New York | Enterprise SaaS account executive |
+| [Riley Singh](returned-profile-url) | Network status unavailable | Account Executive at Other Co. | New York | B2B sales professional |
 ```
+
+Out-of-network profiles are compact public leads, not deeply verified matches.
+They use no product credits and are not locally reranked or personalized.
 
 ### Check credits
 
@@ -140,7 +181,7 @@ reports exact network counts above the tables and uses this compact shape:
 @pluto How many credits do I have left, and when do they reset?
 ```
 
-### Express candidate interest
+### Act on a selected candidate
 
 After choosing an in-network candidate for a role:
 
@@ -154,26 +195,35 @@ After choosing an out-of-network candidate, do not select a role or project:
 @pluto Get the available professional email for Jordan Lee, the out-of-network candidate from my Pluto results.
 ```
 
-Candidate discovery consumes monthly credits. Credit-balance lookup calls
-`get_credit_balance` without a user or organization ID and reports the exact
-`monthlyCredits`, `remainingCredits`, and `resetsAt` values returned by Pluto.
-Pluto does not calculate usage or balance from result counts or provider
-pricing; it reports usage or balance only when the server returns authoritative
-values.
+Each in-network person returned by discovery uses one credit from the
+organization's shared monthly allowance; out-of-network profiles are free.
+Every successful search returns exact `creditsUsed` and `remainingCredits`.
+The current allowance is 5,000 credits per organization per UTC calendar month,
+shared by its authorized users, with no rollover. At a low or depleted balance,
+Pluto limits billed in-network results while retaining available free
+out-of-network profiles.
+Credit-balance lookup calls `get_credit_balance` without a user or organization
+ID and reports the exact shared `monthlyCredits`, `remainingCredits`, and
+`resetsAt` values returned by Pluto. Pluto never reconstructs accounting from
+result counts or provider pricing.
 
-Candidate interest runs only after the user explicitly selects a returned
-candidate and explicitly asks Pluto to act. Selection alone is insufficient and
-does not authorize `express_candidate_interest`. For an internal candidate, the
-operation can add or reuse the candidate in the selected role's normal
-prospecting flow, send the normal reconfirm-interest message, and mark them for
-automatic sharing after Ready to Submit. For an external candidate, it omits
-project selection, runs fresh professional enrichment, commits the disclosure,
-and returns the stored email to the authorized user when one is available. It
-does not add the candidate to a role, create or send an outreach campaign,
-start onboarding, contact the candidate, or return phone numbers.
+An outbound action runs only after the user explicitly selects a returned
+candidate and asks Pluto to act. Selection alone is insufficient. For an
+in-network candidate, `express_candidate_interest` can add or reuse the
+candidate in the selected role's normal prospecting flow, send the normal
+reconfirm-interest message, and mark them for automatic sharing after Ready to
+Submit. For a selection from the compact out-of-network group,
+`enrich_candidate_email` omits project selection, runs fresh professional
+enrichment, commits the disclosure, and returns one stored email when
+available. A stored and returned email uses one organization credit; an
+unavailable result uses zero. It does not add the candidate to a role, create
+or send an outreach campaign, start onboarding, contact the candidate, or
+return phone numbers.
 
-The underlying action is `express_candidate_interest`. It is non-idempotent, so
-Pluto does not retry an ambiguous failure.
+Pluto does not automatically retry an ambiguous search, interest action, or
+email enrichment. Request IDs protect product-credit accounting for an
+explicit retry of the identical metered operation; they do not authorize
+automatic retries.
 
 Pluto does not expose private notes, resumes, transcripts, account identifiers,
 authentication metadata, raw provider data, or uncommitted contact results. Its
