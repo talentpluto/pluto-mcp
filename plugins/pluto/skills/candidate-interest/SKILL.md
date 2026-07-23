@@ -49,24 +49,18 @@ includes `candidates:outbound`.
 
 If the required tool is absent or unusable, fail closed:
 
-- If Pluto requests authentication or is disconnected, ask the user to connect
-  Pluto and start a new task. Do not log out first.
-- If Pluto failed to initialize, ask the user to start a fresh task and restart
-  Codex only if the error persists. Diagnose credentials only when Codex
-  identifies an authentication problem.
-- If Pluto is connected and healthy but the tool is absent, ask the user to
-  start one fresh task to refresh the live tool catalog. If it remains absent,
-  report the exact unavailable action; do not recommend upgrading, reinstalling,
-  or reconnecting Pluto for a missing tool alone.
+- Follow the `connection-recovery` skill for the required route-specific tool.
+  If recovery exposes it, continue this skill with the original selected
+  candidate and requested action.
 - If the OAuth response explicitly reports missing `candidates:outbound`,
-  explain that a refresh token cannot add a scope absent from the saved grant.
-  The user must deliberately reset only Pluto's saved authorization with
-  `codex mcp logout pluto`, run `codex mcp login pluto`, approve the permission,
-  and start a new task.
+  follow the missing-scope boundary in `connection-recovery`. A refresh token
+  cannot add a scope absent from the saved grant.
+- If recovery does not expose the tool, report the exact unavailable action and
+  state that no enrichment or interest action ran.
 
 `enrich_candidate_email` uses the existing `candidates:outbound` scope, so
 ordinary server updates do not require reconnection when the saved Pluto grant
-already includes it. Never run `codex mcp logout pluto` automatically.
+already includes it.
 
 ## Preserve the selected candidate
 

@@ -16,25 +16,10 @@ exposes Pluto's `get_credit_balance` MCP tool. Loading this skill alone does not
 prove that Pluto initialized successfully.
 
 If the tool is absent, do not call the MCP endpoint directly, infer a balance
-from prior searches, or imply that a lookup ran. Report the applicable state and
-recovery step concisely:
-
-- If Codex requests authentication or reports Pluto as disconnected, say that
-  Pluto authentication is required. Ask the user to connect Pluto, then start a
-  new task.
-- If Pluto reports an initialization error, say that Pluto failed to initialize.
-  Ask the user to start a fresh task and restart Codex only if the error
-  persists. Reconnect only when Codex reports that the saved authorization is
-  missing, expired, revoked, invalid, or no longer authorized.
-- If Pluto is connected and otherwise healthy but does not expose
-  `get_credit_balance`, ask the user to start one fresh task to refresh the live
-  tool catalog. If it remains absent, report that credit balance is currently
-  unavailable; do not recommend upgrading, reinstalling, or reconnecting Pluto,
-  and do not misreport it as an authentication failure.
-
-Never run `codex mcp logout pluto` automatically. A logout/login reset is a
-user-directed last resort for genuinely invalid credentials, not a normal
-startup step.
+from prior searches, or imply that a lookup ran. Follow the
+`connection-recovery` skill for `get_credit_balance`. If recovery exposes the
+tool, continue this skill and read the balance once. Otherwise report that no
+balance lookup ran and do not substitute a prior or estimated value.
 
 ## Read the balance once
 

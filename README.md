@@ -82,11 +82,15 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
 
 ## If Pluto is not available
 
-1. If Pluto was just installed, fully restart Codex and start a new task.
-2. If a tool is missing from an older task, start a new task. Do not reinstall
-   or reconnect Pluto.
-3. If Codex asks you to sign in, run `codex mcp login pluto`.
-4. If initialization still fails, restart Codex and report the error shown.
+1. Pluto rechecks its live tool catalog once before asking you to recover
+   anything.
+2. If a tool is missing from a task that predates a server update, start one new
+   task. Do not keep creating tasks if the new one has the same problem.
+3. If Codex explicitly asks you to sign in, use **Connect Pluto** in Codex
+   Desktop. The CLI fallback is `codex mcp login pluto`.
+4. If a fresh task still has no Pluto tools and Codex shows no authentication
+   error, fully restart Codex once. Do not reconnect or clear authorization for
+   an initialization failure.
 
 Normal server updates do not require reinstalling Pluto or signing in again.
 

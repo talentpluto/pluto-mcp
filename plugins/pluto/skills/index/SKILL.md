@@ -39,15 +39,14 @@ tool contract.
 
 ## Recover without reinstalling
 
-If a tool is missing from a task that was already open when a capability was
-deployed, ask the user to start a fresh task. Do not recommend upgrading,
-reinstalling, logging out, or reconnecting Pluto for a missing tool alone.
+If a required Pluto tool is missing or unusable, follow the
+`connection-recovery` skill. It owns the single live-catalog recheck,
+authentication handoff, initialization recovery, and fresh-task limit. Return
+to this routing skill if recovery exposes a suitable live tool.
 
-If Codex explicitly reports that Pluto needs authentication, ask the user to
-connect it; do not log out first. If Codex reports an initialization error, ask
-the user to start a fresh task and restart Codex only if the error persists.
-Resetting saved authorization is a user-directed last resort for a grant that
-Codex identifies as missing, expired, revoked, invalid, or insufficient.
+Do not diagnose authentication from a missing tool alone, repeat fresh-task
+advice, reinstall Pluto, or clear saved authorization as a generic recovery
+step.
 
 ## Report the outcome
 
