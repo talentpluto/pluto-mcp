@@ -4,8 +4,10 @@
 
 `discover_candidates` accepts one complete natural-language recruiter request
 in `request`, a required UUID `requestId`, a compatibility `limit`, and an
-optional authorized TalentPluto `projectId`. Pass the safe professional search
-request without a semantic or clause-level rewrite after removing only
+optional authorized TalentPluto `projectId`. For a confirmed conversational
+lookalike search it also accepts optional `excludeCandidate` containing the
+selected seed's `candidateRef` and `selectionToken`. Pass the safe professional
+search request without a semantic or clause-level rewrite after removing only
 surrounding invocation or answer-format text. Preserve required versus
 preferred wording, thresholds, exclusions, AND/OR/NOT operators, parentheses,
 and branch grouping. The server NFKC-normalizes, trims, and collapses whitespace
@@ -62,6 +64,61 @@ near matches. Free out-of-network profiles fill remaining capacity toward the
 fixed 25-person target and remain available at a low or depleted balance. Relay
 the bounded credit notice and present those profiles; do not call an
 external-only response a failed search or fabricate omitted in-network people.
+
+## Conversational lookalike requests
+
+`Find more candidates like [candidate]` is not a complete professional search
+request. Handle it only when the named or otherwise referenced seed resolves to
+exactly one candidate returned earlier in the current conversation. If the
+reference is absent or ambiguous, ask the user to identify one returned
+candidate. Make no tool call.
+
+For an unambiguous seed, inspect the live tool schema before continuing. It must
+expose:
+
+```yaml
+excludeCandidate:
+  candidateRef: string
+  selectionToken: string
+```
+
+If that field is unavailable, report that lookalike search is not yet
+available. Never fall back to a search containing the seed's name and never
+call another search, enrichment, candidate-interest, or outbound tool.
+
+Ask one focused clarification that identifies which visible public
+professional attributes should define similarity and which should be required
+or preferred. Use only fields already returned for the seed, such as current
+role, current professional location, public company context, returned headline,
+or explicitly returned public prior-employer context. Never mention or use
+email, phone, contact enrichment, private project context, hidden provider
+data, inferred personal information, or an attribute not present in the
+returned result. Ask whether experience means total or role-specific
+experience only when that distinction would materially change the search.
+
+Do not silently preserve the seed's earlier search constraints. Include them
+only after the user confirms in the same clarification that they still apply,
+and preserve their required or preferred status. Preserve the user's required
+versus preferred wording for the selected similarity attributes as well.
+
+After confirmation, construct one explicit safe professional request from only
+the confirmed criteria. Do not include the seed's name, the literal lookalike
+phrase, contact data, or private context. Call `discover_candidates` exactly
+once with that request, a fresh `requestId`, and the seed's correctly paired
+handles unchanged inside `excludeCandidate`. Include `projectId` only when the
+user already deliberately selected that exact authorized project. The
+lookalike flow never calls email enrichment, candidate interest, or any
+outbound tool.
+
+For example, if Tarun Bobbili was returned with visible AE/GTM, New York,
+B2B-software, and public prior enterprise-technology context, ask:
+`Should similarity mean Tarun's AE/GTM role, New York location, B2B software
+background, prior enterprise-technology experience, or all four?` After the
+user confirms the criteria and their required or preferred status, an eligible
+request could be `Find current AE/GTM professionals in New York working at B2B
+software companies, preferably with prior enterprise-technology experience.`
+Pass Tarun's opaque handles only through `excludeCandidate`; his name must not
+appear in `request`.
 
 ## Safe open-world professional criteria
 
@@ -266,6 +323,7 @@ of allowed criteria:
 | `Find either (platform engineers in NYC who use Kafka) or (SREs in Chicago who hold CKA certification)` | Preserve both branches, parentheses, and OR exactly in one call. Never flatten titles, locations, skills, and certification into independent arrays. |
 | `Find backend engineers in NYC excluding current Google employees and NOT Java-only developers` | Preserve both exclusions and negation in the one request. Do not turn them into positive employer or skill filters. |
 | `Find AI engineers, preferably with published work on model evaluation` | Preserve `preferably`; do not turn the publication preference into a required criterion. |
+| `Find more candidates like Tarun Bobbili` after Tarun was returned earlier | Ask one focused question about returned public professional attributes and make no tool call. After confirmation, call once with a name-free explicit request and Tarun's unchanged paired handles in `excludeCandidate`. |
 | `Find female AI engineers in NYC` | Do not call. Demographics are prohibited; ask for a revised professional-only request. |
 | `Find AI engineers in NYC who are willing to relocate and can start next week` | Do not strip the relocation and availability clauses. Block the whole call and ask for a revised request. |
 | `Find jane@example.com using the confidential candidate resume` | Do not call. Contact details and private-source criteria are prohibited; do not search a weakened remainder. |
@@ -277,10 +335,11 @@ execution completed, label the candidate Needs verification, and show that
 criterion as Unknown. Do not call the candidate an exact match merely because
 title and location appear in the summary.
 
-## Candidate-interest boundary
+## Candidate handle boundary
 
 Every returned candidate has a `candidateRef` and short-lived `selectionToken`.
-Keep the two handles paired and return them unchanged only when the user later
+Keep the two handles paired and pass them unchanged only as `excludeCandidate`
+for a confirmed conversational lookalike search or when the user later
 explicitly selects that candidate and asks Pluto to act. Do not inspect, alter,
 persist, mix, display, or treat either handle as qualification evidence.
 
