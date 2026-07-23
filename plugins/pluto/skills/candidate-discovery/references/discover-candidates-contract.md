@@ -30,6 +30,12 @@ The current schema accepts 2 to 2,000 request characters. `limit` is from 5 to
 change. Discovery is metered and non-idempotent: make one call for one approved
 search and never split or automatically retry it.
 
+Never calculate credit usage or balance from request shape, result counts,
+provider pricing, or prior calls. Display authoritative usage or balance
+information concisely only when the server returns it; otherwise do not infer or
+mention an amount. Never use another external candidate source to replace,
+supplement, or bypass Pluto discovery.
+
 ## Safe open-world professional criteria
 
 Any bounded, public, professional people-search criterion is valid even when it
@@ -124,8 +130,11 @@ Each returned candidate has:
   location, recorded sales data, candidate-reported highlights, and
   candidate-reported `fitEvidence`.
 
-Use only the returned `profileUrl` for the candidate link. Never construct or
-infer a LinkedIn URL. Treat a missing or invalid URL as a contract mismatch.
+Before rendering a name link, require `profileUrl` to be an absolute HTTPS URL
+whose hostname is `linkedin.com`, `linkedin.cn`, or a subdomain of either. Use
+only that returned field. Never use a legacy fallback field or construct,
+search for, or infer a LinkedIn URL. A missing or invalid URL is a server/plugin
+contract mismatch; do not present a partial shortlist as complete.
 
 Only `qualificationStatus: verified` may be called an exact or fully verified
 match. A provisional candidate always has at least one `unverifiedCriteria` or
@@ -151,18 +160,46 @@ they state; empty or null values mean unavailable. Never estimate general
 experience from title seniority, graduation year, role count, or time since
 education.
 
-The server returns one ordered `candidates` list. Preserve that order and put
-network and qualification labels beside every linked name. Do not create a new
-ranking or a names-only table. Keep the separate `nearMatches` list after the
-main list and show its missing and unverified criteria. Do not display a legacy
-fit score or invent a replacement numeric score.
+The server returns one ordered `candidates` list. Preserve that exact order even
+when verified and provisional candidates are interleaved. Do not regroup or
+create a new ranking. Keep the separate `nearMatches` list after the main list
+and preserve its returned order. Do not display a legacy fit score or invent a
+replacement numeric score.
 
-Every candidate needs a concise, candidate-specific "Why this person"
-explanation based on relevant returned evidence. Prefer differentiating
-client-specific `fitEvidence`, then relevant `candidateReportedHighlights`,
-recorded sales context, and finally `matchReasons`, current role, company, and
-location. Label candidate-reported evidence as unverified and never use a
-returned gap as a positive reason.
+## Presentation contract
+
+Immediately above the result tables, state the exact In network and Out of
+network counts across all distinct displayed results. State the Network unknown
+count when nonzero so the total reconciles. Do not impose or report an arbitrary
+network-result floor.
+
+Render one Candidates table for the ordered `candidates` list and one separate
+Near matches table for `nearMatches`. Every non-empty table uses exactly these
+columns:
+
+```markdown
+| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- | --- |
+```
+
+Make every candidate name a link to the validated returned `profileUrl`. Map
+`in_network`, `out_of_network`, and `unknown` to In network, Out of network, and
+Network unknown. Map `verified` and `provisional` to Verified match and
+Provisional match; use Near match for `nearMatches`. Build Current role only
+from returned current-title and current-company data, do not infer missing role
+or location data, and escape table-breaking Markdown in returned text.
+
+Every candidate needs a concise, candidate-specific `Why this person` cell.
+Prefer differentiating client-specific `fitEvidence`, then relevant
+`candidateReportedHighlights`, recorded sales context, and finally
+`matchReasons`, current role, company, and location. Label candidate-reported
+evidence as unverified and never use a returned gap as a positive reason. A
+names-only table is never sufficient.
+
+Put every `unverifiedCriteria` item in Evidence gaps and label it Unverified.
+For a near match, also include every `missingCriteria` item and label it Missing.
+Use None only when both returned lists are empty. Never display `candidateRef`
+or `selectionToken` in the shortlist.
 
 ## Request examples
 
@@ -192,7 +229,8 @@ match merely because title and location appear in the summary.
 Every returned candidate has a `candidateRef` and short-lived `selectionToken`.
 Keep the two handles paired and return them unchanged only when the user later
 explicitly selects that candidate and asks Pluto to express interest. Do not
-inspect, alter, persist, mix, or treat either handle as qualification evidence.
+inspect, alter, persist, mix, display, or treat either handle as qualification
+evidence.
 
 Discovery never authorizes an interest action by itself. Do not call
 `express_candidate_interest` because a candidate ranked highly, looks
