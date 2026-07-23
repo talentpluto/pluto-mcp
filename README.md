@@ -38,6 +38,11 @@ Then start a new Codex session.
 ```
 
 ```text
+@pluto Find people who match this JD:
+[paste the full job description]
+```
+
+```text
 @pluto How many credits does my organization have left?
 ```
 
@@ -79,6 +84,10 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   sensitive or private criteria such as demographics, compensation, work
   authorization, relocation intent, availability, work-style preferences, and
   private notes or resumes.
+- A pasted raw JD can include ordinary office, compensation, benefits, and
+  interview-process text. Pluto derives the professional candidate-search
+  brief server-side, reports what it searched, and discloses context it
+  excluded instead of asking you to rewrite the JD.
 
 ## If Pluto is not available
 
