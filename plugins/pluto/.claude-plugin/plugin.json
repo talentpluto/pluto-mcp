@@ -1,0 +1,24 @@
+{
+  "name": "pluto",
+  "version": "0.1.15",
+  "description": "Use TalentPluto's live recruiting workflows through a stable, authenticated Pluto connection.",
+  "author": {
+    "name": "Pluto"
+  },
+  "homepage": "https://app.talentpluto.com",
+  "keywords": [
+    "candidates",
+    "credits",
+    "candidate interest",
+    "candidate email",
+    "recruiting",
+    "pluto",
+    "mcp"
+  ],
+  "mcpServers": {
+    "pluto": {
+      "type": "http",
+      "url": "https://app.talentpluto.com/api/mcp"
+    }
+  }
+}
