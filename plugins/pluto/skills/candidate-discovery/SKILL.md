@@ -1,6 +1,6 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, shortlist, compare, rank, or assess candidates with discover_candidates. Preserves complete open-world professional search intent, supplies a per-search request ID, blocks private criteria, and presents all four returned qualification groups without overclaiming compact out-of-network profiles.
+description: Use when a user asks Pluto to find, shortlist, compare, rank, or assess candidates with discover_candidates. Preserves complete open-world professional search intent, handles the fixed 25-person search target, supplies a per-search request ID, blocks private criteria, and presents all four returned qualification groups without overclaiming compact out-of-network profiles.
 ---
 
 # Candidate discovery
@@ -78,8 +78,9 @@ lack of a fixed field is never a reason to ask or refuse.
 Extract the complete safe professional search request and pass it once as
 `discover_candidates.request`. Generate a fresh random UUID for
 `discover_candidates.requestId` for this deliberate search. Keep that UUID
-paired with the exact request, `limit`, and optional `projectId` for the current
-operation; never display it or reuse it for a different or changed search.
+paired with the exact request, fixed 25-person target, and optional `projectId`
+for the current operation; never display it or reuse it for a different or
+changed search.
 Remove only surrounding Pluto invocation or answer-format instructions.
 Preserve every criterion and its original required or preferred wording,
 thresholds, exclusions, AND/OR/NOT operators, parentheses, and branch grouping.
@@ -94,11 +95,17 @@ that full request intact. A request made only of novel safe professional
 criteria is valid and must still call the tool; the server can skip the
 unfiltered TalentPluto pool and use its bounded external lane.
 
-Follow the live input schema for request length and `limit`. If the user did
-not specify a result count, omit `limit` and accept the server default. Do not
-retain an older client-side minimum or maximum that differs from the live
-schema. Keep research notes, candidate summaries, and presentation instructions
-out of `request`.
+Follow the live input schema for request length. Omit `limit`: it is a
+compatibility field, and the current server normalizes every search to a fixed
+25-person target. It tries to return up to 15 in-network people, then fills the
+remaining slots with out-of-network profiles. The actual response may be
+shorter when there are not enough results or organization credits.
+
+If the user requests a result count other than 25 or sets a lower result or
+credit cap, explain the fixed target and get confirmation before calling the
+tool. Remove that requested display count from `request`; it is an answer-format
+instruction, not a professional search criterion. Keep research notes,
+candidate summaries, and presentation instructions out of `request`.
 
 Pass `projectId` only when the user deliberately selected that exact authorized
 TalentPluto project and its UUID is already available from trusted Pluto
@@ -169,9 +176,9 @@ Review every response component:
 - Use `matchReasons` only for facts they explicitly establish. Treat
   `candidateReportedHighlights` as candidate-reported, unverified supporting
   context and label it that way. `fitEvidence` is a reserved compatibility
-  field and must not be used as client-specific evidence. An empty
-  `salesSegments` list or null `totalYearsSalesExperience` means unavailable,
-  not zero or a mismatch.
+  field and must not be used as client-specific evidence. A missing or empty
+  `salesSegments` list and a missing or null `totalYearsSalesExperience` mean
+  unavailable, not zero or a mismatch.
 - Do not display `fitScore`, a percentage, or any replacement relevance or
   goodness score. Preserve the server's order instead.
 - Offer `broadeningSuggestions` without applying them automatically.

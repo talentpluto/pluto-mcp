@@ -64,10 +64,9 @@ If the required tool is absent or unusable, fail closed:
   `codex mcp logout pluto`, run `codex mcp login pluto`, approve the permission,
   and start a new task.
 
-Pluto 0.1.10 does not add an OAuth scope; routine adoption of
-`enrich_candidate_email` does not require reconnection when the existing Pluto
-grant already includes `candidates:outbound`. Never run
-`codex mcp logout pluto` automatically.
+`enrich_candidate_email` uses the existing `candidates:outbound` scope, so
+ordinary server updates do not require reconnection when the saved Pluto grant
+already includes it. Never run `codex mcp logout pluto` automatically.
 
 ## Preserve the selected candidate
 
