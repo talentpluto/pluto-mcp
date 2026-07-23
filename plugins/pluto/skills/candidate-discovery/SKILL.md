@@ -28,6 +28,54 @@ MCP endpoint directly, or imply that a search ran. Follow the
 tool, continue this skill with the original request. Otherwise report that no
 search ran and no credits were used.
 
+## Resolve conversational lookalikes
+
+Treat a request such as `find more candidates like [candidate]` as a
+conversational lookalike only when the reference resolves to exactly one
+candidate returned earlier in the current conversation. Never forward that
+literal phrase or the seed candidate's name to `discover_candidates`. If the
+reference is missing or could identify more than one returned candidate, ask
+the user to identify one candidate and make no tool call.
+
+For an unambiguous seed, first confirm that the live `discover_candidates`
+input schema exposes `excludeCandidate` with both `candidateRef` and
+`selectionToken`. If it does not, report that lookalike search is not yet
+available. Do not fall back to a name search or call another search,
+enrichment, candidate-interest, or outbound tool.
+
+Ask one focused clarification about which visible professional attributes
+should define similarity, including which should be required or preferred, and
+make no tool call until the user confirms them. Mention only public
+professional fields already returned for that seed, such as the current role,
+current professional location, public company context, returned headline, or
+explicitly returned public prior-employer context. Do not mention or use email,
+phone, contact enrichment, private project context, hidden provider data,
+inferred personal information, or any attribute that was not returned. Clarify
+total versus role-specific experience in the same question only when the
+distinction would materially change the search.
+
+Do not carry forward constraints from the seed's earlier search unless the user
+confirms that they still apply; when prior constraints exist, include that in
+the same clarification. Preserve the user's required versus preferred wording
+for every confirmed prior constraint and similarity attribute. After
+confirmation, construct one explicit safe professional request from only those
+confirmed criteria. The request must not contain the seed's name, a `more like`
+phrase, contact data, or private context.
+
+Call `discover_candidates` exactly once with that explicit request, a fresh
+random `requestId`, and:
+
+```yaml
+excludeCandidate:
+  candidateRef: <the seed's unchanged candidateRef>
+  selectionToken: <the seed's unchanged selectionToken>
+```
+
+Keep the two opaque handles paired exactly as returned. Include `projectId`
+only when the user already deliberately selected that exact authorized
+project. Do not call `enrich_candidate_email`, `express_candidate_interest`,
+or any outbound tool as part of a lookalike search.
+
 ## Classify only the safety boundary
 
 Treat any bounded, public, professional people-search criterion as searchable
@@ -60,7 +108,9 @@ lack of a fixed field is never a reason to ask or refuse.
 
 ## Make one faithful call
 
-Extract the complete safe professional search request and pass it once as
+For an ordinary direct search, extract the complete safe professional request.
+For a confirmed conversational lookalike, use the explicit request constructed
+under Resolve conversational lookalikes. Pass the resulting request once as
 `discover_candidates.request`. Generate a fresh random UUID for
 `discover_candidates.requestId` for this deliberate search. Keep that UUID
 paired with the exact request, fixed 25-person target, and optional `projectId`
@@ -73,12 +123,13 @@ Ordinary Unicode and whitespace canonicalization may occur at the server
 boundary; unchanged forwarding means no semantic or clause-level rewrite, not
 preservation of unusual spacing.
 
-Never paraphrase, summarize, expand abbreviations, split the request across
-calls, compile it into known fields, or remove a clause to make it easier to
-search. In particular, forward `find me AI engineers with 1+ YoE in NYC` with
-that full request intact. A request made only of novel safe professional
-criteria is valid and must still call the tool; the server can skip the
-unfiltered TalentPluto pool and use its bounded external lane.
+Once a direct request is extracted or a lookalike request is confirmed, never
+paraphrase, summarize, expand abbreviations, split it across calls, compile it
+into known fields, or remove a clause to make it easier to search. In
+particular, forward `find me AI engineers with 1+ YoE in NYC` with that full
+request intact. A request made only of novel safe professional criteria is
+valid and must still call the tool; the server can skip the unfiltered
+TalentPluto pool and use its bounded external lane.
 
 Follow the live input schema for request length. Omit `limit`: it is a
 compatibility field, and the current server normalizes every search to a fixed
