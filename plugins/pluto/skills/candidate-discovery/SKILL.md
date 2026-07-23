@@ -1,13 +1,14 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, shortlist, compare, rank, or assess candidates with discover_candidates. Preserves complete open-world professional search intent, handles the fixed 25-person search target, supplies a per-search request ID, blocks private criteria, and presents all four returned qualification groups without overclaiming compact out-of-network profiles.
+description: Use when a user asks Pluto to find, shortlist, compare, rank, or assess candidates with discover_candidates, including from a pasted raw JD. Preserves direct open-world professional search intent, routes raw JDs through server-owned compilation, handles the fixed 25-person target, blocks explicit private criteria, and presents all four qualification groups without overclaiming compact out-of-network profiles.
 ---
 
 # Candidate discovery
 
-Use this skill for any Pluto candidate search. Send one complete safe
-professional request to `discover_candidates`, preserve the server's returned
-group order and evidence, and distinguish source execution, in-network
+Use this skill for any Pluto candidate search. Send either one complete safe
+professional query or one recognizable raw job description to
+`discover_candidates`, preserve the server's returned group order and evidence,
+and distinguish source interpretation, source execution, in-network
 qualification, network membership, and product-credit use.
 
 ## Reference
@@ -88,16 +89,26 @@ logic.
 Do not create a client-side supported-field allowlist. Do not label a safe
 professional criterion unsupported, verification-only, or external-only before
 the call. The server decides whether a faithful internal optimization applies;
-the complete request always remains authoritative for its bounded external
-lane.
+the server's effective request always remains authoritative for its bounded
+external lane.
 
-Block requests that use demographics or sensitive personal traits,
-compensation, work authorization or sponsorship, desired location or relocation
-intent, availability or job-search state, remote or work-style preferences,
-contact details, private-source data, or other sensitive/private criteria. If a
-request mixes safe professional intent with a prohibited criterion, do not
-strip the prohibited clause and search the remainder. Explain the boundary and
-ask for a revised request that omits it.
+Block direct people-search requests that use demographics or sensitive personal
+traits, compensation, work authorization or sponsorship, desired location or
+relocation intent, availability or job-search state, remote or work-style
+preferences, contact details, private-source data, or other sensitive/private
+criteria. If a direct request mixes safe professional intent with a prohibited
+criterion, do not strip the prohibited clause and search the remainder. Explain
+the boundary and ask for a revised request that omits it.
+
+A recognizable pasted job description is source material, not a direct
+candidate-criteria ledger. Ordinary JD sections may state office location,
+on-site or hybrid expectations, compensation, benefits, application steps, or
+interview process. Do not reinterpret those role facts as candidate willingness
+or private preferences, and do not block the raw-JD search merely because they
+appear. Send the source through the server-owned raw-JD mode, which compiles the
+effective professional search and discloses excluded context. Still block when
+the user separately and explicitly asks to source candidates by a prohibited
+trait rather than merely providing a JD that contains role logistics.
 
 Current professional location is allowed; desired future location and
 relocation intent are not. Keep current and previous roles separate, current
@@ -108,34 +119,53 @@ lack of a fixed field is never a reason to ask or refuse.
 
 ## Make one faithful call
 
-For an ordinary direct search, extract the complete safe professional request.
-For a confirmed conversational lookalike, use the explicit request constructed
-under Resolve conversational lookalikes. Pass the resulting request once as
-`discover_candidates.request`. Generate a fresh random UUID for
-`discover_candidates.requestId` for this deliberate search. Keep that UUID
-paired with the exact request, fixed 25-person target, and optional `projectId`
-for the current operation; never display it or reuse it for a different or
-changed search.
-Remove only surrounding Pluto invocation or answer-format instructions.
-Preserve every criterion and its original required or preferred wording,
-thresholds, exclusions, AND/OR/NOT operators, parentheses, and branch grouping.
+Choose the live input mode before the call:
+
+- For an ordinary recruiter-authored people query, pass the complete safe
+  professional query once as `discover_candidates.request` with
+  `requestType: search_request`. Remove only surrounding Pluto invocation or
+  answer-format instructions. Preserve every criterion and its original
+  required or preferred wording, thresholds, exclusions, AND/OR/NOT operators,
+  parentheses, and branch grouping.
+- When the user asks to match, search from, or find people for a recognizable
+  pasted job description, pass the raw JD once as
+  `discover_candidates.request` with `requestType: job_description`. Do not
+  summarize, shorten, sanitize, extract criteria from, or ask the user to
+  rewrite the JD. The server owns the grounded professional compilation and
+  length reduction.
+- For a confirmed conversational lookalike, use the explicit request
+  constructed under Resolve conversational lookalikes, pass it with
+  `requestType: search_request`, and include the seed's unchanged paired
+  `candidateRef` and `selectionToken` in `excludeCandidate`.
+
+Generate a fresh random UUID for `discover_candidates.requestId` for this
+deliberate search. Keep that UUID paired with the exact source text,
+`requestType`, fixed 25-person target, optional `projectId`, and any
+`excludeCandidate` for the current operation; never display it or reuse it for
+a different or changed search.
+
 Ordinary Unicode and whitespace canonicalization may occur at the server
 boundary; unchanged forwarding means no semantic or clause-level rewrite, not
 preservation of unusual spacing.
 
-Once a direct request is extracted or a lookalike request is confirmed, never
-paraphrase, summarize, expand abbreviations, split it across calls, compile it
-into known fields, or remove a clause to make it easier to search. In
-particular, forward `find me AI engineers with 1+ YoE in NYC` with that full
-request intact. A request made only of novel safe professional criteria is
-valid and must still call the tool; the server can skip the unfiltered
-TalentPluto pool and use its bounded external lane.
+Once a direct request is extracted, a lookalike request is confirmed, or a raw
+JD is recognized, never paraphrase, summarize, expand abbreviations, split the
+source across calls, compile it into known fields, or remove a clause to make
+it easier to search. In particular, forward
+`find me AI engineers with 1+ YoE in NYC` as a `search_request` with that full
+query intact. Forward a pasted multi-section JD as `job_description` even when
+it contains role logistics or exceeds the direct query limit. A direct request
+made only of novel safe professional criteria is valid and must still call the
+tool; the server can skip the unfiltered TalentPluto pool and use its bounded
+external lane.
 
-Follow the live input schema for request length. Omit `limit`: it is a
-compatibility field, and the current server normalizes every search to a fixed
-25-person target. It tries to return up to 15 in-network people, then fills the
-remaining slots with out-of-network profiles. The actual response may be
-shorter when there are not enough results or organization credits.
+Follow the live input schema for the separate direct-query and raw-JD length
+limits. A recognizable JD that fits the live raw-JD limit must not be shortened
+to the smaller direct-query limit. Omit `limit`: it is a compatibility field,
+and the current server normalizes every search to a fixed 25-person target. It
+tries to return up to 15 in-network people, then fills the remaining slots with
+out-of-network profiles. The actual response may be shorter when there are not
+enough results or organization credits.
 
 If the user requests a result count other than 25 or sets a lower result or
 credit cap, explain the fixed target and get confirmation before calling the
@@ -172,6 +202,15 @@ a failed search or invent omitted in-network candidates.
 
 Review every response component:
 
+- Require `searchInterpretation` and use its `request` as the exact effective
+  professional search when describing what Pluto searched. For
+  `requestType: job_description`, concisely disclose every returned
+  `excludedJobDescriptionContext` category and any
+  `preferredCurrentLocation`. Make clear that the location is a soft
+  current-location sourcing proxy, not evidence of willingness, relocation,
+  availability, or work-style preference. Do not reconstruct or second-guess
+  the server's compilation. A missing or unsafe interpretation is a
+  server/plugin contract mismatch.
 - Treat top-level `status` as source-execution coverage, not candidate
   qualification. Relay every material `notice` from a `partial` response and
   any other coverage limitation. Unknown or failed candidate criteria do not
@@ -263,10 +302,12 @@ reported.
 
 ## Present every candidate with evidence
 
-Lead with the request Pluto searched, the exact returned `creditsUsed` and
-`remainingCredits`, and any source-coverage limitation. State the exact In
-network, Out of network, and Network status unavailable counts across all
-distinct displayed results. Do not impose or report an arbitrary result floor.
+Lead with `searchInterpretation.request`, the exact returned `creditsUsed` and
+`remainingCredits`, and any source-coverage limitation. For a raw JD, add one
+concise sentence covering its returned exclusions and optional current-location
+proxy. State the exact In network, Out of network, and Network status
+unavailable counts across all distinct displayed results. Do not impose or
+report an arbitrary result floor.
 
 Render the three rich in-network arrays as separate sections in this order:
 Verified in-network matches, In-network candidates needing verification, and
