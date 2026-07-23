@@ -1,0 +1,26 @@
+{
+  "name": "talentpluto",
+  "owner": {
+    "name": "TalentPluto"
+  },
+  "metadata": {
+    "description": "TalentPluto's Pluto recruiting connector for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "pluto",
+      "source": "./plugins/pluto",
+      "description": "Use TalentPluto's live recruiting workflows through a stable, authenticated Pluto connection.",
+      "category": "productivity",
+      "keywords": [
+        "candidates",
+        "credits",
+        "candidate interest",
+        "candidate email",
+        "recruiting",
+        "pluto",
+        "mcp"
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "name": "pluto",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Use TalentPluto's live recruiting workflows through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"

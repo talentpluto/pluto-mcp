@@ -15,9 +15,9 @@ connection recovery.
 
 ## Recheck the live catalog once
 
-When Codex has not reported a specific authentication or initialization error,
-use the host's tool-discovery mechanism to refresh or reinspect Pluto's live
-tools once. If the host reports that Pluto startup is still in progress, wait
+When the host (Codex or Claude Code) has not reported a specific authentication
+or initialization error, use the host's tool-discovery mechanism to refresh or
+reinspect Pluto's live tools once. If the host reports that Pluto startup is still in progress, wait
 for that bounded startup attempt to finish before the recheck.
 
 If the required tool appears, resume the original feature skill and perform the
@@ -28,25 +28,27 @@ start another fresh task.
 ## Launch connection only for a confirmed authentication failure
 
 A missing tool by itself is not evidence that OAuth is invalid. Treat the
-problem as authentication only when Codex or Pluto explicitly reports that
+problem as authentication only when the host or Pluto explicitly reports that
 Pluto needs authentication, is disconnected, or has a saved authorization that
 is missing, expired, revoked, invalid, or no longer authorized.
 
-For a confirmed authentication failure, invoke Codex's host-provided
-**Connect Pluto** or **Reconnect Pluto** action once when it is available. This
-may open the user-visible TalentPluto OAuth flow; the user must complete sign-in,
-organization selection, and consent. Never choose or submit those decisions for
-the user.
+For a confirmed authentication failure, invoke the host's native connection
+action once when it is available: in Codex, the host-provided **Connect Pluto**
+or **Reconnect Pluto** action; in Claude Code, authenticating `pluto` from the
+`/mcp` menu. This may open the user-visible TalentPluto OAuth flow; the user
+must complete sign-in, organization selection, and consent. Never choose or
+submit those decisions for the user.
 
-If the host does not expose a native connection action, give the exact CLI
-fallback `codex mcp login pluto`. Do not execute the CLI login silently. After
-connection succeeds, ask for one new task so it receives Pluto's live tool
-catalog.
+If the host does not expose a native connection action, give the exact
+user-run fallback: `codex mcp login pluto` in Codex, or `/mcp` in Claude Code.
+Do not execute the login silently. After connection succeeds, ask for one new
+task so it receives Pluto's live tool catalog.
 
-Never run `codex mcp logout pluto` automatically. If Pluto explicitly reports a
-missing OAuth scope, explain that an existing refresh grant cannot acquire the
-new scope. Resetting Pluto's saved authorization is allowed only after the user
-deliberately approves that reset.
+Never reset Pluto's saved authorization automatically (Codex:
+`codex mcp logout pluto`; Claude Code: clearing authentication in `/mcp`). If
+Pluto explicitly reports a missing OAuth scope, explain that an existing
+refresh grant cannot acquire the new scope. Resetting Pluto's saved
+authorization is allowed only after the user deliberately approves that reset.
 
 ## Distinguish initialization from authentication
 
@@ -54,14 +56,14 @@ If no explicit authentication error exists after the single catalog recheck,
 describe the problem as Pluto initialization or tool availability, not as
 expired authentication.
 
-For a task that was already open when a new Pluto capability was deployed, ask
-for at most one fresh task. If the current task is already fresh or the user
-already tried that recovery, do not repeat it. Ask the user to fully restart
-Codex once and retry after restart. Reconnect only if Codex then reports an
-authentication failure.
+For a task or session that was already open when a new Pluto capability was
+deployed, ask for at most one fresh one. If the current task is already fresh
+or the user already tried that recovery, do not repeat it. Ask the user to
+fully restart the host once and retry after restart. Reconnect only if the
+host then reports an authentication failure.
 
 If the host exposes a safe action that reloads only the failed Pluto MCP
-connection, invoke it once before asking for a full Codex restart, then perform
+connection, invoke it once before asking for a full host restart, then perform
 the single catalog recheck above.
 
 ## Report the recovery result

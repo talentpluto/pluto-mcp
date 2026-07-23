@@ -1,13 +1,14 @@
 # Pluto
 
-Pluto connects Codex to TalentPluto. Install it once, sign in, and ask for
-recruiting help in plain English.
+Pluto connects your coding agent — OpenAI Codex or Claude Code — to
+TalentPluto. Install it once, sign in, and ask for recruiting help in plain
+English.
 
 ## Before you start
 
 You need:
 
-- Codex desktop or the Codex CLI
+- Codex desktop, the Codex CLI, or Claude Code
 - A TalentPluto account whose organization has Pluto access
 
 ## Install
@@ -31,7 +32,22 @@ codex mcp login pluto
 
 Then start a new Codex session.
 
+### Claude Code
+
+Run these once inside Claude Code:
+
+```text
+/plugin marketplace add talentpluto/pluto-mcp
+/plugin install pluto@talentpluto
+```
+
+Then run `/mcp`, select **pluto**, and complete the TalentPluto sign-in in the
+browser window it opens. Start a new session afterward.
+
 ## Try it
+
+The `@pluto` mention below is Codex syntax; in Claude Code, just ask in plain
+language ("Use Pluto to find AI engineers…").
 
 ```text
 @pluto Find AI engineers with 1+ years of professional experience in New York.
@@ -84,20 +100,32 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
 
 1. Pluto rechecks its live tool catalog once before asking you to recover
    anything.
-2. If a tool is missing from a task that predates a server update, start one new
-   task. Do not keep creating tasks if the new one has the same problem.
-3. If Codex explicitly asks you to sign in, use **Connect Pluto** in Codex
-   Desktop. The CLI fallback is `codex mcp login pluto`.
-4. If a fresh task still has no Pluto tools and Codex shows no authentication
-   error, fully restart Codex once. Do not reconnect or clear authorization for
-   an initialization failure.
+2. If a tool is missing from a task or session that predates a server update,
+   start one new one. Do not keep creating tasks if the new one has the same
+   problem.
+3. If your client explicitly asks you to sign in: in Codex Desktop use
+   **Connect Pluto** (CLI fallback `codex mcp login pluto`); in Claude Code run
+   `/mcp` and authenticate **pluto**.
+4. If a fresh task or session still has no Pluto tools and the client shows no
+   authentication error, fully restart the client once. Do not reconnect or
+   clear authorization for an initialization failure.
 
 Normal server updates do not require reinstalling Pluto or signing in again.
 
 ## For maintainers
 
-The connection is defined in `plugins/pluto/.mcp.json`; bundled guidance lives
-in `plugins/pluto/skills`. Keep the `pluto` server name, URL, OAuth resource,
-scopes, compatibility headers, and install-time authentication policy stable.
-Ship routine capabilities from the TalentPluto MCP server, and update the
-plugin version only when bundled plugin guidance changes.
+The plugin ships dual packaging over one shared `plugins/pluto` directory.
+Codex reads `.agents/plugins/marketplace.json`,
+`plugins/pluto/.codex-plugin/plugin.json`, and `plugins/pluto/.mcp.json`.
+Claude Code reads `.claude-plugin/marketplace.json` and
+`plugins/pluto/.claude-plugin/plugin.json`, whose inline MCP config
+intentionally omits the Codex-only OAuth compatibility header; Claude Code
+discovers OAuth scopes and the resource from the server's metadata. Bundled
+guidance lives in `plugins/pluto/skills` and is shared by both clients, so
+keep it client-neutral.
+
+Keep the `pluto` server name, URL, OAuth resource, scopes, compatibility
+headers, and install-time authentication policy stable, and keep the two
+plugin manifests' name, version, and server URL in sync. Ship routine
+capabilities from the TalentPluto MCP server, and update the plugin version
+only when bundled plugin guidance changes.
