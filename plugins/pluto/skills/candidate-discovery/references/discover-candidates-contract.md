@@ -2,19 +2,27 @@
 
 ## Choose the source type without rewriting it
 
-`discover_candidates` accepts one source string in `request`, its matching
-`requestType`, a required UUID `requestId`, a compatibility `limit`, and an
-optional authorized TalentPluto `projectId`. For a confirmed conversational
-lookalike search it also accepts optional `excludeCandidate` containing the
-selected seed's `candidateRef` and `selectionToken`.
+`discover_candidates` accepts `request`, a required UUID `requestId`, a
+compatibility `limit`, and an optional authorized TalentPluto `projectId`. For
+a confirmed conversational lookalike search it also accepts optional
+`excludeCandidate` containing the selected seed's `candidateRef` and
+`selectionToken`.
 
-Use `requestType: search_request` for an ordinary recruiter-authored people
-query or a confirmed conversational lookalike's explicit professional request.
-Use `requestType: job_description` when the user asks to match, search from, or
-find people for a recognizable pasted JD. Forward the selected source unchanged
-after removing only surrounding Pluto invocation or answer-format text. Never
-compile or shorten a raw JD client-side; the server returns its grounded
-professional compilation in `searchInterpretation.request`.
+Use the complete professional query string as `request` for an ordinary
+recruiter-authored people query or a confirmed conversational lookalike. When
+the user asks to match, search from, or find people for a recognizable pasted
+JD, use:
+
+```yaml
+request:
+  type: job_description
+  text: <the unchanged raw JD>
+```
+
+Forward the selected source unchanged after removing only surrounding Pluto
+invocation or answer-format text. Never compile or shorten a raw JD
+client-side; the server returns its grounded professional compilation in
+`searchInterpretation.request`.
 
 Raw job descriptions commonly contain role location and work arrangement,
 compensation, benefits, application instructions, interview steps, employer
@@ -35,14 +43,14 @@ raw-JD mode.
 
 ## The effective request is authoritative
 
-For `search_request`, pass the safe professional query without a semantic or
-clause-level rewrite. Preserve required versus preferred wording, thresholds,
-exclusions, AND/OR/NOT operators, parentheses, and branch grouping. For
-`job_description`, the server-owned `searchInterpretation.request` is the
-effective safe professional query used by retrieval and qualification. The
-server NFKC-normalizes, trims, and collapses whitespace at the relevant
-boundary, so unchanged forwarding is semantic rather than byte-for-byte
-preservation of unusual spacing.
+For a direct request string, pass the safe professional query without a
+semantic or clause-level rewrite. Preserve required versus preferred wording,
+thresholds, exclusions, AND/OR/NOT operators, parentheses, and branch grouping.
+For a tagged JD request object, the server-owned
+`searchInterpretation.request` is the effective safe professional query used by
+retrieval and qualification. The server NFKC-normalizes, trims, and collapses
+whitespace at the relevant boundary, so unchanged forwarding is semantic
+rather than byte-for-byte preservation of unusual spacing.
 
 Do not translate the request into a client-side constraint ledger or fixed
 filters. The server may derive current title, current location, sales
@@ -209,7 +217,7 @@ the entire call. Do not remove the prohibited clause and silently run a
 different search. Ask the user for a revised request containing only the safe
 professional intent. This rule does not turn ordinary role logistics inside a
 recognizable raw JD into candidate preferences; send that source through
-`job_description` and use the server's disclosed compilation.
+the tagged JD request object and use the server's disclosed compilation.
 
 ## Server routing does not change client intent
 
@@ -361,7 +369,7 @@ of allowed criteria:
 | `Find backend engineers in NYC excluding current Google employees and NOT Java-only developers` | Preserve both exclusions and negation in the one request. Do not turn them into positive employer or skill filters. |
 | `Find AI engineers, preferably with published work on model evaluation` | Preserve `preferably`; do not turn the publication preference into a required criterion. |
 | `Find more candidates like Tarun Bobbili` after Tarun was returned earlier | Ask one focused question about returned public professional attributes and make no tool call. After confirmation, call once with a name-free explicit request and Tarun's unchanged paired handles in `excludeCandidate`. |
-| `Find people who match this JD: [recognizable multi-section job description]` | Call once with the raw source in `request` and `requestType: job_description`. Do not refuse because the JD contains office, compensation, benefits, or interview-process text. Report the returned effective request and exclusions. |
+| `Find people who match this JD: [recognizable multi-section job description]` | Call once with `request` set to `{ type: "job_description", text: "<the unchanged raw JD>" }`. Do not refuse because the JD contains office, compensation, benefits, or interview-process text. Report the returned effective request and exclusions. |
 | `Find female AI engineers in NYC` | Do not call. Demographics are prohibited; ask for a revised professional-only request. |
 | `Find AI engineers in NYC who are willing to relocate and can start next week` | Do not strip the relocation and availability clauses. Block the whole call and ask for a revised request. |
 | `Find jane@example.com using the confidential candidate resume` | Do not call. Contact details and private-source criteria are prohibited; do not search a weakened remainder. |

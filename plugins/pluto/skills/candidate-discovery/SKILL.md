@@ -122,27 +122,32 @@ lack of a fixed field is never a reason to ask or refuse.
 Choose the live input mode before the call:
 
 - For an ordinary recruiter-authored people query, pass the complete safe
-  professional query once as `discover_candidates.request` with
-  `requestType: search_request`. Remove only surrounding Pluto invocation or
-  answer-format instructions. Preserve every criterion and its original
-  required or preferred wording, thresholds, exclusions, AND/OR/NOT operators,
-  parentheses, and branch grouping.
+  professional query once as the `discover_candidates.request` string. Remove
+  only surrounding Pluto invocation or answer-format instructions. Preserve
+  every criterion and its original required or preferred wording, thresholds,
+  exclusions, AND/OR/NOT operators, parentheses, and branch grouping.
 - When the user asks to match, search from, or find people for a recognizable
   pasted job description, pass the raw JD once as
-  `discover_candidates.request` with `requestType: job_description`. Do not
-  summarize, shorten, sanitize, extract criteria from, or ask the user to
-  rewrite the JD. The server owns the grounded professional compilation and
+  `discover_candidates.request`:
+
+  ```yaml
+  type: job_description
+  text: <the unchanged raw JD>
+  ```
+
+  Do not summarize, shorten, sanitize, extract criteria from, or ask the user
+  to rewrite the JD. The server owns the grounded professional compilation and
   length reduction.
 - For a confirmed conversational lookalike, use the explicit request
-  constructed under Resolve conversational lookalikes, pass it with
-  `requestType: search_request`, and include the seed's unchanged paired
-  `candidateRef` and `selectionToken` in `excludeCandidate`.
+  constructed under Resolve conversational lookalikes, pass it as the
+  `request` string, and include the seed's unchanged paired `candidateRef` and
+  `selectionToken` in `excludeCandidate`.
 
 Generate a fresh random UUID for `discover_candidates.requestId` for this
-deliberate search. Keep that UUID paired with the exact source text,
-`requestType`, fixed 25-person target, optional `projectId`, and any
-`excludeCandidate` for the current operation; never display it or reuse it for
-a different or changed search.
+deliberate search. Keep that UUID paired with the exact `request` value, fixed
+25-person target, optional `projectId`, and any `excludeCandidate` for the
+current operation; never display it or reuse it for a different or changed
+search.
 
 Ordinary Unicode and whitespace canonicalization may occur at the server
 boundary; unchanged forwarding means no semantic or clause-level rewrite, not
@@ -152,12 +157,12 @@ Once a direct request is extracted, a lookalike request is confirmed, or a raw
 JD is recognized, never paraphrase, summarize, expand abbreviations, split the
 source across calls, compile it into known fields, or remove a clause to make
 it easier to search. In particular, forward
-`find me AI engineers with 1+ YoE in NYC` as a `search_request` with that full
-query intact. Forward a pasted multi-section JD as `job_description` even when
-it contains role logistics or exceeds the direct query limit. A direct request
-made only of novel safe professional criteria is valid and must still call the
-tool; the server can skip the unfiltered TalentPluto pool and use its bounded
-external lane.
+`find me AI engineers with 1+ YoE in NYC` as the full `request` string. Forward
+a pasted multi-section JD in the tagged JD request object even when it contains
+role logistics or exceeds the direct-query limit. A direct request made only of
+novel safe professional criteria is valid and must still call the tool; the
+server can skip the unfiltered TalentPluto pool and use its bounded external
+lane.
 
 Follow the live input schema for the separate direct-query and raw-JD length
 limits. A recognizable JD that fits the live raw-JD limit must not be shortened
