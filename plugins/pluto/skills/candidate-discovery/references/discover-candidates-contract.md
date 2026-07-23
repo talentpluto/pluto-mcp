@@ -99,8 +99,8 @@ another external candidate source to replace, supplement, or bypass Pluto
 discovery.
 
 The server atomically limits displayed in-network results to the credits it can
-reserve, prioritizing verified candidates, then unverified candidates, then
-near matches. Free out-of-network profiles fill remaining capacity toward the
+reserve, prioritizing verified candidates, then near matches, then unverified
+candidates. Free out-of-network profiles fill remaining capacity toward the
 fixed 25-person target and remain available at a low or depleted balance. Relay
 the bounded credit notice and present those profiles; do not call an
 external-only response a failed search or fabricate omitted in-network people.
@@ -298,12 +298,17 @@ criterion. Preferred criteria remain preferences and must not be upgraded into
 required qualification claims.
 
 `candidateReportedHighlights` are candidate-reported, unverified context, not
-independent verification. Label them whenever used. The `fitEvidence` field is
-reserved compatibility output and does not authorize exposing private client
-preferences. Recorded `salesSegments` and `totalYearsSalesExperience` mean only
-what they state; missing, empty, or null means unavailable. Never estimate
-general experience from title seniority, graduation year, role count, or time
-since education.
+independent verification. Label them whenever used. A `matchReasons` item
+beginning with `Client preference fit:` is the only client-preference-backed
+rationale eligible for display. It pairs a positive structured preference with
+supporting TalentPluto candidate evidence and is the primary source for
+`Why this person`; use only the bounded text returned by the server. Never
+reconstruct raw preference details, negative preferences, source actions, or
+private analysis. The `fitEvidence` field is reserved compatibility output and
+does not authorize exposing private client preferences. Recorded
+`salesSegments` and `totalYearsSalesExperience` mean only what they state;
+missing, empty, or null means unavailable. Never estimate general experience
+from title seniority, graduation year, role count, or time since education.
 
 Preserve each array and its returned order exactly. Do not create a replacement
 ranking, merge groups, or display a legacy fit score, percentage, or numeric
@@ -323,21 +328,24 @@ verification, and In-network near matches sections in that order. Every
 non-empty rich in-network table uses:
 
 ```markdown
-| Candidate | Match | Current role | Location | Why this person | Evidence gaps |
-| --- | --- | --- | --- | --- | --- |
+| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- | --- |
 ```
 
 Make every candidate name a link to the validated returned `profileUrl`. Map
-the three sections to Verified match, Needs verification, and Near match. The
-section heading establishes that each is In network. Build Current role only
-from returned current-title and current-company data, do not infer missing role
-or location data, and escape table-breaking Markdown in returned text.
+the three sections to Verified match, Needs verification, and Near match. Put
+In network beside every candidate name in the Network column; do not rely on
+the section heading alone. Build Current role only from returned current-title
+and current-company data, do not infer missing role or location data, and
+escape table-breaking Markdown in returned text.
 
 Every rich in-network candidate needs a concise, candidate-specific
-`Why this person` cell. Prefer verified criterion-evaluation explanations and
-evidence labels, then relevant `matchReasons`, recorded sales context, and
-candidate-reported highlights. Label candidate-reported evidence as unverified
-and never use a returned gap as a positive reason.
+`Why this person` cell. When `matchReasons` contains one or more
+`Client preference fit:` items, lead with those returned reasons as the source
+of truth for client fit. Otherwise use verified criterion-evaluation
+explanations and evidence labels, then other relevant `matchReasons`, recorded
+sales context, and candidate-reported highlights. Label candidate-reported
+evidence as unverified and never use a returned gap as a positive reason.
 
 Put every unresolved and failed returned criterion in Evidence gaps with the
 labels defined above. Use None only when all gap fields are empty.

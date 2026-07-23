@@ -20,8 +20,8 @@ criteria or a result has evidence gaps.
 ## Confirm Pluto is available
 
 Before promising or attempting candidate discovery, confirm that the current
-task exposes Pluto's `discover_candidates` MCP tool. Loading this skill alone
-does not prove that Pluto initialized successfully.
+host context exposes Pluto's `discover_candidates` MCP tool. Loading this skill
+alone does not prove that Pluto initialized successfully.
 
 If the tool is absent, do not search through another candidate source, call the
 MCP endpoint directly, or imply that a search ran. Follow the
@@ -237,7 +237,8 @@ Review every response component:
   network, Out of network, and Network status unavailable. Network membership
   is not raw provider provenance, and the provider must not be named.
 - For rich in-network candidates, use `criterionEvaluations` as the primary
-  evidence ledger. Use each returned `criterionText`, `status`, `explanation`,
+  qualification ledger for the recruiter request, not as evidence of client
+  preference fit. Use each returned `criterionText`, `status`, `explanation`,
   and relevant evidence labels without rewriting their meaning. A
   `verified` evaluation is established, `unknown` is unresolved, and `failed`
   is known not to match. Do not expose evidence IDs or evaluator internals.
@@ -253,7 +254,11 @@ Review every response component:
   construct, search for, or infer a LinkedIn URL. A missing or invalid
   `profileUrl` is a server/plugin contract mismatch; report it rather than
   presenting a partial shortlist as complete.
-- Use `matchReasons` only for facts they explicitly establish. Treat
+- Use `matchReasons` only for facts they explicitly establish. An item beginning
+  with `Client preference fit:` is the only client-preference-backed rationale
+  and is the primary source for `Why this person`. Use only the bounded reason
+  the server returned; do not reconstruct raw preference details, negative
+  preferences, source actions, or private analysis. Treat
   `candidateReportedHighlights` as candidate-reported, unverified supporting
   context and label it that way. `fitEvidence` is a reserved compatibility
   field and must not be used as client-specific evidence. A missing or empty
@@ -320,22 +325,25 @@ In-network near matches. Preserve server order within every section. Every
 non-empty in-network table uses this compact shape:
 
 ```markdown
-| Candidate | Match | Current role | Location | Why this person | Evidence gaps |
-| --- | --- | --- | --- | --- | --- |
+| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
+| --- | --- | --- | --- | --- | --- | --- |
 ```
 
-The section heading already establishes that these candidates are In network.
-Use Verified match, Needs verification, and Near match for the three sections.
-Build Current role only from returned current-title and current-company fields,
-and do not infer unavailable role or location values. Escape table-breaking
-Markdown in all returned text. A names-only table is never sufficient.
+Put In network beside every candidate name in the Network column; do not rely
+on the section heading alone. Use Verified match, Needs verification, and Near
+match for the three sections. Build Current role only from returned
+current-title and current-company fields, and do not infer unavailable role or
+location values. Escape table-breaking Markdown in all returned text. A
+names-only table is never sufficient.
 
 Give every in-network candidate one concise, candidate-specific
-`Why this person` cell. Prefer verified `criterionEvaluations` and their
-evidence labels, then relevant `matchReasons`, recorded sales experience and
-segments, and candidate-reported highlights. Label candidate-reported
-highlights as unverified. Never use an unknown, failed, missing, or unverified
-criterion as a positive reason.
+`Why this person` cell. When `matchReasons` contains one or more
+`Client preference fit:` items, lead with those returned reasons as the source
+of truth for client fit. Otherwise use verified `criterionEvaluations` and
+their evidence labels, then other relevant `matchReasons`, recorded sales
+experience and segments, and candidate-reported highlights. Label
+candidate-reported highlights as unverified. Never use an unknown, failed,
+missing, or unverified criterion as a positive reason.
 
 Put every unresolved or failed criterion in Evidence gaps using the labels
 defined above. Use None only when every returned gap field is empty. Never

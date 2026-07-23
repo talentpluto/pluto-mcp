@@ -11,12 +11,12 @@ and safety rules for that capability.
 
 ## Route from the live contract
 
-Inspect the Pluto MCP tools exposed in the current task. Treat each live tool's
-name, description, and input schema as its authoritative runtime contract. Use
-annotations as declared behavioral hints, not as a substitute for the tool
-description or result. Choose a tool only when the live contract clearly
-matches the user's request, and supply only fields supported by its current
-schema.
+Inspect the Pluto MCP tools exposed in the current host context. Treat each live
+tool's name, description, and input schema as its authoritative runtime
+contract. Use annotations as declared behavioral hints, not as a substitute for
+the tool description or result. Choose a tool only when the live contract
+clearly matches the user's request, and supply only fields supported by its
+current schema.
 
 Never invent a tool, argument, identifier, capability, or result. Do not call
 the MCP endpoint directly or silently switch to another recruiting system when
@@ -41,12 +41,12 @@ tool contract.
 
 If a required Pluto tool is missing or unusable, follow the
 `connection-recovery` skill. It owns the single live-catalog recheck,
-authentication handoff, initialization recovery, and fresh-task limit. Return
-to this routing skill if recovery exposes a suitable live tool.
+authentication handoff, initialization recovery, and fresh-task-or-session
+limit. Return to this routing skill if recovery exposes a suitable live tool.
 
-Do not diagnose authentication from a missing tool alone, repeat fresh-task
-advice, reinstall Pluto, or clear saved authorization as a generic recovery
-step.
+Do not diagnose authentication from a missing tool alone, repeat
+fresh-task-or-session advice, reinstall Pluto, or clear saved authorization as
+a generic recovery step.
 
 ## Report the outcome
 
