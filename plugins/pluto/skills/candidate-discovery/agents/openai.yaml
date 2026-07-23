@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate discovery"
-  short_description: "Find and assess candidates with Pluto"
-  default_prompt: "Use $candidate-discovery to find and assess candidates with Pluto."
+  short_description: "Run open-world candidate searches with Pluto"
+  default_prompt: "Use $candidate-discovery to forward my complete safe professional search request once and assess every result with its returned evidence gaps."
 
 dependencies:
   tools:

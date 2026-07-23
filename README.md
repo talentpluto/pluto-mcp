@@ -41,12 +41,41 @@ Normal Pluto features, fixes, and tool updates are delivered by the live
 TalentPluto MCP server. They do not require users to upgrade or reinstall the
 plugin, log out, or repeat OAuth consent.
 
+A versioned change to Pluto's bundled client guidance is the narrow exception:
+the server cannot replace a skill already installed on the user's machine. The
+open-world discovery contract in Pluto 0.1.9 requires the one-time plugin
+refresh below, but it does not change the connection or permission boundary.
+
 Keep using Pluto normally after an update. A task that was already open may
 retain its original tool catalog; if a newly deployed capability is not visible,
 start a fresh task. Restart Codex only when Codex reports an initialization or
 cache problem. Reconnect only when Codex explicitly reports that Pluto's saved
 authorization is missing, expired, revoked, invalid, or lacks a newly required
 permission.
+
+### One-time discovery skill refresh from 0.1.8 or earlier
+
+Pluto 0.1.9 replaces the fixed-filter discovery skill with the open-world
+`discover_candidates` contract. Refresh the TalentPluto marketplace, install
+the new Pluto plugin, and start a fresh task so Codex loads the new skill.
+
+In Codex desktop, refresh the `talentpluto/pluto-mcp` marketplace and install or
+update **Pluto**, then start a fresh task. For the CLI, run:
+
+```bash
+codex plugin marketplace upgrade talentpluto
+codex plugin add pluto@talentpluto
+```
+
+Then start a new Codex session. Do not log out, reconnect, or repeat OAuth
+consent for this discovery update. Pluto 0.1.9 keeps the existing
+`candidates:read`, `candidates:outbound`, and `offline_access` scopes; discovery
+continues to use `candidates:read`.
+
+Users upgrading from 0.1.6 or earlier must also follow the separate outbound
+permission migration below if they will use candidate interest. That pre-existing
+scope addition, not the discovery-contract update, requires a user-directed
+reconnect.
 
 ### One-time migration from 0.1.6 or earlier
 
@@ -75,7 +104,13 @@ new task.
 ### Discover candidates
 
 ```text
-@pluto Find account executives in New York with at least three years of experience.
+@pluto Find AI engineers with 1+ years of professional experience in New York.
+```
+
+Pluto also preserves novel professional criteria and Boolean grouping:
+
+```text
+@pluto Find either (platform engineers in NYC who use Kafka) or (SREs in Chicago who hold CKA certification), excluding current Acme employees.
 ```
 
 ### Check credits
@@ -147,7 +182,8 @@ Pluto connects to `https://app.talentpluto.com/api/mcp` with OAuth. This
 repository contains no credentials or API keys. Keep the MCP server name, URL,
 OAuth resource, scopes, and compatibility headers stable. Ship routine feature
 work from the server; change the plugin connection only when the connector or
-its permission boundary genuinely changes. Keep server tool descriptions,
-schemas, side effects, costs, retry behavior, privacy boundaries, and output
-semantics self-contained and backward compatible so installed plugins do not
-need a matching release.
+its permission boundary genuinely changes. When a server change deliberately
+replaces bundled behavioral guidance, update the plugin skill and version
+without changing the connector or forcing OAuth reconnection. Keep server tool
+descriptions, schemas, side effects, costs, retry behavior, privacy boundaries,
+and output semantics self-contained and backward compatible wherever possible.
