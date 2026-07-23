@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto private candidate question"
+  short_description: "Ask one bounded question about a selected candidate"
+  default_prompt: "Use $candidate-question to ask my single question unchanged about the in-network candidate I explicitly selected, and return only Pluto's bounded privacy-safe answer."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated TalentPluto recruiting MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"

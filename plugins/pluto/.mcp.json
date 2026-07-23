@@ -6,6 +6,7 @@
       "scopes": [
         "candidates:read",
         "candidates:outbound",
+        "candidates:private_assess",
         "offline_access"
       ],
       "oauth_resource": "https://app.talentpluto.com/api/mcp",

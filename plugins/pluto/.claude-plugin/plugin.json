@@ -1,6 +1,6 @@
 {
   "name": "pluto",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Use TalentPluto's live recruiting workflows through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
@@ -11,6 +11,8 @@
     "credits",
     "candidate interest",
     "candidate email",
+    "candidate questions",
+    "private assessment",
     "recruiting",
     "pluto",
     "mcp"
@@ -18,7 +20,10 @@
   "mcpServers": {
     "pluto": {
       "type": "http",
-      "url": "https://app.talentpluto.com/api/mcp"
+      "url": "https://app.talentpluto.com/api/mcp",
+      "oauth": {
+        "scopes": "candidates:read candidates:outbound candidates:private_assess offline_access"
+      }
     }
   }
 }
