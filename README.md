@@ -133,6 +133,20 @@ discovers OAuth scopes and the resource from the server's metadata. Bundled
 guidance lives in `plugins/pluto/skills` and is shared by both clients, so
 keep it client-neutral.
 
+Anthropic's OAuth callback differs by client surface:
+
+- Hosted Claude and Claude Desktop use the exact callback
+  `https://claude.ai/api/mcp/auth_callback`. Keep it and Anthropic's documented
+  future callback, `https://claude.com/api/mcp/auth_callback`, in the production
+  `CANDIDATE_MCP_OAUTH_REDIRECT_URI_ALLOWLIST`.
+- Claude Code uses `http://localhost:<port>/callback`. Keep the portless
+  `http://localhost/callback` template in
+  `CANDIDATE_MCP_OAUTH_LOOPBACK_REDIRECT_URI_ALLOWLIST`.
+
+If hosted Claude suggests adding an OAuth Client ID during registration,
+verify the exact callback allowlist and redeploy the server. Pluto supports
+dynamic client registration, so a static Client ID is not the normal recovery.
+
 Keep the `pluto` server name, URL, OAuth resource, scopes, compatibility
 headers, and install-time authentication policy stable, and keep the two
 plugin manifests' name, version, and server URL in sync. Ship routine
