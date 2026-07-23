@@ -1,6 +1,6 @@
 {
   "name": "pluto",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Use TalentPluto's live recruiting workflows through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
@@ -10,6 +10,8 @@
     "credits",
     "candidate interest",
     "candidate email",
+    "candidate questions",
+    "private assessment",
     "recruiting",
     "pluto",
     "mcp"
@@ -31,6 +33,7 @@
       "Find AI engineers with 1+ years of professional experience in New York.",
       "Find people who match this pasted job description.",
       "How many Pluto credits do I have left, and when do they reset?",
+      "Ask whether the selected in-network candidate's recorded preference is compatible with a $180,000 annual base salary.",
       "Get the available professional email for the out-of-network candidate I selected.",
       "Continue with the candidate and role I selected in Pluto."
     ],

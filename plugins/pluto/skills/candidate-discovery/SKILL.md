@@ -1,6 +1,6 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, shortlist, compare, rank, or assess candidates with discover_candidates, including from a pasted raw JD. Preserves direct open-world professional search intent, routes raw JDs through server-owned compilation, handles the fixed 25-person target, blocks explicit private criteria, and presents all four qualification groups without overclaiming compact out-of-network profiles.
+description: Use when a user asks Pluto to find, shortlist, compare, rank, or qualify candidates from a professional search or pasted raw JD with discover_candidates. Does not handle private questions about one selected in-network candidate. Preserves direct open-world professional search intent, routes raw JDs through server-owned compilation, handles the fixed 25-person target, blocks explicit private criteria, and presents all four qualification groups without overclaiming compact out-of-network profiles.
 ---
 
 # Candidate discovery
@@ -10,6 +10,11 @@ professional query or one recognizable raw job description to
 `discover_candidates`, preserve the server's returned group order and evidence,
 and distinguish source interpretation, source execution, in-network
 qualification, network membership, and product-credit use.
+
+If the user asks one supported private question about an explicitly selected
+in-network candidate, use the `candidate-question` skill instead. Never add that
+private criterion to a discovery request or use private answers to filter,
+rerank, compare, or qualify candidates.
 
 ## Reference
 

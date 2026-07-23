@@ -65,6 +65,10 @@ language ("Use Pluto to find AI engineers…").
 After Pluto returns candidates, you can select one and ask:
 
 ```text
+@pluto Is this in-network candidate's recorded preference compatible with a $180,000 annual base salary?
+```
+
+```text
 @pluto Get the available professional email for this out-of-network candidate.
 ```
 
@@ -76,8 +80,9 @@ After Pluto returns candidates, you can select one and ask:
 
 | Ask Pluto to | MCP tool |
 | --- | --- |
-| Find and assess candidates | `discover_candidates` |
+| Find and qualify candidates against professional criteria | `discover_candidates` |
 | Check the shared organization credit balance | `get_credit_balance` |
+| Ask one bounded private question about a selected in-network candidate | `answer_candidate_question` |
 | Get the professional email for a selected out-of-network candidate | `enrich_candidate_email` |
 | Add a selected in-network candidate to a role's prospecting flow | `express_candidate_interest` |
 
@@ -90,6 +95,9 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   A search can return fewer people when matches or credits are limited.
 - Each returned in-network candidate uses one shared organization credit.
   Out-of-network search results are free.
+- A private candidate question is free and does not change candidate or
+  pipeline records. Pluto answers only from the supported bounded catalog and
+  never returns raw private values.
 - An out-of-network email lookup uses one credit only when an email is safely
   stored and returned. Pluto does not send outreach.
 - Expressing interest in an in-network candidate can update the TalentPluto
@@ -100,6 +108,11 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   sensitive or private criteria such as demographics, compensation, work
   authorization, relocation intent, availability, work-style preferences, and
   private notes or resumes.
+- After an in-network candidate is explicitly selected, Pluto can answer one
+  bounded question about a proposed annual USD base salary or OTE, recorded US
+  work authorization or countryless sponsorship needs, recorded job-search
+  status, general relocation willingness, or one work arrangement. The
+  candidate must have a visible active relationship and current consent.
 - A pasted raw JD can include ordinary office, compensation, benefits, and
   interview-process text. Pluto derives the professional candidate-search
   brief server-side, reports what it searched, and discloses context it
@@ -119,7 +132,10 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
    authentication error, fully restart the client once. Do not reconnect or
    clear authorization for an initialization failure.
 
-Normal server updates do not require reinstalling Pluto or signing in again.
+Normal server updates do not require reinstalling Pluto or signing in again. A
+connector release that adds an OAuth permission is different: after updating,
+an existing grant needs one deliberate reauthorization before the newly scoped
+tool can run.
 
 ## For maintainers
 
@@ -128,10 +144,10 @@ Codex reads `.agents/plugins/marketplace.json`,
 `plugins/pluto/.codex-plugin/plugin.json`, and `plugins/pluto/.mcp.json`.
 Claude Code reads `.claude-plugin/marketplace.json` and
 `plugins/pluto/.claude-plugin/plugin.json`, whose inline MCP config
-intentionally omits the Codex-only OAuth compatibility header; Claude Code
-discovers OAuth scopes and the resource from the server's metadata. Bundled
-guidance lives in `plugins/pluto/skills` and is shared by both clients, so
-keep it client-neutral.
+pins the same OAuth permission set, intentionally omits the Codex-only OAuth
+compatibility header, and discovers the resource from the server's metadata.
+Bundled guidance lives in `plugins/pluto/skills` and is shared by both clients,
+so keep it client-neutral.
 
 Anthropic's OAuth callback differs by client surface:
 
