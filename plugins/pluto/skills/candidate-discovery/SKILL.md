@@ -23,25 +23,10 @@ task exposes Pluto's `discover_candidates` MCP tool. Loading this skill alone
 does not prove that Pluto initialized successfully.
 
 If the tool is absent, do not search through another candidate source, call the
-MCP endpoint directly, or imply that a search ran. Report the applicable state
-and recovery step concisely:
-
-- If Codex requests authentication or reports Pluto as disconnected, say that
-  Pluto authentication is required. Ask the user to connect Pluto, then start a
-  new task.
-- If Pluto reports an initialization error, say that Pluto failed to initialize.
-  Ask the user to start a fresh task and restart Codex only if the error
-  persists. Reconnect only when Codex reports that the saved authorization is
-  missing, expired, revoked, invalid, or no longer authorized.
-- If Pluto is connected and no explicit error is available, ask the user to
-  start one fresh task to refresh the live tool catalog. If the tool remains
-  absent, report that candidate discovery is currently unavailable; do not
-  recommend upgrading, reinstalling, or reconnecting Pluto for a missing tool
-  alone.
-
-Never run `codex mcp logout pluto` automatically. A logout/login reset is a
-user-directed last resort for genuinely invalid credentials, not a normal
-startup step.
+MCP endpoint directly, or imply that a search ran. Follow the
+`connection-recovery` skill for `discover_candidates`. If recovery exposes the
+tool, continue this skill with the original request. Otherwise report that no
+search ran and no credits were used.
 
 ## Classify only the safety boundary
 

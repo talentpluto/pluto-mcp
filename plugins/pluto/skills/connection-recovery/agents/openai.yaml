@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto connection recovery"
+  short_description: "Recover a missing or disconnected Pluto tool"
+  default_prompt: "Use $connection-recovery to distinguish Pluto initialization from authentication, recheck once, and launch native connection only for a confirmed auth failure."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated TalentPluto recruiting MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"
