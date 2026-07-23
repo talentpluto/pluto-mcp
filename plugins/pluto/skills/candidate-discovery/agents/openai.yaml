@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate discovery"
   short_description: "Run evidence-qualified candidate searches"
-  default_prompt: "Use $candidate-discovery to forward my complete safe professional search once, supply a fresh request ID, and present all four returned result groups with their exact evidence and credit accounting."
+  default_prompt: "Use $candidate-discovery to forward my complete safe professional query or raw JD once, supply a fresh request ID, report the server's effective search interpretation, and present all four returned result groups with their exact evidence and credit accounting."
 
 dependencies:
   tools:
