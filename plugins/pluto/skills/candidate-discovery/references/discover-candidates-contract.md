@@ -3,7 +3,7 @@
 ## The complete request is authoritative
 
 `discover_candidates` accepts one complete natural-language recruiter request
-in `request`, a required UUID `requestId`, an optional result `limit`, and an
+in `request`, a required UUID `requestId`, a compatibility `limit`, and an
 optional authorized TalentPluto `projectId`. Pass the safe professional search
 request without a semantic or clause-level rewrite after removing only
 surrounding invocation or answer-format text. Preserve required versus
@@ -25,11 +25,18 @@ or narrow it. A request without a faithful internal retrieval optimization can
 still succeed through bounded out-of-network search. The client must call the
 tool for such a request.
 
-The current schema accepts 2 to 2,000 request characters. `limit` is from 5 to
-25 and defaults to 25. Treat the live schema as authoritative if these bounds
-change. Generate a fresh random `requestId` for every deliberate search and
-keep it bound to the exact request, limit, and project scope. Reuse it only for
-a user-directed retry of that identical operation; any deliberate repeat or
+The current schema accepts 2 to 2,000 request characters. Although `limit`
+accepts 5 through 25 for compatibility, the server normalizes every search to a
+fixed 25-person target. Omit `limit`. The server tries to return up to 15
+in-network people, then fills every remaining slot with out-of-network profiles;
+the actual response may be shorter when results or credits are limited.
+
+If the user requests a count other than 25 or sets a lower result or credit cap,
+explain the fixed target and get confirmation before calling. Treat the count as
+an answer-format instruction, not part of the professional recruiter request.
+Generate a fresh random `requestId` for every deliberate search and keep it
+bound to the exact request, fixed target, and project scope. Reuse it only for a
+user-directed retry of that identical operation; any deliberate repeat or
 changed input uses a new UUID. This makes product-credit accounting retry-safe,
 not the whole external operation automatically retryable. Make one call for one
 approved search and never split or automatically retry it.
@@ -51,10 +58,10 @@ discovery.
 
 The server atomically limits displayed in-network results to the credits it can
 reserve, prioritizing verified candidates, then unverified candidates, then
-near matches. Free out-of-network profiles remain available at a low or
-depleted balance. Relay the bounded credit notice and present those profiles;
-do not call an external-only response a failed search or fabricate omitted
-in-network people.
+near matches. Free out-of-network profiles fill remaining capacity toward the
+fixed 25-person target and remain available at a low or depleted balance. Relay
+the bounded credit notice and present those profiles; do not call an
+external-only response a failed search or fabricate omitted in-network people.
 
 ## Safe open-world professional criteria
 
@@ -194,9 +201,9 @@ required qualification claims.
 independent verification. Label them whenever used. The `fitEvidence` field is
 reserved compatibility output and does not authorize exposing private client
 preferences. Recorded `salesSegments` and `totalYearsSalesExperience` mean only
-what they state; empty or null means unavailable. Never estimate general
-experience from title seniority, graduation year, role count, or time since
-education.
+what they state; missing, empty, or null means unavailable. Never estimate
+general experience from title seniority, graduation year, role count, or time
+since education.
 
 Preserve each array and its returned order exactly. Do not create a replacement
 ranking, merge groups, or display a legacy fit score, percentage, or numeric
