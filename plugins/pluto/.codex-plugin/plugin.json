@@ -1,6 +1,6 @@
 {
   "name": "pluto",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Use TalentPluto's live recruiting workflows through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
@@ -27,7 +27,7 @@
     ],
     "defaultPrompt": [
       "Use Pluto to help with this recruiting task.",
-      "Find senior account executives in New York with SaaS experience.",
+      "Find AI engineers with 1+ years of professional experience in New York.",
       "How many Pluto credits do I have left, and when do they reset?",
       "Continue with the candidate and role I selected in Pluto."
     ],
