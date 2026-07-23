@@ -43,10 +43,10 @@ for that candidate through this workflow.
 
 ## Confirm the route-specific tool is available
 
-Before promising or attempting an action, confirm that the current task exposes
-the required Pluto tool: `express_candidate_interest` for an in-network action
-or `enrich_candidate_email` for an out-of-network email action. Loading this
-skill does not prove that Pluto initialized or that the saved OAuth grant
+Before promising or attempting an action, confirm that the current host context
+exposes the required Pluto tool: `express_candidate_interest` for an in-network
+action or `enrich_candidate_email` for an out-of-network email action. Loading
+this skill does not prove that Pluto initialized or that the saved OAuth grant
 includes `candidates:outbound`.
 
 If the required tool is absent or unusable, fail closed:

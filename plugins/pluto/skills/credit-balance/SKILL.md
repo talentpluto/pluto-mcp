@@ -11,9 +11,9 @@ returned for the organization selected by the authenticated Pluto session.
 
 ## Confirm Pluto is available
 
-Before promising or attempting a balance lookup, confirm that the current task
-exposes Pluto's `get_credit_balance` MCP tool. Loading this skill alone does not
-prove that Pluto initialized successfully.
+Before promising or attempting a balance lookup, confirm that the current host
+context exposes Pluto's `get_credit_balance` MCP tool. Loading this skill alone
+does not prove that Pluto initialized successfully.
 
 If the tool is absent, do not call the MCP endpoint directly, infer a balance
 from prior searches, or imply that a lookup ran. Follow the
