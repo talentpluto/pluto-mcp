@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto credit balance"
-  short_description: "Check monthly Pluto credits"
-  default_prompt: "Use $credit-balance to check my remaining Pluto credits and reset date."
+  short_description: "Check shared organization credits"
+  default_prompt: "Use $credit-balance to check my organization's shared monthly Pluto credits and reset date."
 
 dependencies:
   tools:

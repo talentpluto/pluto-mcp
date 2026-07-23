@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate discovery"
-  short_description: "Run open-world candidate searches with Pluto"
-  default_prompt: "Use $candidate-discovery to forward my complete safe professional search request once and assess every result with its returned evidence gaps."
+  short_description: "Run evidence-qualified candidate searches"
+  default_prompt: "Use $candidate-discovery to forward my complete safe professional search once, supply a fresh request ID, and present all four returned result groups with their exact evidence and credit accounting."
 
 dependencies:
   tools:
