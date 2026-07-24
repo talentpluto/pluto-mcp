@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate discovery"
-  short_description: "Find candidates with concise fit evidence"
-  default_prompt: "Use $candidate-discovery to forward my complete recruiter query or raw JD once without privacy-policy preclassification, supply a fresh request ID, and return one concise candidate shortlist. Keep qualification, network, and credit metadata internal unless it materially limits the results, and use returned Client preference fit reasons with their supporting candidate evidence as the primary Why they fit source."
+  short_description: "Draft an ideal profile, then find candidates"
+  default_prompt: "Use $candidate-discovery to turn my recruiting prompt into a hypothetical ideal LinkedIn profile and exact draft search brief. Iterate with me without calling the search tool. Only after I approve the current draft and explicitly ask to search, make one call with a fresh request ID and return one concise evidence-first shortlist."
 
 dependencies:
   tools:

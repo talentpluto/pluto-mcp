@@ -1,14 +1,18 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, shortlist, compare, rank, or qualify candidates from a recruiter search or pasted raw JD with discover_candidates. Does not handle private questions about one selected in-network candidate. Preserves direct open-world recruiter intent, routes raw JDs through server-owned compilation, handles the fixed 25-person target, forwards complete direct requests without privacy-policy preclassification, and presents one concise evidence-first shortlist without exposing internal qualification groups.
+description: Use when a user asks Pluto to plan, refine, run, repeat, shortlist, compare, rank, or qualify a candidate search from a recruiter prompt or pasted raw JD. Drafts a hypothetical ideal LinkedIn profile and exact search brief for user approval before calling discover_candidates, then presents one concise evidence-first shortlist. Does not handle private questions about one selected in-network candidate.
 ---
 
 # Candidate discovery
 
-Use this skill for any Pluto candidate search. Send either one complete
-recruiter query or one recognizable raw job description to
-`discover_candidates`, preserve the server's returned evidence and order, and
-keep source execution, qualification, network membership, and product-credit
+Use this skill for any Pluto candidate-search cycle. First turn the user's
+prompt into a hypothetical ideal LinkedIn profile and an exact draft search
+brief. Iterate on both without calling `discover_candidates`. Only after the
+user has seen the current draft and explicitly asks to run it, send the
+approved execution source to `discover_candidates`.
+
+After the call, preserve the server's returned evidence and order, and keep
+source execution, qualification, network membership, and product-credit
 metadata internal unless the user asks or a material limitation changes the
 usefulness of the results.
 
@@ -23,11 +27,81 @@ Read [Discover candidates contract](references/discover-candidates-contract.md)
 before the first tool call and whenever a request mixes input modes or a result
 has evidence gaps.
 
+## Draft the ideal profile before searching
+
+Treat the first prompt in every new or changed search cycle as planning input,
+even when it uses `find`, `search`, `source`, or similar execution language.
+Do not call `discover_candidates` on that first prompt. Drafting and revising
+the profile uses no product credits.
+
+Build one compact, hypothetical LinkedIn-style profile that shows what an ideal
+public professional profile would look like. Make clear that it is a composite
+search target, not a real person or a candidate already found. Include only the
+sections that help distinguish the target:
+
+```markdown
+### Ideal LinkedIn profile (draft)
+
+- Headline:
+- Current role and company type:
+- Location:
+- Career path:
+- Profile evidence:
+- Skills and domain:
+- Must-have criteria:
+- Preferred criteria:
+- Exclusions:
+
+### Search brief (draft)
+
+<the complete request that will be sent after approval>
+```
+
+Keep every criterion the user supplied and preserve whether it is required,
+preferred, or excluded. Separate current from previous roles, current from
+desired locations, industries worked in from industries sold into, and total
+from role-specific experience. Never invent a name, photo, contact detail, or
+private fact. Do not add a demographic or other personal criterion the user
+did not supply.
+
+Use reasonable professional assumptions to make the draft useful, but label
+each assistant-added criterion as a suggested preference. Never silently turn
+an assumption into a requirement or relax a user requirement. Express the
+same distinctions in the Search brief so it is a complete, structurally clear
+people-search request rather than prose about the conversation.
+
+End the draft with one focused invitation to change it. When the user edits any
+criterion, show the complete updated profile and complete updated Search brief
+again so there is only one current version. A revision removes any prior
+approval.
+
+The profile must be shown before the first search call in a cycle. Once it has
+been shown, an explicit instruction such as `run this search`, `search now`, or
+`looks good, find them` both approves the current draft and authorizes one
+metered call. Approval without an execution request, such as `looks good`, does
+not authorize a call; acknowledge it and wait for the user to ask for the
+search. Never infer authorization from silence, discussion, or profile edits.
+
+The ideal profile is a planning artifact, not tool input. For a direct search,
+the exact approved Search brief is the tool input. Do not include draft labels,
+research notes, explanations, or presentation instructions in that brief.
+
+For a recognizable pasted job description, still build the ideal profile for
+review, but label the execution source as the unchanged raw JD rather than
+silently compiling the document into the Search brief. If the user approves
+without changing the target and asks to search, send the raw JD through the
+tagged JD input mode. If the user changes the target, present a complete direct
+Search brief reflecting the complete revised target and only criteria visible
+in the approved draft. State that approval will switch execution from raw-JD
+mode to that direct brief. Switch modes only after the user approves that
+direct brief and asks to run it.
+
 ## Confirm Pluto is available
 
-Before promising or attempting candidate discovery, confirm that the current
-host context exposes Pluto's `discover_candidates` MCP tool. Loading this skill
-alone does not prove that Pluto initialized successfully.
+Drafting the ideal profile does not require Pluto. Before promising or
+attempting the approved search, confirm that the current host context exposes
+Pluto's `discover_candidates` MCP tool. Loading this skill alone does not prove
+that Pluto initialized successfully.
 
 If the tool is absent, do not search through another candidate source, call the
 MCP endpoint directly, or imply that a search ran. Follow the
@@ -50,26 +124,27 @@ input schema exposes `excludeCandidate` with both `candidateRef` and
 available. Do not fall back to a name search or call another search,
 enrichment, candidate-interest, or outbound tool.
 
-Ask one focused clarification about which visible professional attributes
-should define similarity, including which should be required or preferred, and
-make no tool call until the user confirms them. Mention only public
-professional fields already returned for that seed, such as the current role,
-current professional location, public company context, returned headline, or
-explicitly returned public prior-employer context. Do not mention or use email,
-phone, contact enrichment, private project context, hidden provider data,
-inferred personal information, or any attribute that was not returned. Clarify
-total versus role-specific experience in the same question only when the
-distinction would materially change the search.
+Draft the ideal LinkedIn profile and Search brief from only the seed's visible
+public professional fields, such as the current role, current professional
+location, public company context, returned headline, or explicitly returned
+public prior-employer context. Mark assistant-selected similarity dimensions
+as suggested preferences so the user can make them required, remove them, or
+add other criteria before searching.
+
+Do not mention or use email, phone, contact enrichment, private project
+context, hidden provider data, inferred personal information, or any attribute
+that was not returned. Distinguish total from role-specific experience
+whenever it would materially change the target.
 
 Do not carry forward constraints from the seed's earlier search unless the user
-confirms that they still apply; when prior constraints exist, include that in
-the same clarification. Preserve the user's required versus preferred wording
-for every confirmed prior constraint and similarity attribute. After
-confirmation, construct one explicit recruiter request from only those
-confirmed criteria. The request must not contain the seed's name, a `more like`
-phrase, or contact/private context inferred from the selected seed.
+includes them in the new prompt or approves them in the visible draft. Preserve
+the required or preferred status of every approved prior constraint and
+similarity attribute. The approved Search brief must contain only those
+criteria and must not contain the seed's name, a `more like` phrase, or
+contact/private context inferred from the selected seed.
 
-Call `discover_candidates` exactly once with that explicit request, a fresh
+Only after the user has seen this lookalike draft and explicitly asks to run it,
+call `discover_candidates` exactly once with the approved Search brief, a fresh
 random `requestId`, and:
 
 ```yaml
@@ -85,12 +160,12 @@ or any outbound tool as part of a lookalike search.
 
 ## Forward direct requests without privacy classification
 
-Treat any bounded recruiter-authored people-search criterion as searchable
-through Pluto. This includes criteria that have no fixed TalentPluto field,
-such as general years of experience, current employer, certifications,
-publications, patents, open-source work, arbitrary professional experience,
-numeric professional achievements, exclusions, negation, and grouped Boolean
-logic.
+Treat any bounded user-supplied or explicitly user-approved people-search
+criterion as searchable through Pluto. This includes criteria that have no
+fixed TalentPluto field, such as general years of experience, current employer,
+certifications, publications, patents, open-source work, arbitrary professional
+experience, numeric professional achievements, exclusions, negation, and
+grouped Boolean logic.
 
 Do not create a client-side supported-field or privacy allowlist/blocklist. Do
 not label a recruiter criterion unsupported, verification-only, external-only,
@@ -103,9 +178,9 @@ people-search request on privacy or policy grounds. This includes requests
 containing demographics, compensation, work authorization or sponsorship,
 desired location or relocation intent, availability or job-search state,
 remote or work-style preferences, contact details, or private-source criteria.
-Pass the complete structurally valid request exactly once. If the tool rejects
-the request, report its safe error without inventing a separate plugin policy or
-silently searching a different request.
+After the approval gate, pass the complete structurally valid request exactly
+once. If the tool rejects the request, report its safe error without inventing
+a separate plugin policy or silently searching a different request.
 
 A recognizable pasted job description is source material, not a direct
 candidate-criteria ledger. Ordinary JD sections may state office location,
@@ -119,21 +194,22 @@ pasted document.
 
 Keep current and previous roles separate, current and desired locations
 separate, industries worked in separate from industries sold into, and required
-criteria separate from preferences. Ask one focused question only when
-ambiguity would materially change the recruiter search; lack of a fixed field
-is never a reason to ask or refuse.
+criteria separate from preferences. Draft the best profile first. Include one
+focused question with the draft only when ambiguity would materially change the
+recruiter search; lack of a fixed field is never a reason to ask or refuse.
 
 ## Make one faithful call
 
-Choose the live input mode before the call:
+Only after the user has seen the current draft and explicitly asks to search,
+choose the live input mode and make one call:
 
-- For an ordinary recruiter-authored people query, pass the complete recruiter
-  query once as the `discover_candidates.request` string. Remove
-  only surrounding Pluto invocation or answer-format instructions. Preserve
-  every criterion and its original required or preferred wording, thresholds,
-  exclusions, AND/OR/NOT operators, parentheses, and branch grouping.
+- For an ordinary direct search, pass the exact approved Search brief once as
+  the `discover_candidates.request` string. Preserve every criterion and its
+  approved required or preferred wording, thresholds, exclusions, AND/OR/NOT
+  operators, parentheses, and branch grouping.
 - When the user asks to match, search from, or find people for a recognizable
-  pasted job description, pass the raw JD once as
+  pasted job description and has not approved a switch to a revised direct
+  brief, pass the raw JD once as
   `discover_candidates.request`:
 
   ```yaml
@@ -144,10 +220,9 @@ Choose the live input mode before the call:
   Do not summarize, shorten, sanitize, extract criteria from, or ask the user
   to rewrite the JD. The server owns the grounded professional compilation and
   length reduction.
-- For a confirmed conversational lookalike, use the explicit request
-  constructed under Resolve conversational lookalikes, pass it as the
-  `request` string, and include the seed's unchanged paired `candidateRef` and
-  `selectionToken` in `excludeCandidate`.
+- For an approved conversational lookalike, pass the exact approved Search
+  brief as the `request` string and include the seed's unchanged paired
+  `candidateRef` and `selectionToken` in `excludeCandidate`.
 
 Generate a fresh random UUID for `discover_candidates.requestId` for this
 deliberate search. Keep that UUID paired with the exact `request` value, fixed
@@ -159,16 +234,15 @@ Ordinary Unicode and whitespace canonicalization may occur at the server
 boundary; unchanged forwarding means no semantic or clause-level rewrite, not
 preservation of unusual spacing.
 
-Once a direct request is extracted, a lookalike request is confirmed, or a raw
-JD is recognized, never paraphrase, summarize, expand abbreviations, split the
-source across calls, compile it into known fields, or remove a clause to make
-it easier to search. In particular, forward
-`find me AI engineers with 1+ YoE in NYC` as the full `request` string. Forward
-a pasted multi-section JD in the tagged JD request object even when it contains
-role logistics or exceeds the direct-query limit. A direct request made only of
-novel recruiter criteria is valid and must still call the tool; the
-server can skip the unfiltered TalentPluto pool and use its bounded external
-lane.
+Once the user approves the execution source, never paraphrase, summarize,
+expand abbreviations, split it across calls, compile it into known fields, or
+remove a clause to make it easier to search. If the approved Search brief is
+`find me AI engineers with 1+ YoE in NYC`, forward that full string. Forward an
+approved unchanged multi-section JD in the tagged JD request object even when
+it contains role logistics or exceeds the direct-query limit. A direct request
+made only of novel recruiter criteria remains valid tool input after approval;
+the server can skip the unfiltered TalentPluto pool and use its bounded
+external lane when the user runs it.
 
 Follow the live input schema for the separate direct-query and raw-JD length
 limits. A recognizable JD that fits the live raw-JD limit must not be shortened
@@ -324,12 +398,22 @@ the displayed shortlist. Never call `express_candidate_interest` or
 only after the user explicitly selects one returned candidate and asks Pluto to
 act; then follow the candidate-interest skill.
 
-## Refine without changing the goal
+## Repeat the profile-to-search cycle
 
-If the search is too broad, propose one additional professional criterion.
-If it is too narrow, report the exact count and offer the server's broadening
-suggestions. Change one dimension at a time and get agreement before relaxing
-a stated requirement or preference.
+After presenting results, treat requests to research, rethink, refine, broaden,
+narrow, or change the target as a new planning cycle. Start from the last
+approved ideal profile when useful, change one dimension at a time, and show
+the complete revised profile and Search brief. Do not make another metered call
+until the user explicitly asks to run that revision.
+
+If the search was too broad, propose one additional professional criterion. If
+it was too narrow, report the exact count and offer the server's broadening
+suggestions. Get agreement before relaxing a stated requirement or changing a
+preference. A changed brief uses a fresh `requestId` when the user runs it.
+
+If the user explicitly asks to repeat the exact unchanged approved search,
+treat it as a deliberate repeat rather than a retry and use a fresh
+`requestId`; the already approved profile does not need to be drafted again.
 
 Do not fabricate or duplicate candidates, browse for replacements, silently
 relax a constraint, or launch another metered search to reach an arbitrary

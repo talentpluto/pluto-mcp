@@ -1,5 +1,26 @@
 # Discover candidates contract
 
+## Approval precedes this tool contract
+
+The first prompt in a new or changed search cycle does not call
+`discover_candidates`. The candidate-discovery skill first shows a
+hypothetical ideal LinkedIn profile and its execution source, then iterates
+without using product credits. This contract governs the one tool call made
+only after the user has seen the current draft and explicitly asks to run it.
+
+For a direct search, the execution source is the exact user-approved Search
+brief. That approved brief supersedes the earlier conversational prompt and is
+authoritative for the call. Any revision removes approval and requires the
+complete profile and brief to be shown again. Never send the hypothetical
+profile, draft labels, discussion, research notes, or answer-format
+instructions as tool input.
+
+For a recognizable raw JD, the initial execution source remains the unchanged
+document. A user-approved profile change may switch execution to a complete
+direct Search brief, but only when the skill visibly states the mode change and
+the user approves that brief before asking to run it. Never silently compile a
+raw JD into a direct request.
+
 ## Choose the source type without rewriting it
 
 `discover_candidates` accepts `request`, a required UUID `requestId`, a
@@ -8,10 +29,10 @@ a confirmed conversational lookalike search it also accepts optional
 `excludeCandidate` containing the selected seed's `candidateRef` and
 `selectionToken`.
 
-Use the complete recruiter query string as `request` for an ordinary
-recruiter-authored people query or a confirmed conversational lookalike. When
-the user asks to match, search from, or find people for a recognizable pasted
-JD, use:
+Use the exact approved Search brief as the `request` string for an ordinary
+direct search or a confirmed conversational lookalike. When the user asks to
+match, search from, or find people for a recognizable pasted JD and has not
+approved a switch to a revised direct brief, use:
 
 ```yaml
 request:
@@ -19,9 +40,8 @@ request:
   text: <the unchanged raw JD>
 ```
 
-Forward the selected source unchanged after removing only surrounding Pluto
-invocation or answer-format text. Never compile or shorten a raw JD
-client-side; the server returns its grounded professional compilation in
+Forward the approved execution source unchanged. Never compile or shorten a raw
+JD client-side; the server returns its grounded professional compilation in
 `searchInterpretation.request`.
 
 Raw job descriptions commonly contain role location and work arrangement,
@@ -42,7 +62,7 @@ form required to keep the complete request intact.
 
 ## The effective request is authoritative
 
-For a direct request string, pass the complete recruiter query without a
+For a direct request string, pass the complete approved Search brief without a
 semantic or clause-level rewrite. Preserve required versus preferred wording,
 thresholds, exclusions, AND/OR/NOT operators, parentheses, and branch grouping.
 For a tagged JD request object, the server-owned
@@ -63,7 +83,7 @@ a raw JD, it builds one grounded professional request before either search lane
 runs. A later planning failure must not cause the client to rewrite or narrow
 the effective request. A request without a faithful internal retrieval
 optimization can still succeed through bounded out-of-network search. The
-client must call the tool for such a request.
+approved request remains valid tool input when the user explicitly runs it.
 
 Follow the live schema's separate direct-query and raw-JD request limits. Do not
 shorten a valid raw JD to the direct-query limit. Although `limit` accepts 5
@@ -126,44 +146,43 @@ If that field is unavailable, report that lookalike search is not yet
 available. Never fall back to a search containing the seed's name and never
 call another search, enrichment, candidate-interest, or outbound tool.
 
-Ask one focused clarification that identifies which visible public
-professional attributes should define similarity and which should be required
-or preferred. Use only fields already returned for the seed, such as current
-role, current professional location, public company context, returned headline,
-or explicitly returned public prior-employer context. Never mention or use
-email, phone, contact enrichment, private project context, hidden provider
-data, inferred personal information, or an attribute not present in the
-returned result. Ask whether experience means total or role-specific
-experience only when that distinction would materially change the search.
+Draft a hypothetical ideal LinkedIn profile and Search brief from only fields
+already returned for the seed, such as current role, current professional
+location, public company context, returned headline, or explicitly returned
+public prior-employer context. Mark assistant-selected similarity dimensions as
+suggested preferences. Never mention or use email, phone, contact enrichment,
+private project context, hidden provider data, inferred personal information,
+or an attribute not present in the returned result. Distinguish total from
+role-specific experience when it would materially change the target.
 
 Do not silently preserve the seed's earlier search constraints. Include them
-only after the user confirms in the same clarification that they still apply,
-and preserve their required or preferred status. Preserve the user's required
-versus preferred wording for the selected similarity attributes as well.
+only when the user supplies them in the new prompt or approves them in the
+visible draft, and preserve their required or preferred status. Revise and
+show the complete profile and brief until the user explicitly asks to run the
+current version.
 
-After confirmation, construct one explicit recruiter request from only the
-confirmed criteria. Do not include the seed's name, the literal lookalike
-phrase, or contact/private context inferred from the selected seed. Call
-`discover_candidates` exactly once with that request, a fresh `requestId`, and
-the seed's correctly paired handles unchanged inside `excludeCandidate`.
-Include `projectId` only when the user already deliberately selected that exact
-authorized project. The lookalike flow never calls email enrichment, candidate
-interest, or any outbound tool.
+The approved Search brief must contain only confirmed criteria. Do not include
+the seed's name, the literal lookalike phrase, or contact/private context
+inferred from the selected seed. Call `discover_candidates` exactly once with
+that brief, a fresh `requestId`, and the seed's correctly paired handles
+unchanged inside `excludeCandidate`. Include `projectId` only when the user
+already deliberately selected that exact authorized project. The lookalike
+flow never calls email enrichment, candidate interest, or any outbound tool.
 
 For example, if Tarun Bobbili was returned with visible AE/GTM, New York,
-B2B-software, and public prior enterprise-technology context, ask:
-`Should similarity mean Tarun's AE/GTM role, New York location, B2B software
-background, prior enterprise-technology experience, or all four?` After the
-user confirms the criteria and their required or preferred status, an eligible
-request could be `Find current AE/GTM professionals in New York working at B2B
-software companies, preferably with prior enterprise-technology experience.`
-Pass Tarun's opaque handles only through `excludeCandidate`; his name must not
-appear in `request`.
+B2B-software, and public prior enterprise-technology context, draft a target
+with the AE/GTM role, New York location, and B2B-software background as
+suggested preferences. The draft can propose
+`Find current AE/GTM professionals in New York working at B2B software
+companies, preferably with prior enterprise-technology experience.` Iterate
+until the user approves or changes those dimensions, then wait for an explicit
+search instruction. Pass Tarun's opaque handles only through
+`excludeCandidate`; his name must not appear in `request`.
 
 ## Open-world recruiter criteria
 
-Any bounded recruiter-authored people-search criterion is valid even when it
-has no fixed TalentPluto field. Examples include:
+Any bounded user-supplied or explicitly user-approved people-search criterion
+is valid even when it has no fixed TalentPluto field. Examples include:
 
 - general, role-specific, or skill-specific experience amounts and ranges;
 - current or previous employers and titles;
@@ -386,22 +405,26 @@ append a generic email-lookup or paid-action offer.
 
 ## Request examples
 
-These examples show the request value the client must send, not a fixed catalog
-of allowed criteria:
+Every example begins with the skill drafting the ideal profile and execution
+source without making a tool call. The Client behavior column describes what
+happens only after the user has seen the current draft and explicitly asks to
+run it. For an unchanged direct target, the approved Search brief preserves the
+original criteria shown here. These examples are not a fixed catalog of allowed
+criteria:
 
 | Recruiter intent | Client behavior |
 | --- | --- |
-| `find me AI engineers with 1+ YoE in NYC` | Call once with `request` equal to that complete string. Do not remove `1+ YoE` or convert it to sales experience. |
-| `Find engineers currently at OpenAI with AWS certification and 5+ years building distributed systems` | Call once with the complete string. Preserve current employer, certification, and general experience as recruiter criteria. |
-| `Find people who presented at NeurIPS and contributed to Apache projects` | Call once with the complete string even though the request may be external-only. Publications, presentations, and open-source work do not require fixed fields. |
-| `Find either (platform engineers in NYC who use Kafka) or (SREs in Chicago who hold CKA certification)` | Preserve both branches, parentheses, and OR exactly in one call. Never flatten titles, locations, skills, and certification into independent arrays. |
-| `Find backend engineers in NYC excluding current Google employees and NOT Java-only developers` | Preserve both exclusions and negation in the one request. Do not turn them into positive employer or skill filters. |
-| `Find AI engineers, preferably with published work on model evaluation` | Preserve `preferably`; do not turn the publication preference into a required criterion. |
-| `Find more candidates like Tarun Bobbili` after Tarun was returned earlier | Ask one focused question about returned public professional attributes and make no tool call. After confirmation, call once with a name-free explicit request and Tarun's unchanged paired handles in `excludeCandidate`. |
-| `Find people who match this JD: [recognizable multi-section job description]` | Call once with `request` set to `{ type: "job_description", text: "<the unchanged raw JD>" }`. Do not refuse because the JD contains office, compensation, benefits, or interview-process text. Report the returned effective request and exclusions. |
-| `Find female AI engineers in NYC` | Call once with the complete string unchanged. Do not classify or rewrite the demographic criterion in the plugin. |
-| `Find AI engineers in NYC who are willing to relocate and can start next week` | Call once with the complete string unchanged. Preserve the relocation and availability clauses. |
-| `Find jane@example.com using the confidential candidate resume` | Call once with the complete string unchanged. Do not strip the contact or private-source criteria. |
+| `find me AI engineers with 1+ YoE in NYC` | After approval, call once with `request` equal to that complete string. Do not remove `1+ YoE` or convert it to sales experience. |
+| `Find engineers currently at OpenAI with AWS certification and 5+ years building distributed systems` | After approval, call once with the complete string. Preserve current employer, certification, and general experience as recruiter criteria. |
+| `Find people who presented at NeurIPS and contributed to Apache projects` | After approval, call once with the complete string even though the request may be external-only. Publications, presentations, and open-source work do not require fixed fields. |
+| `Find either (platform engineers in NYC who use Kafka) or (SREs in Chicago who hold CKA certification)` | After approval, preserve both branches, parentheses, and OR exactly in one call. Never flatten titles, locations, skills, and certification into independent arrays. |
+| `Find backend engineers in NYC excluding current Google employees and NOT Java-only developers` | After approval, preserve both exclusions and negation in the one request. Do not turn them into positive employer or skill filters. |
+| `Find AI engineers, preferably with published work on model evaluation` | After approval, preserve `preferably`; do not turn the publication preference into a required criterion. |
+| `Find more candidates like Tarun Bobbili` after Tarun was returned earlier | Draft a hypothetical profile and name-free Search brief from returned public professional attributes, then iterate without a call. After the user asks to run the approved brief, call once with Tarun's unchanged paired handles in `excludeCandidate`. |
+| `Find people who match this JD: [recognizable multi-section job description]` | After approval, call once with `request` set to `{ type: "job_description", text: "<the unchanged raw JD>" }`. Do not refuse because the JD contains office, compensation, benefits, or interview-process text. Report the returned effective request and exclusions. |
+| `Find female AI engineers in NYC` | After approval, call once with the complete string unchanged. Do not classify or rewrite the demographic criterion in the plugin. |
+| `Find AI engineers in NYC who are willing to relocate and can start next week` | After approval, call once with the complete string unchanged. Preserve the relocation and availability clauses. |
+| `Find jane@example.com using the confidential candidate resume` | After approval, call once with the complete string unchanged. Do not strip the contact or private-source criteria. |
 
 For a result in `unverifiedCandidates` with `status: complete`,
 `qualificationStatus: provisional`, and
