@@ -229,18 +229,19 @@ Review every response component:
   results. Unknown or failed candidate criteria do not by themselves make
   source execution partial.
 - Keep the four arrays distinct internally for safe follow-up. For the normal
-  presentation, combine only `candidates`, `unverifiedCandidates`, then
-  `outOfNetworkCandidates`. Preserve returned order inside each array and never
-  rerank candidates with a client-side score. Keep `nearMatches` out of the
-  normal Candidates table because every item has a known failed requirement.
+  presentation, combine only `candidates`, then `outOfNetworkCandidates`.
+  Preserve returned order inside each array and never rerank candidates with a
+  client-side score. Keep `unverifiedCandidates` and `nearMatches` out of the
+  normal Candidates table.
 - Treat `candidates` as verified in-network matches,
   `unverifiedCandidates` as in-network candidates with an unknown required
   criterion and no known required failure, and `nearMatches` as in-network
   candidates with a known failed requirement. Use these distinctions to avoid
   overclaiming and route later actions. Do not expose the qualification
-  taxonomy in the normal shortlist. Surface `nearMatches` only when the user
-  explicitly asks for near matches or alternatives, using the separate
-  tradeoff-preserving presentation below.
+  taxonomy in the normal shortlist. Handle returned `unverifiedCandidates`
+  separately as Potential candidates with a required What to confirm value.
+  Surface `nearMatches` only when the user explicitly asks for near matches or
+  alternatives, using the separate tradeoff-preserving presentation below.
 - Treat `outOfNetworkCandidates` as compact public professional leads, not
   qualified matches. They intentionally lack deep criterion evidence and
   private personalization. They may appear in the same concise candidate table,
@@ -258,10 +259,11 @@ Review every response component:
 - Treat every `unknownCriteria`, `failedCriteria`, `unverifiedCriteria`, and
   near-match `missingCriteria` item as a guard against a positive claim.
   Unknown or unverified criteria are not established; failed or missing
-  criteria are known gaps. Do not display the gap taxonomy by default. When
-  near matches were explicitly requested, state the relevant returned failed
-  or missing criterion as the candidate's known tradeoff. Never claim a
-  returned gap is satisfied because adjacent profile context looks suggestive.
+  criteria are known gaps. For an unverified candidate, state a relevant
+  returned unknown or unverified criterion as What to confirm. When near
+  matches were explicitly requested, state the relevant returned failed or
+  missing criterion as the candidate's known tradeoff. Never claim a returned
+  gap is satisfied because adjacent profile context looks suggestive.
 - Use only the candidate's returned `profileUrl` for the name link. Before
   rendering it, require an absolute HTTPS URL whose hostname is `linkedin.com`,
   `linkedin.cn`, or a subdomain of either. Never use a legacy fallback field or
@@ -334,8 +336,8 @@ matches were found. Add one short preface only when a raw-JD exclusion,
 location proxy, partial-source limitation, or credit limit materially changes
 how the shortlist should be read.
 
-Combine `candidates`, `unverifiedCandidates`, and
-`outOfNetworkCandidates` in their server-defined order and use this shape:
+Combine `candidates` and `outOfNetworkCandidates` in their server-defined order
+and use this shape:
 
 ```markdown
 | Candidate | Current role | Location | Why they fit |
@@ -358,6 +360,21 @@ evidence, or a verification label as the rationale.
 For an out-of-network candidate, use only the returned current role, headline,
 company, and location to explain relevance to the recruiter request. Do not
 claim deep qualification or client-preference personalization.
+
+Do not include `unverifiedCandidates` in the Candidates table. When the array
+is non-empty, add a separate Potential candidates table:
+
+```markdown
+| Candidate | Current role | Location | Why they may fit | What to confirm |
+| --- | --- | --- | --- | --- |
+```
+
+Build the relevance cell from the same returned-evidence rules above. Build
+What to confirm only from returned `unknownCriteria` and
+`unverifiedCriteria`, phrased as the unresolved professional requirement rather
+than verification jargon. If neither field contains a usable criterion, omit
+that person instead of presenting them as an ordinary fit. Never imply that a
+potential candidate satisfies the complete recruiter request.
 
 Do not include `nearMatches` in the Candidates table. Only when the user
 explicitly asks for near matches or alternatives, add a separate Alternatives
