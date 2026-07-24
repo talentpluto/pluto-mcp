@@ -181,9 +181,9 @@ has no fixed TalentPluto field. Examples include:
 Do not pre-reject, strip, weaken, approximate, or reclassify these criteria as
 verification-only. Out-of-network discovery is itself a search path, not a
 fallback the user must separately approve. In-network qualification is conveyed
-by the returned array, `qualificationStatus`, `criterionEvaluations`, and
-evidence-gap fields. Compact out-of-network profiles are not evidence-qualified
-matches.
+by the returned array, `qualificationStatus`, `qualificationGapSource`,
+`criterionEvaluations`, and evidence-gap fields. Compact out-of-network
+profiles are not evidence-qualified matches.
 
 Current location is safe professional intent. Desired future location,
 relocation willingness, and where a candidate wants their next role are not.
@@ -262,9 +262,17 @@ The response has four ordered arrays with different contracts:
 
 The first three arrays share the rich in-network contract. Each item has a
 confirmed normalized LinkedIn `profileUrl`, `networkStatus: in_network`,
-`qualificationStatus`, `criterionEvaluations`, `unknownCriteria`,
-`failedCriteria`, compatibility gap fields, one or more `matchReasons`, and
-optional recorded professional context.
+`qualificationStatus`, `qualificationGapSource`, `criterionEvaluations`,
+`unknownCriteria`, `failedCriteria`, compatibility gap fields, one or more
+`matchReasons`, and optional recorded professional context.
+
+`qualificationGapSource: criterion | canonical_request |
+private_requirement | null` is an internal presentation guard. Only
+`criterion` identifies individually evaluated public criteria eligible for
+What to confirm or Known tradeoff. `canonical_request` and
+`private_requirement` are non-displayable fallbacks. Omit those people from the
+secondary tables rather than trying to recognize fallback text. Never display
+the marker itself.
 
 Each criterion evaluation supplies the original public `criterionText`,
 `requirementLevel`, `status: verified | unknown | failed`, a concise
@@ -361,12 +369,11 @@ is non-empty, add a separate Potential candidates table:
 ```
 
 Build relevance from the same returned-evidence rules above. Build What to
-confirm only from an `unknownCriteria` or `unverifiedCriteria` entry that names
-an individually unresolved professional requirement. Never use
-`searchInterpretation.request` or an entry that repeats the complete canonical
-request. If no specific unresolved entry remains, omit that person rather than
-presenting them as an ordinary fit. Never imply that a potential candidate
-satisfies the complete recruiter request.
+confirm only when `qualificationGapSource` is `criterion`, using an
+`unknownCriteria` or `unverifiedCriteria` entry that names an individually
+unresolved professional requirement. Omit `canonical_request` and
+`private_requirement` fallbacks without comparing text. Never imply that a
+potential candidate satisfies the complete recruiter request.
 
 Do not include `nearMatches` in the Candidates table because each item has a
 known failed required criterion. Only when the user explicitly asks for near
@@ -378,12 +385,11 @@ matches or alternatives, add a separate Alternatives table:
 ```
 
 Build relevance from the same returned-evidence rules above. Build the known
-tradeoff only from a returned `failedCriteria` entry that names an individually
-failed professional requirement. Never use `missingCriteria`,
-`searchInterpretation.request`, or a `failedCriteria` entry that repeats the
-complete canonical request. If no specific failed criterion remains, omit that
-person from the Alternatives table. Never imply that the alternative satisfies
-the complete recruiter request.
+tradeoff only when `qualificationGapSource` is `criterion`, using a returned
+`failedCriteria` entry that names an individually failed professional
+requirement. Never use `missingCriteria`. Omit `canonical_request` and
+`private_requirement` fallbacks without comparing text. Never imply that the
+alternative satisfies the complete recruiter request.
 
 Include a candidate only when the returned fields support a useful,
 candidate-specific rationale, preserving server order among included
@@ -414,6 +420,7 @@ of allowed criteria:
 
 For a result in `unverifiedCandidates` with `status: complete`,
 `qualificationStatus: provisional`, and
+`qualificationGapSource: criterion`, and
 `unknownCriteria: ["1+ years of professional experience"]`, put the person in
 the Potential candidates table when other returned fields support a useful,
 specific rationale. Use the returned criterion as What to confirm, do not claim

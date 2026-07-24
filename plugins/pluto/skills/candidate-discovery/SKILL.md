@@ -242,6 +242,12 @@ Review every response component:
   separately as Potential candidates with a required What to confirm value.
   Surface `nearMatches` only when the user explicitly asks for near matches or
   alternatives, using the separate tradeoff-preserving presentation below.
+- Treat `qualificationGapSource: criterion | canonical_request |
+  private_requirement | null` as an internal presentation guard. Only
+  `criterion` permits a Potential candidates or Alternatives row.
+  `canonical_request` and `private_requirement` are non-displayable fallbacks;
+  omit those people instead of comparing criterion text with the recruiter
+  request. Never display the marker itself.
 - Treat `outOfNetworkCandidates` as compact public professional leads, not
   qualified matches. They intentionally lack deep criterion evidence and
   private personalization. They may appear in the same concise candidate table,
@@ -259,15 +265,13 @@ Review every response component:
 - Treat every `unknownCriteria`, `failedCriteria`, `unverifiedCriteria`, and
   near-match `missingCriteria` item as a guard against a positive claim.
   Unknown or unverified criteria are not established; failed or missing
-  criteria are known gaps. For an unverified candidate, use only a returned
-  unknown or unverified entry that names an individually unresolved
-  professional requirement as What to confirm. Never use the complete search
-  request or an entry that repeats it. When near matches were explicitly
-  requested, use only a `failedCriteria` entry that names an individually
-  failed professional requirement as the known tradeoff. Never use
-  `missingCriteria`, the complete search request, or a `failedCriteria` entry
-  that repeats it. Never claim a returned gap is satisfied because adjacent
-  profile context looks suggestive.
+  criteria are known gaps. When `qualificationGapSource` is `criterion`, use
+  only a returned unknown or unverified entry that names an individually
+  unresolved professional requirement as What to confirm. For an explicitly
+  requested near match with the same source, use only a `failedCriteria` entry
+  that names an individually failed professional requirement as the known
+  tradeoff. Never use `missingCriteria`. Never claim a returned gap is
+  satisfied because adjacent profile context looks suggestive.
 - Use only the candidate's returned `profileUrl` for the name link. Before
   rendering it, require an absolute HTTPS URL whose hostname is `linkedin.com`,
   `linkedin.cn`, or a subdomain of either. Never use a legacy fallback field or
@@ -299,10 +303,11 @@ experience from seniority, graduation year, role count, or time since
 education.
 
 The returned array and `qualificationStatus` jointly determine in-network
-qualification. Never promote an unverified candidate or near match based on
-client inspection, even if every requested term appears somewhere in the
-returned summary. If an item's fields contradict its array contract, report a
-server/plugin mismatch instead of silently moving it.
+qualification; `qualificationGapSource` independently determines whether a
+secondary row is safe to present. Never promote an unverified candidate or near
+match based on client inspection, even if every requested term appears
+somewhere in the returned summary. If an item's fields contradict its array
+contract, report a server/plugin mismatch instead of silently moving it.
 
 Use Pluto's returned professional data unless the user asks for additional
 verification. Do not automatically browse for missing details, and never use
@@ -374,12 +379,11 @@ is non-empty, add a separate Potential candidates table:
 ```
 
 Build the relevance cell from the same returned-evidence rules above. Build
-What to confirm only from an `unknownCriteria` or `unverifiedCriteria` entry
-that names an individually unresolved professional requirement. Never use
-`searchInterpretation.request` or an entry that repeats the complete canonical
-request. If no specific unresolved entry remains, omit that person instead of
-presenting them as an ordinary fit. Never imply that a potential candidate
-satisfies the complete recruiter request.
+What to confirm only when `qualificationGapSource` is `criterion`, using an
+`unknownCriteria` or `unverifiedCriteria` entry that names an individually
+unresolved professional requirement. Omit `canonical_request` and
+`private_requirement` fallbacks without comparing text. Never imply that a
+potential candidate satisfies the complete recruiter request.
 
 Do not include `nearMatches` in the Candidates table. Only when the user
 explicitly asks for near matches or alternatives, add a separate Alternatives
@@ -391,12 +395,11 @@ table:
 ```
 
 Build the relevance cell from the same returned-evidence rules above. Build the
-tradeoff only from a returned `failedCriteria` entry that names an individually
-failed professional requirement. Never use `missingCriteria`,
-`searchInterpretation.request`, or a `failedCriteria` entry that repeats the
-complete canonical request. If no specific failed criterion remains, omit that
-person from the Alternatives table. Never imply that an alternative satisfies
-the complete recruiter request.
+tradeoff only when `qualificationGapSource` is `criterion`, using a returned
+`failedCriteria` entry that names an individually failed professional
+requirement. Never use `missingCriteria`. Omit `canonical_request` and
+`private_requirement` fallbacks without comparing text. Never imply that an
+alternative satisfies the complete recruiter request.
 
 Include a candidate only when the returned fields support a useful,
 candidate-specific rationale. Preserve server order among included candidates.
