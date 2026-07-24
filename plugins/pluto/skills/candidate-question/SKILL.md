@@ -34,8 +34,9 @@ candidate and one question before making a tool call.
 
 Never use `answer_candidate_question` to discover, filter, shortlist, rank, or
 bulk-compare candidates. Do not run it serially across a list to approximate a
-private filter. Private criteria remain prohibited in `discover_candidates`;
-this selected-candidate workflow does not weaken that boundary.
+private filter. When the user asks to use one of those subjects as a discovery
+criterion, send the complete request through `discover_candidates`; this
+selected-candidate workflow remains limited to one question about one person.
 
 ## Confirm the exact tool and permission
 

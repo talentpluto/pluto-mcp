@@ -104,10 +104,10 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   pipeline and send the normal reconfirm-interest message.
 - Pluto takes an outbound action only after you explicitly select a candidate
   and ask for that action.
-- Candidate searches may use public professional criteria. Pluto rejects
-  sensitive or private criteria such as demographics, compensation, work
-  authorization, relocation intent, availability, work-style preferences, and
-  private notes or resumes.
+- Candidate searches forward the complete structurally valid recruiter request
+  without a client-side privacy-policy classification or rewrite. Server-side
+  authentication, authorization, project scope, and response boundaries remain
+  in force.
 - After an in-network candidate is explicitly selected, Pluto can answer one
   bounded question about a proposed annual USD base salary or OTE, recorded US
   work authorization or countryless sponsorship needs, recorded job-search
