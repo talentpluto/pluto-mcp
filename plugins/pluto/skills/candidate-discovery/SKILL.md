@@ -1,15 +1,15 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to plan, refine, run, repeat, shortlist, compare, rank, or qualify a candidate search from a recruiter prompt or pasted raw JD. Drafts a hypothetical ideal LinkedIn profile and exact search brief for user approval before calling discover_candidates, then presents one concise evidence-first shortlist. Does not handle private questions about one selected in-network candidate.
+description: Use when a user asks Pluto to plan, refine, run, repeat, shortlist, compare, rank, or qualify a candidate search from a recruiter prompt or pasted raw JD. Drafts a compact LinkedIn-style candidate profile and structured search brief for user approval before calling discover_candidates, then presents one concise evidence-first shortlist. Does not handle private questions about one selected in-network candidate.
 ---
 
 # Candidate discovery
 
 Use this skill for any Pluto candidate-search cycle. First turn the user's
-prompt into a hypothetical ideal LinkedIn profile and an exact draft search
-brief. Iterate on both without calling `discover_candidates`. Only after the
-user has seen the current draft and explicitly asks to run it, send the
-approved execution source to `discover_candidates`.
+prompt into a compact LinkedIn-style candidate profile and a structured search
+brief. Iterate on both without calling `discover_candidates`. Only after
+the user has seen the current draft and explicitly asks to run it, send that
+exact approved execution source to `discover_candidates`.
 
 After the call, preserve the server's returned evidence and order, and keep
 source execution, qualification, network membership, and product-credit
@@ -36,26 +36,47 @@ the profile uses no product credits.
 
 Build one compact, hypothetical LinkedIn-style profile that shows what an ideal
 public professional profile would look like. Make clear that it is a composite
-search target, not a real person or a candidate already found. Include only the
-sections that help distinguish the target:
+search target, not a real person or a candidate already found. Present it like
+a profile, not a form or a flat field dump: lead with the professional headline
+and current professional location, then use no more than three short
+LinkedIn-like sections that help distinguish the target.
 
 ```markdown
-### Ideal LinkedIn profile (draft)
+### Ideal candidate profile
 
-- Headline:
-- Current role and company type:
-- Location:
-- Career path:
-- Profile evidence:
-- Skills and domain:
-- Must-have criteria:
-- Preferred criteria:
-- Exclusions:
+*Draft composite — not a real person*
 
-### Search brief (draft)
+**<professional headline>**<br>
+<current professional location>
 
-<the complete request that will be sent after approval>
+#### About
+<one concise sentence connecting the role, experience, and domain>
+
+#### Experience
+- **Current:** <current role and relevant company context>
+- **Background:** <role-specific career path or public professional evidence>
+
+#### Highlights
+- <skill, domain evidence, or explicitly labeled suggested preference>
+
+### Search brief
+
+**Required**
+- <criterion>
+
+**Preferred**
+- <criterion>
+
+**Exclude**
+- <criterion>
 ```
+
+Omit any profile section or Search brief group that would be empty,
+uninformative, or duplicative. Never display placeholder labels. For a short
+query, keep the profile to roughly three to six visible lines or bullets. The
+profile is the recruiter-readable sketch; the Search brief is the canonical,
+complete criteria ledger. Do not restate every Search brief bullet in the
+profile, and do not collapse the Search brief into a dense paragraph.
 
 Keep every criterion the user supplied and preserve whether it is required,
 preferred, or excluded. Separate current from previous roles, current from
@@ -65,15 +86,50 @@ private fact. Do not add a demographic or other personal criterion the user
 did not supply.
 
 Use reasonable professional assumptions to make the draft useful, but label
-each assistant-added criterion as a suggested preference. Never silently turn
-an assumption into a requirement or relax a user requirement. Express the
-same distinctions in the Search brief so it is a complete, structurally clear
-people-search request rather than prose about the conversation.
+each assistant-added criterion as `*(suggested)*` and place it under
+**Preferred**. Never silently turn an assumption into a requirement, relax a
+user requirement, or invent an exclusion. Do not restate a positive requirement
+as its inverse exclusion; for example, a required current AE role does not also
+need an exclusion for SDRs, BDRs, or Account Managers without a current AE
+role. Express the same distinctions in the Search brief so it remains a
+complete, structurally clear people-search request rather than prose about the
+conversation.
 
-End the draft with one focused invitation to change it. When the user edits any
-criterion, show the complete updated profile and complete updated Search brief
-again so there is only one current version. A revision removes any prior
-approval.
+When one ambiguity would materially change the search, draft the best
+interpretation and place one bold `Confirm:` line after the Search brief. Keep
+the question outside the brief so it is never sent to the tool. Otherwise end
+with one short invitation to reply `run this search` or describe a change. When
+the user edits any criterion, show the complete updated profile and complete
+updated Search brief again so there is only one current version. A revision
+removes any prior approval.
+
+For a short request, prefer this density and hierarchy:
+
+```markdown
+### Ideal candidate profile
+
+*Draft composite — not a real person*
+
+**Account Executive**<br>
+New York City Metropolitan Area
+
+#### Experience
+- **Current:** Account Executive
+- **Background:** 3+ years specifically in Account Executive roles
+
+### Search brief
+
+**Required**
+- Current role: Account Executive
+- Current professional location: New York City metropolitan area
+- Experience: 3+ years specifically in Account Executive roles
+
+**Preferred**
+- Full-cycle, quota-carrying B2B sales ownership *(suggested)*
+
+**Confirm:** Should the 3+ years be AE-specific, or total professional
+experience? If AE-specific is right, reply `run this search`.
+```
 
 The profile must be shown before the first search call in a cycle. Once it has
 been shown, an explicit instruction such as `run this search`, `search now`, or
