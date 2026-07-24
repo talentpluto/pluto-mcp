@@ -1,15 +1,16 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, shortlist, compare, rank, or qualify candidates from a professional search or pasted raw JD with discover_candidates. Does not handle private questions about one selected in-network candidate. Preserves direct open-world professional search intent, routes raw JDs through server-owned compilation, handles the fixed 25-person target, blocks explicit private criteria, and presents all four qualification groups without overclaiming compact out-of-network profiles.
+description: Use when a user asks Pluto to find, shortlist, compare, rank, or qualify candidates from a professional search or pasted raw JD with discover_candidates. Does not handle private questions about one selected in-network candidate. Preserves direct open-world professional search intent, routes raw JDs through server-owned compilation, handles the fixed 25-person target, blocks explicit private criteria, and presents one concise evidence-first shortlist without exposing internal qualification groups.
 ---
 
 # Candidate discovery
 
 Use this skill for any Pluto candidate search. Send either one complete safe
 professional query or one recognizable raw job description to
-`discover_candidates`, preserve the server's returned group order and evidence,
-and distinguish source interpretation, source execution, in-network
-qualification, network membership, and product-credit use.
+`discover_candidates`, preserve the server's returned evidence and order, and
+keep source execution, qualification, network membership, and product-credit
+metadata internal unless the user asks or a material limitation changes the
+usefulness of the results.
 
 If the user asks one supported private question about an explicitly selected
 in-network candidate, use the `candidate-question` skill instead. Never add that
@@ -200,59 +201,77 @@ execution, report that no search ran and preserve all criteria when asking the
 user for a corrected request.
 
 Never calculate credit usage or balance from the request, result counts,
-provider pricing, or prior calls. Report the exact returned `creditsUsed` and
-`remainingCredits` after a successful search. If either required field is
-missing, report a server/plugin contract mismatch rather than calculating it.
-A depleted or low balance may legitimately produce fewer in-network results
-while retaining free `outOfNetworkCandidates`. Present every returned group and
-relay the credit-limit notice; do not describe the free external-only result as
-a failed search or invent omitted in-network candidates.
+provider pricing, or prior calls. Treat the exact returned `creditsUsed` and
+`remainingCredits` as accounting metadata and show them only when the user asks
+about credits. If either required field is missing, treat that as a
+server/plugin contract mismatch rather than calculating it. A depleted or low
+balance may legitimately produce fewer in-network results while retaining free
+`outOfNetworkCandidates`. Relay a credit-limit notice only when it materially
+changes the returned shortlist; do not describe an external-only result as a
+failed search or invent omitted in-network candidates.
 
 ## Evaluate the response
 
 Review every response component:
 
-- Require `searchInterpretation` and use its `request` as the exact effective
-  professional search when describing what Pluto searched. For
-  `requestType: job_description`, concisely disclose every returned
-  `excludedJobDescriptionContext` category and any
-  `preferredCurrentLocation`. Make clear that the location is a soft
-  current-location sourcing proxy, not evidence of willingness, relocation,
-  availability, or work-style preference. Do not reconstruct or second-guess
-  the server's compilation. A missing or unsafe interpretation is a
-  server/plugin contract mismatch.
+- Require `searchInterpretation` and use its `request` internally as the exact
+  effective professional search. Do not lead a normal answer with a restatement
+  of what Pluto searched. For `requestType: job_description`, concisely
+  disclose only returned excluded context or a `preferredCurrentLocation` that
+  materially changes how the results should be understood. Make clear that the
+  location is a soft current-location sourcing proxy, not evidence of
+  willingness, relocation, availability, or work-style preference. Do not
+  reconstruct or second-guess the server's compilation. A missing or unsafe
+  interpretation is a server/plugin contract mismatch.
 - Treat top-level `status` as source-execution coverage, not candidate
-  qualification. Relay every material `notice` from a `partial` response and
-  any other coverage limitation. Unknown or failed candidate criteria do not
-  by themselves make source execution partial.
-- Keep the four arrays separate and preserve the returned order inside each:
-  `candidates`, `unverifiedCandidates`, `nearMatches`, then
-  `outOfNetworkCandidates`. Never merge, regroup, or rerank them by evidence
-  richness, network membership, gap count, or a client-side score.
+  qualification. Omit routine `complete` coverage and relay only a `partial`
+  notice that materially limits the usefulness or interpretation of the
+  results. Unknown or failed candidate criteria do not by themselves make
+  source execution partial.
+- Keep the four arrays distinct internally for safe follow-up. For the normal
+  presentation, combine only `candidates`, then `outOfNetworkCandidates`.
+  Preserve returned order inside each array and never rerank candidates with a
+  client-side score. Keep `unverifiedCandidates` and `nearMatches` out of the
+  normal Candidates table.
 - Treat `candidates` as verified in-network matches,
   `unverifiedCandidates` as in-network candidates with an unknown required
   criterion and no known required failure, and `nearMatches` as in-network
-  candidates with a known failed requirement. Only `candidates` may be called
-  verified or exact matches.
+  candidates with a known failed requirement. Use these distinctions to avoid
+  overclaiming and route later actions. Do not expose the qualification
+  taxonomy in the normal shortlist. Handle returned `unverifiedCandidates`
+  separately as Potential candidates with a required What to confirm value.
+  Surface `nearMatches` only when the user explicitly asks for near matches or
+  alternatives, using the separate tradeoff-preserving presentation below.
+- Treat `qualificationGapSource: criterion | canonical_request |
+  private_requirement | null` as an internal presentation guard. Only
+  `criterion` permits a Potential candidates or Alternatives row.
+  `canonical_request` and `private_requirement` are non-displayable fallbacks;
+  omit those people instead of comparing criterion text with the recruiter
+  request. Never display the marker itself.
 - Treat `outOfNetworkCandidates` as compact public professional leads, not
   qualified matches. They intentionally lack deep criterion evidence and
-  private personalization. Do not assign them a match status or infer that
-  their headline, title, company, or location proves the complete request.
-- Present `networkStatus: in_network`, `out_of_network`, and `unknown` as In
-  network, Out of network, and Network status unavailable. Network membership
-  is not raw provider provenance, and the provider must not be named.
+  private personalization. They may appear in the same concise candidate table,
+  but do not infer that their headline, title, company, or location proves the
+  complete request or a learned client preference.
+- Keep `networkStatus: in_network | out_of_network | unknown` internal for
+  routing later actions. Do not display a Network column or network labels, and
+  never name the provider.
 - For rich in-network candidates, use `criterionEvaluations` as the primary
   qualification ledger for the recruiter request, not as evidence of client
-  preference fit. Use each returned `criterionText`, `status`, `explanation`,
-  and relevant evidence labels without rewriting their meaning. A
-  `verified` evaluation is established, `unknown` is unresolved, and `failed`
-  is known not to match. Do not expose evidence IDs or evaluator internals.
-- Preserve and display every `unknownCriteria`, `failedCriteria`,
-  `unverifiedCriteria`, and near-match `missingCriteria` item exactly once.
+  preference fit. A `verified` evaluation is established, `unknown` is
+  unresolved, and `failed` is known not to match. Use those fields to avoid
+  overclaiming, but do not expose qualification labels, evidence IDs, evaluator
+  internals, or an exhaustive criterion ledger in the normal shortlist.
+- Treat every `unknownCriteria`, `failedCriteria`, `unverifiedCriteria`, and
+  near-match `missingCriteria` item as a guard against a positive claim.
   Unknown or unverified criteria are not established; failed or missing
-  criteria are known gaps. Never replace, combine, translate, shorten, or claim
-  a returned gap is satisfied because adjacent profile context looks
-  suggestive.
+  criteria are known gaps. When `qualificationGapSource` is `criterion`, use
+  only a returned unknown or unverified entry that names an individually
+  unresolved professional requirement as What to confirm. For an explicitly
+  requested near match with the same source, use only a `failedCriteria` entry
+  that names an individually failed professional requirement as the known
+  tradeoff. Never use `missingCriteria`. Never claim a returned gap is
+  satisfied because adjacent profile context looks suggestive.
 - Use only the candidate's returned `profileUrl` for the name link. Before
   rendering it, require an absolute HTTPS URL whose hostname is `linkedin.com`,
   `linkedin.cn`, or a subdomain of either. Never use a legacy fallback field or
@@ -261,32 +280,34 @@ Review every response component:
   presenting a partial shortlist as complete.
 - Use `matchReasons` only for facts they explicitly establish. An item beginning
   with `Client preference fit:` is the only client-preference-backed rationale
-  and is the primary source for `Why this person`. Use only the bounded reason
-  the server returned; do not reconstruct raw preference details, negative
-  preferences, source actions, or private analysis. Treat
-  `candidateReportedHighlights` as candidate-reported, unverified supporting
-  context and label it that way. `fitEvidence` is a reserved compatibility
-  field and must not be used as client-specific evidence. A missing or empty
-  `salesSegments` list and a missing or null `totalYearsSalesExperience` mean
-  unavailable, not zero or a mismatch.
+  and is the primary source for `Why they fit`. Preserve both the learned
+  preference and supporting candidate evidence from the bounded reason, but
+  present the connection naturally instead of repeating internal labels. Do
+  not reconstruct raw preference details, negative preferences, source
+  actions, or private analysis. Without a `Client preference fit:` item, use
+  only specific returned professional evidence and do not claim that it
+  reflects client preference. Treat `candidateReportedHighlights` as
+  candidate-reported, unverified supporting context and label it that way.
+  `fitEvidence` is a reserved compatibility field and must not be used as
+  client-specific evidence. A missing or empty `salesSegments` list and a
+  missing or null `totalYearsSalesExperience` mean unavailable, not zero or a
+  mismatch.
 - Do not display `fitScore`, a percentage, or any replacement relevance or
   goodness score. Preserve the server's order instead.
 - Offer `broadeningSuggestions` without applying them automatically.
 
-Use Unknown for `unknownCriteria`, Unverified for `unverifiedCriteria`, and Does
-not match for `failedCriteria` or `missingCriteria`. Use Verified for an
-individual criterion only when its returned evaluation says `verified` and
-includes supporting explanation or evidence. Do not build a replacement
-client-side criterion ledger or infer a per-criterion status. Avoid guesses
-such as `likely` or `roughly`, and never infer one fact from an adjacent fact.
-In particular, do not infer years of experience from seniority, graduation
-year, role count, or time since education.
+Do not build a replacement client-side criterion ledger or infer a
+per-criterion status. Avoid guesses such as `likely` or `roughly`, and never
+infer one fact from an adjacent fact. In particular, do not infer years of
+experience from seniority, graduation year, role count, or time since
+education.
 
 The returned array and `qualificationStatus` jointly determine in-network
-qualification. Never promote an unverified candidate or near match based on
-client inspection, even if every requested term appears somewhere in the
-returned summary. If an item's fields contradict its array contract, report a
-server/plugin mismatch instead of silently moving it.
+qualification; `qualificationGapSource` independently determines whether a
+secondary row is safe to present. Never promote an unverified candidate or near
+match based on client inspection, even if every requested term appears
+somewhere in the returned summary. If an item's fields contradict its array
+contract, report a server/plugin mismatch instead of silently moving it.
 
 Use Pluto's returned professional data unless the user asks for additional
 verification. Do not automatically browse for missing details, and never use
@@ -315,61 +336,80 @@ relax a constraint, or launch another metered search to reach an arbitrary
 shortlist size. A zero-result or short response is valid when accurately
 reported.
 
-## Present every candidate with evidence
+## Present one evidence-first shortlist
 
-Lead with `searchInterpretation.request`, the exact returned `creditsUsed` and
-`remainingCredits`, and any source-coverage limitation. For a raw JD, add one
-concise sentence covering its returned exclusions and optional current-location
-proxy. State the exact In network, Out of network, and Network status
-unavailable counts across all distinct displayed results. Do not impose or
-report an arbitrary result floor.
+For a normal successful search, lead directly with one concise Candidates
+table. Do not preface it with the effective query, credits, complete coverage,
+source counts, network counts, empty groups, or a statement that no verified
+matches were found. Add one short preface only when a raw-JD exclusion,
+location proxy, partial-source limitation, or credit limit materially changes
+how the shortlist should be read.
 
-Render the three rich in-network arrays as separate sections in this order:
-Verified in-network matches, In-network candidates needing verification, and
-In-network near matches. Preserve server order within every section. Every
-non-empty in-network table uses this compact shape:
+Combine `candidates` and `outOfNetworkCandidates` in their server-defined order
+and use this shape:
 
 ```markdown
-| Candidate | Network | Match | Current role | Location | Why this person | Evidence gaps |
-| --- | --- | --- | --- | --- | --- | --- |
+| Candidate | Current role | Location | Why they fit |
+| --- | --- | --- | --- |
 ```
 
-Put In network beside every candidate name in the Network column; do not rely
-on the section heading alone. Use Verified match, Needs verification, and Near
-match for the three sections. Build Current role only from returned
-current-title and current-company fields, and do not infer unavailable role or
-location values. Escape table-breaking Markdown in all returned text. A
-names-only table is never sufficient.
+Make each candidate name a Markdown link to the validated returned
+`profileUrl`. Build Current role only from returned current-title and
+current-company fields, do not infer unavailable role or location values, and
+escape table-breaking Markdown in all returned text.
 
-Give every in-network candidate one concise, candidate-specific
-`Why this person` cell. When `matchReasons` contains one or more
-`Client preference fit:` items, lead with those returned reasons as the source
-of truth for client fit. Otherwise use verified `criterionEvaluations` and
-their evidence labels, then other relevant `matchReasons`, recorded sales
-experience and segments, and candidate-reported highlights. Label
-candidate-reported highlights as unverified. Never use an unknown, failed,
-missing, or unverified criterion as a positive reason.
+For an in-network candidate, build one concise, candidate-specific `Why they
+fit` cell from `Client preference fit:` reasons first. Retain the preference and
+the supporting candidate fact; do not reduce the reason to a generic statement.
+When no such reason exists, use only the strongest specific professional
+evidence returned for that person and do not describe it as client preference
+fit. Never use location alone, `Candidate discovery profile`, a gap, missing
+evidence, or a verification label as the rationale.
 
-Put every unresolved or failed criterion in Evidence gaps using the labels
-defined above. Use None only when every returned gap field is empty. Never
-display `candidateRef`, `selectionToken`, evidence IDs, private project context,
-or internal ranking data.
+For an out-of-network candidate, use only the returned current role, headline,
+company, and location to explain relevance to the recruiter request. Do not
+claim deep qualification or client-preference personalization.
 
-After the in-network sections, render `outOfNetworkCandidates` in a separate
-Out-of-network profiles section using only the returned compact fields:
+Do not include `unverifiedCandidates` in the Candidates table. When the array
+is non-empty, add a separate Potential candidates table:
 
 ```markdown
-| Candidate | Network | Current role | Location | Headline |
+| Candidate | Current role | Location | Why they may fit | What to confirm |
 | --- | --- | --- | --- | --- |
 ```
 
-Make each candidate's name a Markdown link to the validated returned
-`profileUrl`. Use Out of network or Network status unavailable exactly as
-returned. Do not add a Match, Why this person, evidence, score, personalization,
-or provider column; the compact profile is not deep qualification evidence.
+Build the relevance cell from the same returned-evidence rules above. Build
+What to confirm only when `qualificationGapSource` is `criterion`, using an
+`unknownCriteria` or `unverifiedCriteria` entry that names an individually
+unresolved professional requirement. Omit `canonical_request` and
+`private_requirement` fallbacks without comparing text. Never imply that a
+potential candidate satisfies the complete recruiter request.
 
-Present every distinct candidate Pluto returned. End with the smallest useful
-next step: verify one gap, add one criterion, or approve one specific broadening
-suggestion. An out-of-network email lookup is a separate paid action and may be
-offered only as an option; never run it without explicit selection and
+Do not include `nearMatches` in the Candidates table. Only when the user
+explicitly asks for near matches or alternatives, add a separate Alternatives
+table:
+
+```markdown
+| Candidate | Current role | Location | Why they may still be relevant | Known tradeoff |
+| --- | --- | --- | --- | --- |
+```
+
+Build the relevance cell from the same returned-evidence rules above. Build the
+tradeoff only when `qualificationGapSource` is `criterion`, using a returned
+`failedCriteria` entry that names an individually failed professional
+requirement. Never use `missingCriteria`. Omit `canonical_request` and
+`private_requirement` fallbacks without comparing text. Never imply that an
+alternative satisfies the complete recruiter request.
+
+Include a candidate only when the returned fields support a useful,
+candidate-specific rationale. Preserve server order among included candidates.
+If no candidate has enough evidence for a useful rationale, say that plainly
+without printing the qualification taxonomy. Never display `candidateRef`,
+`selectionToken`, evidence IDs, private project context, internal ranking data,
+network labels, match labels, or evidence-gap columns.
+
+Do not state that Pluto returned no broadening suggestions, and do not append a
+generic email-lookup or paid-action offer. End after the shortlist unless one
+specific next step is materially useful. Never run enrichment, candidate
+interest, or any outbound action without explicit candidate selection and
 authorization.
