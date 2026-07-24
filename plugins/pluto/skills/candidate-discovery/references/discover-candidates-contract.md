@@ -291,11 +291,12 @@ provisional because a required criterion is unknown. An item in `nearMatches`
 has a known failed requirement. Never turn `status: complete`, a high rank,
 `matchReasons`, a headline, or adjacent experience into proof of a returned
 gap, and never promote an item between arrays. Keep these distinctions internal
-for safe follow-up; do not describe candidates with verified, provisional,
-needs-verification, or near-match labels in the normal shortlist. Unknown or
-unverified means not established, while failed or missing means known not to
-satisfy the criterion. Preferred criteria remain preferences and must not be
-upgraded into required qualification claims.
+for safe follow-up; keep `nearMatches` out of the normal shortlist, and do not
+describe the remaining candidates with verified, provisional,
+needs-verification, or network labels. Unknown or unverified means not
+established, while failed or missing means known not to satisfy the criterion.
+Preferred criteria remain preferences and must not be upgraded into required
+qualification claims.
 
 `candidateReportedHighlights` are candidate-reported, unverified context, not
 independent verification. Label them whenever used. A `matchReasons` item
@@ -312,9 +313,10 @@ not authorize exposing private client preferences. Recorded
 missing, empty, or null means unavailable. Never estimate general experience
 from title seniority, graduation year, role count, or time since education.
 
-Preserve each array and its returned order internally. Combine the arrays only
-for the concise presentation contract below, and do not create a replacement
-ranking or display a legacy fit score, percentage, or numeric goodness score.
+Preserve each array and its returned order internally. Combine only
+`candidates`, `unverifiedCandidates`, and `outOfNetworkCandidates` for the
+normal concise presentation contract below. Do not create a replacement ranking
+or display a legacy fit score, percentage, or numeric goodness score.
 
 ## Presentation contract
 
@@ -326,9 +328,8 @@ current-location proxy that materially changes how the results should be read.
 Likewise, surface only partial-source or credit limitations that materially
 affect the shortlist.
 
-Combine `candidates`, `unverifiedCandidates`, `nearMatches`, and
-`outOfNetworkCandidates` in that order while preserving the order inside each
-array. Use:
+Combine `candidates`, `unverifiedCandidates`, and `outOfNetworkCandidates` in
+that order while preserving the order inside each array. Use:
 
 ```markdown
 | Candidate | Current role | Location | Why they fit |
@@ -350,6 +351,20 @@ label as positive rationale.
 For an out-of-network candidate, use only returned current role, headline,
 company, and location to explain relevance to the recruiter request. Do not
 claim deep qualification or client-preference personalization.
+
+Do not include `nearMatches` in the Candidates table because each item has a
+known failed required criterion. Only when the user explicitly asks for near
+matches or alternatives, add a separate Alternatives table:
+
+```markdown
+| Candidate | Current role | Location | Why they may still be relevant | Known tradeoff |
+| --- | --- | --- | --- | --- |
+```
+
+Build relevance from the same returned-evidence rules above. Build the known
+tradeoff only from returned `failedCriteria` and `missingCriteria`, stating the
+required failure plainly. Never imply that the alternative satisfies the
+complete recruiter request.
 
 Include a candidate only when the returned fields support a useful,
 candidate-specific rationale, preserving server order among included
