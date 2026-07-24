@@ -66,9 +66,11 @@ language ("Use Pluto to find AI engineers…").
 [paste the full job description]
 ```
 
-For a new or changed search, Pluto first drafts a hypothetical ideal LinkedIn
-profile and the exact search brief for you to review. Revise it until it looks
-right, then ask Pluto to run the search.
+For a new or changed search, Pluto first drafts a compact LinkedIn-style
+candidate profile and a structured search brief for you to review. Revise it
+until it looks right, then ask Pluto to run the search. For a recognizable
+pasted JD, the unchanged JD remains the execution source unless you change the
+target and approve switching to a direct brief.
 
 ```text
 @pluto How many credits does my organization have left?
@@ -116,10 +118,12 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   pipeline and send the normal reconfirm-interest message.
 - Pluto takes an outbound action only after you explicitly select a candidate
   and ask for that action.
-- A new or changed candidate search first produces a hypothetical ideal
-  LinkedIn profile and exact draft search brief without using credits. Pluto
-  runs it only after you have seen the current draft and explicitly ask to
-  search.
+- A new or changed candidate search first produces a compact LinkedIn-style
+  candidate profile and structured search brief without using credits. Pluto
+  runs the approved execution source only after you have seen the current draft
+  and explicitly ask to search. For a recognizable pasted JD, that source
+  remains the unchanged JD unless you change the target and approve switching
+  to a direct brief.
 - When you run an approved direct search, Pluto forwards the exact approved
   brief without a client-side privacy-policy classification or rewrite.
   Server-side authentication, authorization, project scope, and response

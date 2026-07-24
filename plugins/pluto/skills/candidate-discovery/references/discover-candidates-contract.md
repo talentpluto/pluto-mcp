@@ -4,7 +4,7 @@
 
 The first prompt in a new or changed search cycle does not call
 `discover_candidates`. The candidate-discovery skill first shows a
-hypothetical ideal LinkedIn profile and its execution source, then iterates
+compact LinkedIn-style candidate profile and its execution source, then iterates
 without using product credits. This contract governs the one tool call made
 only after the user has seen the current draft and explicitly asks to run it.
 
@@ -146,14 +146,14 @@ If that field is unavailable, report that lookalike search is not yet
 available. Never fall back to a search containing the seed's name and never
 call another search, enrichment, candidate-interest, or outbound tool.
 
-Draft a hypothetical ideal LinkedIn profile and Search brief from only fields
-already returned for the seed, such as current role, current professional
-location, public company context, returned headline, or explicitly returned
-public prior-employer context. Mark assistant-selected similarity dimensions as
-suggested preferences. Never mention or use email, phone, contact enrichment,
-private project context, hidden provider data, inferred personal information,
-or an attribute not present in the returned result. Distinguish total from
-role-specific experience when it would materially change the target.
+Draft a compact LinkedIn-style candidate profile and Search brief from only
+fields already returned for the seed, such as current role, current
+professional location, public company context, returned headline, or explicitly
+returned public prior-employer context. Mark assistant-selected similarity
+dimensions as suggested preferences. Never mention or use email, phone, contact
+enrichment, private project context, hidden provider data, inferred personal
+information, or an attribute not present in the returned result. Distinguish
+total from role-specific experience when it would materially change the target.
 
 Do not silently preserve the seed's earlier search constraints. Include them
 only when the user supplies them in the new prompt or approves them in the
