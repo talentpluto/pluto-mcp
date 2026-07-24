@@ -261,9 +261,11 @@ Review every response component:
   Unknown or unverified criteria are not established; failed or missing
   criteria are known gaps. For an unverified candidate, state a relevant
   returned unknown or unverified criterion as What to confirm. When near
-  matches were explicitly requested, state the relevant returned failed or
-  missing criterion as the candidate's known tradeoff. Never claim a returned
-  gap is satisfied because adjacent profile context looks suggestive.
+  matches were explicitly requested, use only a `failedCriteria` entry that
+  names an individually failed professional requirement as the known tradeoff.
+  Never use `missingCriteria`, the complete search request, or a
+  `failedCriteria` entry that repeats it. Never claim a returned gap is
+  satisfied because adjacent profile context looks suggestive.
 - Use only the candidate's returned `profileUrl` for the name link. Before
   rendering it, require an absolute HTTPS URL whose hostname is `linkedin.com`,
   `linkedin.cn`, or a subdomain of either. Never use a legacy fallback field or
@@ -386,9 +388,12 @@ table:
 ```
 
 Build the relevance cell from the same returned-evidence rules above. Build the
-tradeoff only from returned `failedCriteria` and `missingCriteria`; state the
-known required failure plainly. Never imply that an alternative satisfies the
-complete recruiter request.
+tradeoff only from a returned `failedCriteria` entry that names an individually
+failed professional requirement. Never use `missingCriteria`,
+`searchInterpretation.request`, or a `failedCriteria` entry that repeats the
+complete canonical request. If no specific failed criterion remains, omit that
+person from the Alternatives table. Never imply that an alternative satisfies
+the complete recruiter request.
 
 Include a candidate only when the returned fields support a useful,
 candidate-specific rationale. Preserve server order among included candidates.

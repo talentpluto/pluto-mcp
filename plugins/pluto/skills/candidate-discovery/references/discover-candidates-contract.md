@@ -377,9 +377,12 @@ matches or alternatives, add a separate Alternatives table:
 ```
 
 Build relevance from the same returned-evidence rules above. Build the known
-tradeoff only from returned `failedCriteria` and `missingCriteria`, stating the
-required failure plainly. Never imply that the alternative satisfies the
-complete recruiter request.
+tradeoff only from a returned `failedCriteria` entry that names an individually
+failed professional requirement. Never use `missingCriteria`,
+`searchInterpretation.request`, or a `failedCriteria` entry that repeats the
+complete canonical request. If no specific failed criterion remains, omit that
+person from the Alternatives table. Never imply that the alternative satisfies
+the complete recruiter request.
 
 Include a candidate only when the returned fields support a useful,
 candidate-specific rationale, preserving server order among included
