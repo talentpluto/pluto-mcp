@@ -44,6 +44,14 @@ Run these once inside Claude Code:
 Then run `/mcp`, select **pluto**, and complete the TalentPluto sign-in in the
 browser window it opens. Start a new session afterward.
 
+Finally, enable auto-update so future plugin releases install on their own:
+run `/plugin`, open the **Marketplaces** tab, select **talentpluto**, and turn
+on auto-update. Claude Code then refreshes the plugin in the background
+shortly after startup and prompts you to run `/reload-plugins` when a new
+version has landed. Auto-update is off by default for third-party
+marketplaces, so without this step you need to run
+`/plugin marketplace update talentpluto` yourself to pick up new versions.
+
 ## Try it
 
 The `@pluto` mention below is Codex syntax; in Claude Code, just ask in plain
