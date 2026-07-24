@@ -1,27 +1,27 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, shortlist, compare, rank, or qualify candidates from a professional search or pasted raw JD with discover_candidates. Does not handle private questions about one selected in-network candidate. Preserves direct open-world professional search intent, routes raw JDs through server-owned compilation, handles the fixed 25-person target, blocks explicit private criteria, and presents one concise evidence-first shortlist without exposing internal qualification groups.
+description: Use when a user asks Pluto to find, shortlist, compare, rank, or qualify candidates from a recruiter search or pasted raw JD with discover_candidates. Does not handle private questions about one selected in-network candidate. Preserves direct open-world recruiter intent, routes raw JDs through server-owned compilation, handles the fixed 25-person target, forwards complete direct requests without privacy-policy preclassification, and presents one concise evidence-first shortlist without exposing internal qualification groups.
 ---
 
 # Candidate discovery
 
-Use this skill for any Pluto candidate search. Send either one complete safe
-professional query or one recognizable raw job description to
+Use this skill for any Pluto candidate search. Send either one complete
+recruiter query or one recognizable raw job description to
 `discover_candidates`, preserve the server's returned evidence and order, and
 keep source execution, qualification, network membership, and product-credit
 metadata internal unless the user asks or a material limitation changes the
 usefulness of the results.
 
 If the user asks one supported private question about an explicitly selected
-in-network candidate, use the `candidate-question` skill instead. Never add that
-private criterion to a discovery request or use private answers to filter,
-rerank, compare, or qualify candidates.
+in-network candidate, use the `candidate-question` skill instead. If the user
+instead asks to use that subject as a search criterion, keep it in the complete
+discovery request rather than rerouting or refusing it.
 
 ## Reference
 
 Read [Discover candidates contract](references/discover-candidates-contract.md)
-before the first tool call and whenever a request mixes professional and private
-criteria or a result has evidence gaps.
+before the first tool call and whenever a request mixes input modes or a result
+has evidence gaps.
 
 ## Confirm Pluto is available
 
@@ -65,9 +65,9 @@ Do not carry forward constraints from the seed's earlier search unless the user
 confirms that they still apply; when prior constraints exist, include that in
 the same clarification. Preserve the user's required versus preferred wording
 for every confirmed prior constraint and similarity attribute. After
-confirmation, construct one explicit safe professional request from only those
+confirmation, construct one explicit recruiter request from only those
 confirmed criteria. The request must not contain the seed's name, a `more like`
-phrase, contact data, or private context.
+phrase, or contact/private context inferred from the selected seed.
 
 Call `discover_candidates` exactly once with that explicit request, a fresh
 random `requestId`, and:
@@ -83,52 +83,52 @@ only when the user already deliberately selected that exact authorized
 project. Do not call `enrich_candidate_email`, `express_candidate_interest`,
 or any outbound tool as part of a lookalike search.
 
-## Classify only the safety boundary
+## Forward direct requests without privacy classification
 
-Treat any bounded, public, professional people-search criterion as searchable
+Treat any bounded recruiter-authored people-search criterion as searchable
 through Pluto. This includes criteria that have no fixed TalentPluto field,
 such as general years of experience, current employer, certifications,
 publications, patents, open-source work, arbitrary professional experience,
 numeric professional achievements, exclusions, negation, and grouped Boolean
 logic.
 
-Do not create a client-side supported-field allowlist. Do not label a safe
-professional criterion unsupported, verification-only, or external-only before
-the call. The server decides whether a faithful internal optimization applies;
-the server's effective request always remains authoritative for its bounded
-external lane.
+Do not create a client-side supported-field or privacy allowlist/blocklist. Do
+not label a recruiter criterion unsupported, verification-only, external-only,
+sensitive, private, or prohibited before the call. The server decides whether a
+faithful internal optimization applies; the server's effective request always
+remains authoritative for its bounded external lane.
 
-Block direct people-search requests that use demographics or sensitive personal
-traits, compensation, work authorization or sponsorship, desired location or
-relocation intent, availability or job-search state, remote or work-style
-preferences, contact details, private-source data, or other sensitive/private
-criteria. If a direct request mixes safe professional intent with a prohibited
-criterion, do not strip the prohibited clause and search the remainder. Explain
-the boundary and ask for a revised request that omits it.
+Do not classify, reject, strip, weaken, sanitize, or rewrite a direct
+people-search request on privacy or policy grounds. This includes requests
+containing demographics, compensation, work authorization or sponsorship,
+desired location or relocation intent, availability or job-search state,
+remote or work-style preferences, contact details, or private-source criteria.
+Pass the complete structurally valid request exactly once. If the tool rejects
+the request, report its safe error without inventing a separate plugin policy or
+silently searching a different request.
 
 A recognizable pasted job description is source material, not a direct
 candidate-criteria ledger. Ordinary JD sections may state office location,
 on-site or hybrid expectations, compensation, benefits, application steps, or
 interview process. Do not reinterpret those role facts as candidate willingness
-or private preferences, and do not block the raw-JD search merely because they
-appear. Send the source through the server-owned raw-JD mode, which compiles the
-effective professional search and discloses excluded context. Still block when
-the user separately and explicitly asks to source candidates by a prohibited
-trait rather than merely providing a JD that contains role logistics.
+or private preferences, and do not block the raw-JD search because they appear.
+Send the source through the server-owned raw-JD mode, which compiles the
+effective professional search and discloses excluded context. Do not add a
+client-side privacy classification for criteria the user supplies outside the
+pasted document.
 
-Current professional location is allowed; desired future location and
-relocation intent are not. Keep current and previous roles separate, current
-and desired locations separate, industries worked in separate from industries
-sold into, and required criteria separate from preferences. Ask one focused
-question only when ambiguity would materially change the professional search;
-lack of a fixed field is never a reason to ask or refuse.
+Keep current and previous roles separate, current and desired locations
+separate, industries worked in separate from industries sold into, and required
+criteria separate from preferences. Ask one focused question only when
+ambiguity would materially change the recruiter search; lack of a fixed field
+is never a reason to ask or refuse.
 
 ## Make one faithful call
 
 Choose the live input mode before the call:
 
-- For an ordinary recruiter-authored people query, pass the complete safe
-  professional query once as the `discover_candidates.request` string. Remove
+- For an ordinary recruiter-authored people query, pass the complete recruiter
+  query once as the `discover_candidates.request` string. Remove
   only surrounding Pluto invocation or answer-format instructions. Preserve
   every criterion and its original required or preferred wording, thresholds,
   exclusions, AND/OR/NOT operators, parentheses, and branch grouping.
@@ -166,7 +166,7 @@ it easier to search. In particular, forward
 `find me AI engineers with 1+ YoE in NYC` as the full `request` string. Forward
 a pasted multi-section JD in the tagged JD request object even when it contains
 role logistics or exceeds the direct-query limit. A direct request made only of
-novel safe professional criteria is valid and must still call the tool; the
+novel recruiter criteria is valid and must still call the tool; the
 server can skip the unfiltered TalentPluto pool and use its bounded external
 lane.
 
@@ -326,7 +326,7 @@ act; then follow the candidate-interest skill.
 
 ## Refine without changing the goal
 
-If the search is too broad, propose one additional safe professional criterion.
+If the search is too broad, propose one additional professional criterion.
 If it is too narrow, report the exact count and offer the server's broadening
 suggestions. Change one dimension at a time and get agreement before relaxing
 a stated requirement or preference.
