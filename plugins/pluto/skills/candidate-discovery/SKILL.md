@@ -259,13 +259,15 @@ Review every response component:
 - Treat every `unknownCriteria`, `failedCriteria`, `unverifiedCriteria`, and
   near-match `missingCriteria` item as a guard against a positive claim.
   Unknown or unverified criteria are not established; failed or missing
-  criteria are known gaps. For an unverified candidate, state a relevant
-  returned unknown or unverified criterion as What to confirm. When near
-  matches were explicitly requested, use only a `failedCriteria` entry that
-  names an individually failed professional requirement as the known tradeoff.
-  Never use `missingCriteria`, the complete search request, or a
-  `failedCriteria` entry that repeats it. Never claim a returned gap is
-  satisfied because adjacent profile context looks suggestive.
+  criteria are known gaps. For an unverified candidate, use only a returned
+  unknown or unverified entry that names an individually unresolved
+  professional requirement as What to confirm. Never use the complete search
+  request or an entry that repeats it. When near matches were explicitly
+  requested, use only a `failedCriteria` entry that names an individually
+  failed professional requirement as the known tradeoff. Never use
+  `missingCriteria`, the complete search request, or a `failedCriteria` entry
+  that repeats it. Never claim a returned gap is satisfied because adjacent
+  profile context looks suggestive.
 - Use only the candidate's returned `profileUrl` for the name link. Before
   rendering it, require an absolute HTTPS URL whose hostname is `linkedin.com`,
   `linkedin.cn`, or a subdomain of either. Never use a legacy fallback field or
@@ -372,11 +374,12 @@ is non-empty, add a separate Potential candidates table:
 ```
 
 Build the relevance cell from the same returned-evidence rules above. Build
-What to confirm only from returned `unknownCriteria` and
-`unverifiedCriteria`, phrased as the unresolved professional requirement rather
-than verification jargon. If neither field contains a usable criterion, omit
-that person instead of presenting them as an ordinary fit. Never imply that a
-potential candidate satisfies the complete recruiter request.
+What to confirm only from an `unknownCriteria` or `unverifiedCriteria` entry
+that names an individually unresolved professional requirement. Never use
+`searchInterpretation.request` or an entry that repeats the complete canonical
+request. If no specific unresolved entry remains, omit that person instead of
+presenting them as an ordinary fit. Never imply that a potential candidate
+satisfies the complete recruiter request.
 
 Do not include `nearMatches` in the Candidates table. Only when the user
 explicitly asks for near matches or alternatives, add a separate Alternatives

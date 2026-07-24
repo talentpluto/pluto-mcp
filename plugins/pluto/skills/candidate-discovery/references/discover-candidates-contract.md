@@ -361,10 +361,11 @@ is non-empty, add a separate Potential candidates table:
 ```
 
 Build relevance from the same returned-evidence rules above. Build What to
-confirm only from returned `unknownCriteria` and `unverifiedCriteria`, phrased
-as an unresolved professional requirement rather than internal qualification
-jargon. If neither field contains a usable criterion, omit that person rather
-than presenting them as an ordinary fit. Never imply that a potential candidate
+confirm only from an `unknownCriteria` or `unverifiedCriteria` entry that names
+an individually unresolved professional requirement. Never use
+`searchInterpretation.request` or an entry that repeats the complete canonical
+request. If no specific unresolved entry remains, omit that person rather than
+presenting them as an ordinary fit. Never imply that a potential candidate
 satisfies the complete recruiter request.
 
 Do not include `nearMatches` in the Candidates table because each item has a
