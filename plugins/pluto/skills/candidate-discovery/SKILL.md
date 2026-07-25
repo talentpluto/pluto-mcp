@@ -7,14 +7,17 @@ description: Use when a user asks Pluto to plan, refine, run, repeat, shortlist,
 
 Use this skill for any Pluto candidate-search cycle. First turn the user's
 prompt into a compact LinkedIn-style candidate profile and a structured search
-brief. Iterate on both without calling `discover_candidates`. Only after
-the user has seen the current draft and explicitly asks to run it, send that
-exact approved execution source to `discover_candidates`.
+brief backed by one versioned criterion graph. Iterate on both without calling
+`discover_candidates`. Only after the user has seen the current draft and
+explicitly asks to run it, send that exact approved graph or unchanged raw job
+description to `discover_candidates`.
 
-After the call, validate the returned public criterion graph, evaluate every
-eligible in-network person before applying the display cutoff, and rerank only
-that eligible pool. Preserve every candidate's originating array, opaque
-handles, project scope, and server-owned deterministic or private outcome.
+After the call, validate the returned public criterion graph and evaluate every
+eligible in-network person before presentation. Rank supportable matches first,
+then retain every other returned in-network person with a plain-language
+assessment of what remains unconfirmed or conflicts. Preserve every candidate's
+originating array, opaque handles, project scope, and server-owned deterministic
+or private outcome.
 Keep source execution, qualification, network membership, and product-credit
 metadata internal unless the user asks or a material limitation changes the
 usefulness of the results.
@@ -74,12 +77,113 @@ LinkedIn-like sections that help distinguish the target.
 - <criterion>
 ```
 
+Build the Search brief as this exact request graph before rendering it:
+
+```json
+{
+  "type": "search_brief",
+  "version": 1,
+  "nodes": [
+    {
+      "kind": "criterion",
+      "nodeId": "criterion_role",
+      "text": "Current role: Account Executive",
+      "suggested": false
+    },
+    {
+      "kind": "criterion",
+      "nodeId": "criterion_location",
+      "text": "Current professional location: New York City metropolitan area",
+      "suggested": false
+    },
+    {
+      "kind": "criterion",
+      "nodeId": "criterion_experience",
+      "text": "Experience: 3+ years specifically in Account Executive roles",
+      "suggested": false
+    },
+    {
+      "kind": "criterion",
+      "nodeId": "criterion_full_cycle",
+      "text": "Full-cycle, quota-carrying B2B sales ownership",
+      "suggested": true
+    },
+    {
+      "kind": "group",
+      "nodeId": "required_root",
+      "booleanOperator": "and",
+      "childNodeIds": [
+        "criterion_role",
+        "criterion_location",
+        "criterion_experience"
+      ]
+    }
+  ],
+  "requiredRootNodeId": "required_root",
+  "preferredRootNodeIds": ["criterion_full_cycle"]
+}
+```
+
+Each visible criterion must correspond to exactly one atomic `criterion` node.
+Keep the recruiter's complete criterion in `text`, but do not include Markdown,
+the Required/Preferred/Exclude labels, or the literal `*(suggested)*` marker in
+that text. The server owns evaluator selection, structured filters, thresholds,
+evidence scope, and semantic fallback; never add those as client fields or
+reduce an open-world criterion to a known field.
+
+Represent all logic with explicit `group` nodes. `and` and `or` have at least
+two ordered children; `not` has exactly one. A simple Required list is one
+required `and` root. A visible Exclude bullet is a `not` child within the
+required expression, not a separate requirement level. This also permits
+branch-local logic such as `(A AND NOT B) OR (C AND NOT D)`. A preference is
+one root in `preferredRootNodeIds`; use an `and`, `or`, or `not` group there
+when the preference itself is compound. Keep node IDs unique, every reference
+resolvable, no node shared by multiple parents or roots, every node reachable
+from exactly one requirement tier, and the graph acyclic. At least one required
+or preferred root must exist. Never use the server-reserved
+`criterion_private_` or `group_private_` node-ID prefixes.
+
+For example, the visible bullet `- Current Google employees` under **Exclude**
+is exactly these two nodes, with `not_current_google` included in the applicable
+required branch:
+
+```json
+[
+  {
+    "kind": "criterion",
+    "nodeId": "current_google",
+    "text": "Current Google employees",
+    "suggested": false
+  },
+  {
+    "kind": "group",
+    "nodeId": "not_current_google",
+    "booleanOperator": "not",
+    "childNodeIds": ["current_google"]
+  }
+]
+```
+
+`suggested` is authoring provenance, not criterion text. Set it to `true` only
+for an assistant-added leaf reachable exclusively from a preferred root. Set it
+to `false` for every user-supplied leaf. If the user promotes a suggestion to a
+requirement or otherwise explicitly replaces it, make the resulting leaf
+user-confirmed with `suggested: false`. Render `suggested: true` as
+`*(suggested)*`; never send that marker inside `text`.
+
 Omit any profile section or Search brief group that would be empty,
 uninformative, or duplicative. Never display placeholder labels. For a short
 query, keep the profile to roughly three to six visible lines or bullets. The
-profile is the recruiter-readable sketch; the Search brief is the canonical,
-complete criteria ledger. Do not restate every Search brief bullet in the
-profile, and do not collapse the Search brief into a dense paragraph.
+profile is the recruiter-readable sketch; the graph-backed Search brief is the
+canonical, complete criteria ledger. Do not restate every Search brief bullet
+in the profile, and do not collapse the Search brief into a dense paragraph.
+
+The visible brief must be a faithful rendering of the graph, not a second
+source. For simple top-level logic, render positive required children under
+**Required**, simple `not(criterion)` children under **Exclude**, and preferred
+roots under **Preferred**. For nested logic, use indented `All of`, `Any of`,
+and `Not` bullets so every branch and scope is visible. Never flatten, reorder,
+duplicate, or hide a nested expression. Do not display node IDs.
 
 Keep every criterion the user supplied and preserve whether it is required,
 preferred, or excluded. Separate current from previous roles, current from
@@ -102,9 +206,10 @@ When one ambiguity would materially change the search, draft the best
 interpretation and place one bold `Confirm:` line after the Search brief. Keep
 the question outside the brief so it is never sent to the tool. Otherwise end
 with one short invitation to reply `run this search` or describe a change. When
-the user edits any criterion, show the complete updated profile and complete
-updated Search brief again so there is only one current version. A revision
-removes any prior approval.
+the user edits any criterion, suggested marker, requirement tier, operator, or
+branch, update the graph and show the complete profile and complete Search brief
+again so there is only one current version. Any graph revision removes prior
+approval.
 
 For a short request, prefer this density and hierarchy:
 
@@ -141,31 +246,39 @@ metered call. Approval without an execution request, such as `looks good`, does
 not authorize a call; acknowledge it and wait for the user to ask for the
 search. Never infer authorization from silence, discussion, or profile edits.
 
+Treat the displayed Search brief and its `search_brief` graph as one approval
+artifact. Build the graph first, then render it. Once shown, freeze every node
+text, `suggested` value, root, child edge, and child order. When the user asks
+to run it, pass that exact object; never reconstruct it from the earlier prompt
+or rendered Markdown. If the exact approved graph cannot be recovered
+confidently, show the complete profile and brief again instead of searching a
+best-effort rewrite.
+
 The ideal profile is a planning artifact, not tool input. For a direct search,
-the exact approved Search brief is the tool input. Do not include draft labels,
-research notes, explanations, or presentation instructions in that brief.
-The exact leading `### Search brief` heading and paired bold group labels may
-remain; the server removes that presentation wrapper without changing the
-enclosed recruiter criteria.
+the exact approved `search_brief` object is the tool input. Do not send the
+Markdown rendering, profile, confirmation question, research notes,
+explanations, or presentation instructions.
 
 For a recognizable pasted job description, still build the ideal profile for
 review, but label the execution source as the unchanged raw JD rather than
 silently compiling the document into the Search brief. If the user approves
 without changing the target and asks to search, send the raw JD through the
 tagged JD input mode. If the user changes the target, present a complete direct
-Search brief reflecting the complete revised target and only criteria visible
-in the approved draft. State that approval will switch execution from raw-JD
-mode to that direct brief. Switch modes only after the user approves that
-direct brief and asks to run it.
+graph-backed Search brief reflecting the complete revised target and only
+criteria visible in the approved draft. State that approval will switch
+execution from raw-JD mode to a `search_brief` request object. Switch modes only
+after the user approves that complete direct brief and asks to run it. Do not
+create a hybrid raw-JD-plus-overrides request.
 
 ## Confirm Pluto is available
 
 Drafting the ideal profile does not require Pluto. Before promising or
 attempting the approved search, confirm that the current host context exposes
 Pluto's `discover_candidates` MCP tool and that its live input schema accepts
-`resultMode: "candidate_pool"`. Loading this skill alone does not prove that
-Pluto initialized successfully or that the connected server advertises the
-candidate-pool contract.
+`resultMode: "candidate_pool"` plus a `request` object whose `type` is
+`search_brief`, `version` is `1`, and whose graph fields match this skill.
+Loading this skill alone does not prove that Pluto initialized successfully or
+that the connected server advertises the current candidate-pool contract.
 
 If the tool is absent, do not search through another candidate source, call the
 MCP endpoint directly, or imply that a search ran. Follow the
@@ -173,13 +286,14 @@ MCP endpoint directly, or imply that a search ran. Follow the
 tool, continue this skill with the original request. Otherwise report that no
 search ran and no credits were used.
 
-If `discover_candidates` is present but its live schema does not accept
-`candidate_pool`, do not make a legacy `qualified_matches` call. Recheck the
-live catalog once through `connection-recovery`; if the field remains absent,
-report a plugin/server contract mismatch and that no search ran. A newly
-deployed schema may require one fresh task or session to refresh the catalog,
-but routine server changes do not require reinstalling Pluto or clearing
-authorization.
+If `discover_candidates` is present but its live schema does not accept either
+`candidate_pool` or the versioned `search_brief` object, do not make a legacy
+`qualified_matches` call and do not fall back to a direct request string.
+Recheck the live catalog once through `connection-recovery`; if either field
+remains absent, report a plugin/server contract mismatch and that no search
+ran. A newly deployed schema may require one fresh task or session to refresh
+the catalog, but routine server changes do not require reinstalling Pluto or
+clearing authorization.
 
 ## Resolve conversational lookalikes
 
@@ -200,8 +314,8 @@ Draft the ideal LinkedIn profile and Search brief from only the seed's visible
 public professional fields, such as the current role, current professional
 location, public company context, returned headline, or explicitly returned
 public prior-employer context. Mark assistant-selected similarity dimensions
-as suggested preferences so the user can make them required, remove them, or
-add other criteria before searching.
+as preferred criterion leaves with `suggested: true` so the user can make them
+required, remove them, or add other criteria before searching.
 
 Do not mention or use email, phone, contact enrichment, private project
 context, hidden provider data, inferred personal information, or any attribute
@@ -211,13 +325,13 @@ whenever it would materially change the target.
 Do not carry forward constraints from the seed's earlier search unless the user
 includes them in the new prompt or approves them in the visible draft. Preserve
 the required or preferred status of every approved prior constraint and
-similarity attribute. The approved Search brief must contain only those
-criteria and must not contain the seed's name, a `more like` phrase, or
-contact/private context inferred from the selected seed.
+similarity attribute. The approved graph must contain only those criteria and
+must not contain the seed's name, a `more like` phrase, or contact/private
+context inferred from the selected seed.
 
 Only after the user has seen this lookalike draft and explicitly asks to run it,
-call `discover_candidates` exactly once with the approved Search brief, a fresh
-random `requestId`, and:
+call `discover_candidates` exactly once with the exact approved `search_brief`
+object as `request`, a fresh random `requestId`, and:
 
 ```yaml
 resultMode: candidate_pool
@@ -239,6 +353,12 @@ fixed TalentPluto field, such as general years of experience, current employer,
 certifications, publications, patents, open-source work, arbitrary professional
 experience, numeric professional achievements, exclusions, negation, and
 grouped Boolean logic.
+
+Put each semantically atomic criterion in its own open-world leaf and express
+only logical relationships in group nodes. Do not add a client-side
+criterion-kind enum, evaluator, filter, or typed value. Thresholds, temporal
+scope, current versus previous meaning, and role-specific versus total
+experience stay explicit in the leaf's approved text for server interpretation.
 
 Do not create a client-side supported-field or privacy allowlist/blocklist. Do
 not label a recruiter criterion unsupported, verification-only, external-only,
@@ -278,10 +398,20 @@ choose the live input mode and make one call. Every call must include
 `resultMode: "candidate_pool"`; never omit it or substitute
 `qualified_matches`.
 
-- For an ordinary direct search, pass the exact approved Search brief once as
-  the `discover_candidates.request` string. Preserve every criterion and its
-  approved required or preferred wording, thresholds, exclusions, AND/OR/NOT
-  operators, parentheses, and branch grouping.
+- For an ordinary direct search, pass the exact approved object once as
+  `discover_candidates.request`:
+
+  ```yaml
+  type: search_brief
+  version: 1
+  nodes: <the frozen ordered criterion and group nodes>
+  requiredRootNodeId: <the frozen required root or null>
+  preferredRootNodeIds: <the frozen ordered preferred roots>
+  ```
+
+  Do not send the visible Markdown or a direct request string. Direct strings
+  exist only for legacy server compatibility and are never an execution mode
+  for this skill.
 - When the user asks to match, search from, or find people for a recognizable
   pasted job description and has not approved a switch to a revised direct
   brief, pass the raw JD once as
@@ -295,9 +425,9 @@ choose the live input mode and make one call. Every call must include
   Do not summarize, shorten, sanitize, extract criteria from, or ask the user
   to rewrite the JD. The server owns the grounded professional compilation and
   length reduction.
-- For an approved conversational lookalike, pass the exact approved Search
-  brief as the `request` string and include the seed's unchanged paired
-  `candidateRef` and `selectionToken` in `excludeCandidate`.
+- For an approved conversational lookalike, pass the exact approved
+  `search_brief` object and include the seed's unchanged paired `candidateRef`
+  and `selectionToken` in `excludeCandidate`.
 
 Generate a fresh random UUID for `discover_candidates.requestId` for this
 deliberate search. Keep that UUID paired with the exact `request` value, fixed
@@ -305,34 +435,32 @@ deliberate search. Keep that UUID paired with the exact `request` value, fixed
 `excludeCandidate` for the current operation; never display it or reuse it for
 a different or changed search.
 
-Ordinary Unicode and whitespace canonicalization may occur at the server
-boundary; unchanged forwarding means no semantic or clause-level rewrite, not
-preservation of unusual spacing.
+Ordinary Unicode and whitespace canonicalization may occur inside criterion
+text at the server boundary. Unchanged forwarding means no change to semantic
+text, `suggested` values, roots, edges, ordering, or source mode.
 
 Once the user approves the execution source, never paraphrase, summarize,
 expand abbreviations, split it across calls, compile it into known fields, or
-remove a clause to make it easier to search. If the approved Search brief is
-`find me AI engineers with 1+ YoE in NYC`, forward that full string. Forward an
-approved unchanged multi-section JD in the tagged JD request object even when
-it contains role logistics or exceeds the direct-query limit. A direct request
-made only of novel recruiter criteria remains valid tool input after approval;
-the server can skip the unfiltered TalentPluto pool and use its bounded
-external lane when the user runs it.
+remove a criterion to make it easier to search. A graph made only of novel
+recruiter criteria remains valid tool input after approval; the server owns
+leaf interpretation and can use its bounded external lane. Forward an approved
+unchanged multi-section JD in the tagged JD request object even when it contains
+role logistics or exceeds the structured-brief text budget.
 
-Follow the live input schema for the separate direct-query and raw-JD length
+Follow the live input schema's node, criterion-text, total-text, and raw-JD
 limits. A recognizable JD that fits the live raw-JD limit must not be shortened
-to the smaller direct-query limit. Omit `limit`: it is a compatibility field,
-and the current server normalizes every search to a fixed 25-person target. It
-tries to return up to 15 in-network people, then fills the remaining slots with
-out-of-network profiles. The actual response may be shorter when there are not
-enough results or organization credits.
+to the smaller structured-brief budget. Omit `limit`: it is a compatibility
+field, and the current server normalizes every search to a fixed 25-person
+target. It tries to return up to 15 in-network people, then fills the remaining
+slots with out-of-network profiles. The actual response may be shorter when
+there are not enough results or organization credits.
 
 If the user requests a result count other than 25 or sets a lower result or
 credit cap, explain that retrieval still targets 25 people and can charge for
 up to 15 returned in-network people, then get confirmation before calling the
 tool. Remove that requested display count from `request`; it is an answer-format
-instruction, not a professional search criterion. After the user confirms the
-fixed pool, retain the requested display count for presentation only. Keep
+instruction, not a criterion node or graph property. After the user confirms
+the fixed pool, retain the requested display count for presentation only. Keep
 research notes, candidate summaries, and presentation instructions out of
 `request`.
 
@@ -370,6 +498,14 @@ invariants hold:
 - `resultMode` is exactly `candidate_pool`;
 - `searchInterpretation` is present and contains the exact effective
   professional request;
+- for a direct or lookalike call, `searchInterpretation.requestType` is exactly
+  `search_brief` and `searchInterpretation.searchBrief` is present;
+- that echoed `searchBrief`, after only the schema's documented Unicode and
+  whitespace normalization inside leaf text and canonical node-array ordering,
+  exactly matches the submitted node set, criterion text, `suggested`
+  booleans, roots, edges, and child ordering;
+- for an unchanged raw JD call, `searchInterpretation.requestType` is exactly
+  `job_description`;
 - `publicCriterionPlan` is present, has supported `version: 1`, and its
   `canonicalRequest` exactly equals `searchInterpretation.request`; and
 - `recommendedInNetworkShortlistSize` is an integer from 1 through 15.
@@ -382,18 +518,31 @@ two children. Leaves reachable from the required root must remain required,
 and leaves reachable from a preferred root must remain preferred. Preserve
 each leaf's `canonicalText`, `deterministicEvaluator`, `evaluationMode`,
 `operator`, `expectedValues`, role and experience scope, subject, and temporal
-scope exactly. Never flatten the graph into independent filters or reinterpret
-an exclusion as a positive criterion. If the graph or its request binding is
-invalid, report a server/plugin contract mismatch instead of producing a
-legacy or partial shortlist.
+scope exactly.
+
+For a `search_brief` call, also require the public plan to preserve the approved
+source topology exactly: the same node IDs and kinds, required root, ordered
+preferred roots, Boolean operators, ordered child IDs, and one criterion leaf
+whose `canonicalText` equals each source leaf's normalized `text`. The server
+may add evaluation metadata, but it may not split, merge, omit, duplicate,
+reparent, or reorder a node's children or the preferred roots. `suggested`
+remains authoring metadata in `searchInterpretation.searchBrief`; it is not
+criterion text or an evaluation field. Never flatten the graph into independent
+filters or reinterpret an exclusion as a positive criterion. If the echo,
+public graph, or request binding is invalid, report a server/plugin contract
+mismatch instead of producing a legacy or partial shortlist.
+
+Compare source and echoed nodes by `nodeId`; the server may canonicalize only
+the outer `nodes` array order. Ordering inside `childNodeIds` and
+`preferredRootNodeIds` is semantic and must remain exact.
 
 Create the eligible evaluation pool by combining every item in `candidates`
 and `unverifiedCandidates`, retaining each person's original array and original
-index. Reject overlapping candidate references as a contract mismatch. Never
-put `nearMatches` in this pool: the server has already found a required
-deterministic failure. Treat any returned private failure or unresolved private
-requirement as authoritative and disqualifying; never inspect, reconstruct, or
-override private project criteria.
+index. Reject overlapping candidate references as a contract mismatch. Do not
+reevaluate `nearMatches`: the server has already found a required failure, but
+retain every one for the Other returned candidates table. Treat any returned
+private failure or unresolved private requirement as authoritative and
+disqualifying; never inspect, reconstruct, or override private project criteria.
 
 For each pool candidate, map `criterionEvaluations` to criterion leaves by
 `criterionId`. Duplicate or unknown IDs are a contract mismatch. A missing
@@ -439,16 +588,18 @@ A candidate is eligible for the ordinary in-network shortlist only when the
 complete `requiredRootNodeId` expression composes to verified. If there is no
 required root, the required expression is verified. Never promote a failed or
 unknown required expression, an unresolved candidate, a near match, or an
-unknown evidence gap into an ordinary match. Preferred roots affect ranking
-only and never eligibility.
+unknown evidence gap into an ordinary match. Keep every such returned person
+visible under Other returned candidates instead. Preferred roots affect
+ranking only and never eligibility.
 
-Evaluate every returned pool candidate before ranking or applying a display
-cutoff. Rerank only eligible in-network people using fully verified preferred
-root expressions and the specificity of supporting returned public evidence.
-Use original server order as the final tie-breaker so bounded private
-personalization is preserved without reconstructing it. Do not stop when the
-recommended number of usable rows has been found, rerank an unresolved person
-above an eligible one, or display a numeric fit or goodness score.
+Evaluate every returned pool candidate before ranking or presentation. Rerank
+supportable in-network matches using fully verified preferred root expressions
+and the specificity of supporting returned public evidence. Preserve original
+server order among the remaining unresolved or conflicting people and as the
+final tie-breaker among matches, so bounded private personalization survives
+without being reconstructed. Do not stop after the first usable rows, rerank an
+unresolved person above an eligible one, or display a numeric fit or goodness
+score.
 
 Keep all response boundaries intact:
 
@@ -492,14 +643,15 @@ for that exact action.
 
 After presenting results, treat requests to research, rethink, refine, broaden,
 narrow, or change the target as a new planning cycle. Start from the last
-approved ideal profile when useful, change one dimension at a time, and show
-the complete revised profile and Search brief. Do not make another metered call
-until the user explicitly asks to run that revision.
+approved graph when useful, change one dimension at a time, and show the
+complete revised profile and graph-backed Search brief. Do not make another
+metered call until the user explicitly asks to run that revision.
 
 If the search was too broad, propose one additional professional criterion. If
 it was too narrow, report the exact count and offer the server's broadening
 suggestions. Get agreement before relaxing a stated requirement or changing a
-preference. A changed brief uses a fresh `requestId` when the user runs it.
+preference. Any change to a leaf, marker, root, edge, or child order invalidates
+approval and uses a fresh `requestId` when the user runs the revised graph.
 
 If the user explicitly asks to repeat the exact unchanged approved search,
 treat it as a deliberate repeat rather than a retry and use a fresh
@@ -512,19 +664,21 @@ reported.
 
 ## Present one evidence-first shortlist
 
-For a normal successful search, lead directly with one concise Candidates
-table. Do not preface it with the effective query, credits, complete coverage,
-source counts, network counts, empty groups, or a statement that no verified
-matches were found. Add one short preface only when a raw-JD exclusion,
-location proxy, partial-source limitation, or credit limit materially changes
-how the shortlist should be read.
+For a normal successful search, lead directly with the Candidates table when
+there are supportable matches or out-of-network leads; otherwise lead with
+Other returned candidates. Do not preface the result with the effective query,
+credits, complete coverage, source counts, network counts, empty groups, or a
+statement that no verified matches were found. Add one short preface only when
+a raw-JD exclusion, location proxy, partial-source limitation, or credit limit
+materially changes how the result should be read.
 
-Present the assistant-ranked eligible in-network shortlist first, followed by
-`outOfNetworkCandidates` in their unchanged returned order. By default include
-at most `recommendedInNetworkShortlistSize` in-network people, even when the
-eligible evaluation pool is larger. Honor a user-confirmed display count
-instead, but never use the display count to skip evaluation of any returned
-pool candidate. Use this shape:
+Present the assistant-ranked supportable in-network matches first, followed by
+`outOfNetworkCandidates` in their unchanged returned order. By default present
+every returned in-network person, up to
+`recommendedInNetworkShortlistSize`. Honor a smaller user-confirmed display
+count instead, but never use the display count to skip evaluation of any
+returned pool candidate. Use this shape for supportable matches and
+out-of-network leads:
 
 ```markdown
 | Candidate | Current role | Location | Why they fit |
@@ -550,35 +704,40 @@ For an out-of-network candidate, use only the returned current role, headline,
 company, and location to explain relevance to the recruiter request. Do not
 claim deep qualification or client-preference personalization.
 
-Do not automatically present pool candidates whose locally composed required
-expression remains unknown or failed. In particular, originating from
-`candidates` does not override an invalid graph, and originating from
-`unverifiedCandidates` does not prevent inclusion after every required public
-expression is established. Preserve the original array internally either way.
+Build the supportable-match set from the locally composed complete required
+expression, never from the originating response array. A person from
+`candidates` stays outside that set when the local expression is unknown or
+failed; a person from `unverifiedCandidates` enters it when every required
+public expression is established. A `nearMatches` item always stays outside
+because its required failure is authoritative. Preserve every original array
+internally for follow-up routing.
 
-Do not include `nearMatches` in the Candidates table. Only when the user
-explicitly asks for near matches or alternatives, add a separate Alternatives
-table:
+Present every returned in-network person exactly once. After the ordinary
+table, include every returned person outside the supportable-match set under
+the following table, regardless of whether they originated in `candidates`,
+`unverifiedCandidates`, or `nearMatches`:
 
 ```markdown
-| Candidate | Current role | Location | Why they may still be relevant | Known tradeoff |
-| --- | --- | --- | --- | --- |
+| Candidate | Current role | Location | Assessment |
+| --- | --- | --- | --- |
 ```
 
-Build the relevance cell from the same returned-evidence rules above. Build the
-tradeoff only when `qualificationGapSource` is `criterion`, using a returned
-`failedCriteria` entry that names an individually failed professional
-requirement. Never use `missingCriteria`. Omit `canonical_request` and
-`private_requirement` fallbacks without comparing text. Never imply that an
-alternative satisfies the complete recruiter request.
+For each Assessment, use the strongest specific returned fact relevant to the
+request, then state what remains unconfirmed or conflicts. For a locally
+unknown public expression, name an individually unresolved requirement from
+the returned plan or `unknownCriteria`/`unverifiedCriteria` when available. For
+a returned `nearMatches` item, use a criterion-specific `failedCriteria` entry
+when available. Never use `missingCriteria`, infer hidden private criteria, or
+compare fallback marker text with the request. When the returned fields provide
+no useful positive rationale, say plainly which required facts the profile did
+not establish instead of omitting the person. Never imply that an unresolved or
+conflicting person satisfies the complete recruiter request.
 
-Include a candidate only when the returned fields support a useful,
-candidate-specific rationale. Preserve the assistant ranking among eligible
-in-network people and server order among out-of-network people. If no candidate
-has enough evidence for a useful rationale, say that plainly without printing
-the qualification taxonomy. Never display `candidateRef`, `selectionToken`,
-evidence IDs, raw `professionalContext`, private project context, internal
-ranking data, network labels, match labels, or evidence-gap columns.
+Preserve the assistant ranking among supportable in-network matches and server
+order among other in-network and out-of-network people. Never display
+`candidateRef`, `selectionToken`, evidence IDs, raw `professionalContext`,
+private project context, internal ranking data, network labels, match labels,
+or raw evidence-gap metadata.
 
 Do not state that Pluto returned no broadening suggestions, and do not append a
 generic email-lookup or paid-action offer. End after the shortlist unless one

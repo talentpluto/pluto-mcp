@@ -67,12 +67,16 @@ language ("Use Pluto to find AI engineers…").
 ```
 
 For a new or changed search, Pluto first drafts a compact LinkedIn-style
-candidate profile and a structured search brief for you to review. Revise it
-until it looks right, then ask Pluto to run the search. For a recognizable
-pasted JD, the unchanged JD remains the execution source unless you change the
-target and approve switching to a direct brief. Pluto evaluates the complete
-returned eligible in-network pool against the server's public criterion plan
-before it selects the concise shortlist.
+candidate profile and a structured search brief for you to review. Each
+criterion is one atomic part of a versioned search graph; required, preferred,
+excluded, AND, OR, and NOT relationships stay explicit instead of being
+reconstructed later from prose. Revise the complete brief until it looks right,
+then ask Pluto to run that exact approved graph. For a recognizable pasted JD,
+the unchanged JD remains the execution source unless you change the target and
+approve switching to a direct brief. Pluto evaluates the complete returned
+in-network pool against the server's public criterion plan, ranks supportable
+matches first, and keeps every other returned in-network person visible with a
+plain-language assessment.
 
 ```text
 @pluto How many credits does my organization have left?
@@ -107,12 +111,13 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
 ## What to know
 
 - Every candidate search targets 25 distinct people. The server can return up
-  to 15 in-network people overall; candidates without a deterministic or
-  private failure form the evaluation pool, while near matches remain excluded.
-  Out-of-network profiles fill the remaining slots. Pluto evaluates the
-  complete eligible in-network pool before normally displaying no more than the
-  server's recommended in-network shortlist size. A search can return fewer
-  people when matches or credits are limited.
+  to 15 in-network people overall. Pluto evaluates the complete local
+  evaluation pool while preserving known tradeoffs, then displays every
+  returned in-network person by default: supportable matches first and everyone
+  else under Other returned candidates. The response array a person came from
+  never determines whether they stay visible. Out-of-network profiles fill the
+  remaining slots. A search can return fewer people when results or credits are
+  limited.
 - Each returned in-network candidate uses one shared organization credit.
   Out-of-network search results are free.
 - A private candidate question is free and does not change candidate or
@@ -125,13 +130,15 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
 - Pluto takes an outbound action only after you explicitly select a candidate
   and ask for that action.
 - A new or changed candidate search first produces a compact LinkedIn-style
-  candidate profile and structured search brief without using credits. Pluto
+  candidate profile and graph-backed search brief without using credits. The
+  visible brief is the approval artifact: every criterion, suggested marker,
+  and Boolean relationship is preserved in the exact structured request. Pluto
   runs the approved execution source only after you have seen the current draft
   and explicitly ask to search. For a recognizable pasted JD, that source
   remains the unchanged JD unless you change the target and approve switching
   to a direct brief.
 - When you run an approved direct search, Pluto forwards the exact approved
-  brief without a client-side privacy-policy classification or rewrite.
+  graph without a client-side privacy-policy classification or rewrite.
   Server-side authentication, authorization, project scope, and response
   boundaries remain in force.
 - Rich professional context is returned only for actively consented, verified,
