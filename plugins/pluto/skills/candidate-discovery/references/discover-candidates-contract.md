@@ -327,6 +327,15 @@ companies, valid compact profiles and handles, and no candidate-reference
 overlap with any exact array. Its profiles are exploratory leads, not exact
 matches or evidence for the original company criterion.
 
+Bind the substitution to the validated `publicCriterionPlan`. Exactly one leaf
+in the entire plan may use `current_company` or `previous_company` as its
+deterministic evaluator. That leaf must be required, reachable from
+`requiredRootNodeId` only through `and` groups, use the evaluator named by
+`adjacentSearch.criterionType`, and have `expectedValues` exactly equal to
+`[adjacentSearch.originalCompany]`. If that binding is absent, ambiguous,
+mismatched, or otherwise invalid, reject `adjacentSearch` as a contract
+mismatch rather than presenting or routing its candidates.
+
 Combine every item in `candidates` and `unverifiedCandidates` into the local
 evaluation pool, retaining each person's originating array and index. Never add
 `nearMatches`; their server failure is authoritative. A private failure or

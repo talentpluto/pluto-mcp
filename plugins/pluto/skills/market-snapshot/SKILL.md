@@ -64,8 +64,9 @@ identifier, compensation target, or invented filter.
 
 Do not retry an ambiguous failure automatically. The tool is read-only and
 free of Candidate MCP credits, but repeated calls can still duplicate external
-work. If the result fails or is malformed, report that the snapshot is
-temporarily unavailable.
+work. If the tool or transport call fails, report that the snapshot is
+temporarily unavailable. If the call returns a structurally invalid payload,
+report the plugin/server contract mismatch required by the validation below.
 
 ## Validate the response
 

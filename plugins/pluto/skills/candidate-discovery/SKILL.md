@@ -378,14 +378,19 @@ When `adjacentSearch` is present, require:
 
 - `criterionType: current_company | previous_company`;
 - distinct non-empty `originalCompany` and `replacementCompany` values;
+- after validating the public graph, exactly one criterion leaf in the entire
+  plan has either company deterministic evaluator; that leaf is required,
+  reachable from `requiredRootNodeId` only through `and` groups, has
+  `deterministicEvaluator` equal to `criterionType`, and has
+  `expectedValues` exactly equal to `[originalCompany]`;
 - `status: complete | partial`;
 - one bounded `reason`; and
 - no more than five compact candidates with the same valid public-profile and
   opaque-handle shape as `outOfNetworkCandidates`.
 
 Keep its candidate references disjoint from every exact response array. An
-invalid or overlapping adjacent cohort is a contract mismatch, not additional
-evidence for the exact search.
+absent, ambiguous, mismatched, otherwise invalid, or overlapping adjacent
+cohort is a contract mismatch, not additional evidence for the exact search.
 
 Validate the complete public graph before using it. Node IDs must be unique;
 every required root, preferred root, and group child must resolve to one
