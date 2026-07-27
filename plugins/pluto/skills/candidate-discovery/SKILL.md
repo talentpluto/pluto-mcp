@@ -1,6 +1,6 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to plan, refine, run, repeat, shortlist, compare, rank, or qualify a candidate search from a recruiter prompt or pasted raw JD. Drafts a compact LinkedIn-style candidate profile and structured search brief for user approval, then requests and fully evaluates a privacy-filtered candidate pool before presenting one concise evidence-first shortlist. Does not handle private questions about one selected in-network candidate.
+description: Use when a user asks Pluto to plan, refine, run, repeat, shortlist, compare, rank, or qualify a candidate search from a recruiter prompt or pasted raw JD. Drafts a compact LinkedIn-style candidate profile and structured search brief for user approval, then requests and fully evaluates a privacy-filtered candidate pool before presenting one concise evidence-first shortlist with any related-company exploration kept separate. Does not handle private questions about one selected in-network candidate.
 ---
 
 # Candidate discovery
@@ -374,6 +374,24 @@ invariants hold:
   `canonicalRequest` exactly equals `searchInterpretation.request`; and
 - `recommendedInNetworkShortlistSize` is an integer from 1 through 15.
 
+When `adjacentSearch` is present, require:
+
+- `criterionType: current_company | previous_company`;
+- distinct non-empty `originalCompany` and `replacementCompany` values;
+- after validating the public graph, exactly one criterion leaf in the entire
+  plan has either company deterministic evaluator; that leaf is required,
+  reachable from `requiredRootNodeId` only through `and` groups, has
+  `deterministicEvaluator` equal to `criterionType`, and has
+  `expectedValues` exactly equal to `[originalCompany]`;
+- `status: complete | partial`;
+- one bounded `reason`; and
+- no more than five compact candidates with the same valid public-profile and
+  opaque-handle shape as `outOfNetworkCandidates`.
+
+Keep its candidate references disjoint from every exact response array. An
+absent, ambiguous, mismatched, otherwise invalid, or overlapping adjacent
+cohort is a contract mismatch, not additional evidence for the exact search.
+
 Validate the complete public graph before using it. Node IDs must be unique;
 every required root, preferred root, and group child must resolve to one
 returned node; the graph must be acyclic; every node must be reachable from a
@@ -463,6 +481,11 @@ Keep all response boundaries intact:
   leads without the criterion graph evidence or private personalization needed
   for deep qualification; never locally rerank them or claim they satisfy the
   complete request.
+- Keep `adjacentSearch.candidates` outside every exact qualification and
+  evaluation pool. They come from a separate provider-ranked query that changes
+  exactly one mandatory positive company criterion. Never use them to fill a
+  short exact result, resolve a criterion, or imply that they satisfy the
+  original company requirement.
 - Validate every displayed `profileUrl` as absolute HTTPS on `linkedin.com`,
   `linkedin.cn`, or a subdomain of either. Never construct, search for, or infer
   a replacement URL.
@@ -485,8 +508,9 @@ candidate between server arrays or changes the route used later by
 `candidate-interest` or `candidate-question`. Do not inspect, alter, persist,
 mix, or display opaque handles. Never call `express_candidate_interest`,
 `enrich_candidate_email`, or `answer_candidate_question` from discovery alone.
-A later tool call requires the user to select one returned candidate and ask
-for that exact action.
+A later tool call requires the user to ask for the exact action and select
+exactly one in-network candidate for interest or a private question, or one to
+100 external candidates for email enrichment.
 
 ## Repeat the profile-to-search cycle
 
@@ -549,6 +573,26 @@ gap, missing evidence, or a qualification label as the rationale.
 For an out-of-network candidate, use only the returned current role, headline,
 company, and location to explain relevance to the recruiter request. Do not
 claim deep qualification or client-preference personalization.
+
+When `adjacentSearch.candidates` is non-empty, render it after the exact
+Candidates table in a separate section:
+
+```markdown
+### Related company profiles
+
+**Exploration:** <originalCompany> → <replacementCompany> — <reason>
+
+| Candidate | Current role | Location |
+| --- | --- | --- |
+```
+
+State the company substitution and bounded directional reason once. Preserve
+the returned candidate order, validate and link each returned `profileUrl`, and
+build Current role only from the compact returned fields. Do not add a Why they
+fit claim, mix these profiles into exact results, independently verify the
+replacement company, or imply that any person satisfies the original company
+criterion. Surface a `partial` status only when it materially limits this
+exploratory cohort.
 
 Do not automatically present pool candidates whose locally composed required
 expression remains unknown or failed. In particular, originating from

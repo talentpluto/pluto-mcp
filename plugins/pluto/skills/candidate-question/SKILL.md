@@ -22,9 +22,9 @@ Use the discovery array as the routing source:
 - A candidate from `candidates`, `unverifiedCandidates`, or `nearMatches` is an
   in-network selection eligible for this workflow when every server-side
   authorization, relationship, consent, visibility, and evidence check passes.
-- A candidate from `outOfNetworkCandidates` is not eligible. Do not use email
-  enrichment, interest, a name, a profile URL, or another candidate's handles
-  as a fallback.
+- A candidate from `outOfNetworkCandidates` or `adjacentSearch.candidates` is
+  not eligible. Do not use email enrichment, interest, a name, a profile URL,
+  or another candidate's handles as a fallback.
 
 Discovery alone does not authorize a private assessment. The user must clearly
 select one returned in-network candidate and ask one question about that
