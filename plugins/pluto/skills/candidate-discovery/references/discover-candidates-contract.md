@@ -530,8 +530,8 @@ Discovery never authorizes an outbound action by itself. Do not call
 `express_candidate_interest` or `enrich_candidate_email` because a candidate
 ranked highly, looks promising, or was included in the shortlist. The user must
 make a clear selection and ask Pluto to act. The candidate-interest skill
-routes a selection from the first three arrays to internal interest and a
-selection from `outOfNetworkCandidates` or `adjacentSearch.candidates` to
-dedicated email enrichment. The candidate-question skill uses the same retained
-in-network origin and unchanged paired handles; assistant-side display rank
-never changes either route.
+routes exactly one selection from the first three arrays to internal interest
+and one to 100 selections from `outOfNetworkCandidates` or
+`adjacentSearch.candidates` to one ordered email-enrichment batch. The
+candidate-question skill uses the same retained in-network origin and unchanged
+paired handles; assistant-side display rank never changes either route.

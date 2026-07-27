@@ -84,14 +84,14 @@ For a privacy-thresholded US market view:
 @pluto How many credits does my organization have left?
 ```
 
-After Pluto returns candidates, you can select one and ask:
+After Pluto returns candidates, you can select one or more and ask:
 
 ```text
 @pluto Is this in-network candidate's recorded preference compatible with a $180,000 annual base salary?
 ```
 
 ```text
-@pluto Get the available professional email for this out-of-network candidate.
+@pluto Get and verify the available professional emails for these three out-of-network candidates.
 ```
 
 ```text
@@ -106,7 +106,7 @@ After Pluto returns candidates, you can select one and ask:
 | Read a privacy-thresholded US snapshot for one broad role family | `get_market_snapshot` |
 | Check the shared organization credit balance | `get_credit_balance` |
 | Ask one bounded private question about a selected in-network candidate | `answer_candidate_question` |
-| Get the professional email for a selected out-of-network candidate | `enrich_candidate_email` |
+| Get and verify professional emails for 1–100 selected out-of-network candidates | `enrich_candidate_email` |
 | Add a selected in-network candidate to a role's prospecting flow | `express_candidate_interest` |
 
 Pluto's live MCP tool descriptions and input schemas are the source of truth.
@@ -133,12 +133,15 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
 - A private candidate question is free and does not change candidate or
   pipeline records. Pluto answers only from the supported bounded catalog and
   never returns raw private values.
-- An out-of-network email lookup uses one credit only when an email is safely
-  stored and returned. Pluto does not send outreach.
+- One email-enrichment call accepts 1–100 explicitly selected out-of-network
+  candidates and preserves their order. Each safely stored and returned email
+  uses one credit and includes a separate passed, failed, or unavailable
+  verification outcome; a failed or unavailable check does not suppress the
+  email. Pluto does not send outreach.
 - Expressing interest in an in-network candidate can update the TalentPluto
   pipeline and send the normal reconfirm-interest message.
-- Pluto takes an outbound action only after you explicitly select a candidate
-  and ask for that action.
+- Pluto takes an outbound action only after you explicitly select the candidate
+  or candidates and ask for that action.
 - A new or changed candidate search first produces a compact LinkedIn-style
   candidate profile and structured search brief without using credits. Pluto
   runs the approved execution source only after you have seen the current draft

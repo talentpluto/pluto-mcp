@@ -503,8 +503,9 @@ candidate between server arrays or changes the route used later by
 `candidate-interest` or `candidate-question`. Do not inspect, alter, persist,
 mix, or display opaque handles. Never call `express_candidate_interest`,
 `enrich_candidate_email`, or `answer_candidate_question` from discovery alone.
-A later tool call requires the user to select one returned candidate and ask
-for that exact action.
+A later tool call requires the user to ask for the exact action and select
+exactly one in-network candidate for interest or a private question, or one to
+100 external candidates for email enrichment.
 
 ## Repeat the profile-to-search cycle
 
