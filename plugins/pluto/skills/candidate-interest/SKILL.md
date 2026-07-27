@@ -1,6 +1,6 @@
 ---
 name: candidate-interest
-description: Use when a user explicitly selects a candidate returned by Pluto and asks to express interest, add them to a role, start prospecting, take the next step, or get a selected out-of-network candidate's contact information or professional email. Routes rich in-network results to express_candidate_interest and compact out-of-network results to enrich_candidate_email, preserves unchanged discovery handles, and never sends external outreach.
+description: Use when a user explicitly selects a candidate returned by Pluto and asks to express interest, add them to a role, start prospecting, take the next step, or get a selected external candidate's contact information or professional email. Routes rich in-network results to express_candidate_interest and compact external results to enrich_candidate_email, preserves unchanged discovery handles, and never sends external outreach.
 ---
 
 # Candidate interest and email enrichment
@@ -22,14 +22,15 @@ selection token or infer provenance from a name, profile URL, or other field.
   in-network candidate. Use `express_candidate_interest` only when the user
   asks to add, select, prospect, or otherwise express interest in that candidate
   for a role.
-- A selection from `outOfNetworkCandidates` is an external enrichment
-  selection. Use `enrich_candidate_email` when the user explicitly asks for the
-  candidate's contact information, contact details, available professional
-  email, or asks Pluto to take the external candidate's supported next step.
-  Broad contact-information requests use this email-only route and do not
-  warrant commentary about phone availability. This applies whether its
-  `networkStatus` is `out_of_network` or `unknown`; the array, not the display
-  label, establishes the route.
+- A selection from `outOfNetworkCandidates` or `adjacentSearch.candidates` is
+  an external enrichment selection. Use `enrich_candidate_email` when the user
+  explicitly asks for the candidate's contact information, contact details,
+  available professional email, or asks Pluto to take the external
+  candidate's supported next step. Broad contact-information requests use this
+  email-only route and do not warrant commentary about phone availability.
+  This applies whether its `networkStatus` is `out_of_network` or `unknown`;
+  the originating array, not the display label or exploratory placement,
+  establishes the route.
 
 Do not call `express_candidate_interest` as a compatibility fallback for a new
 out-of-network action. Dedicated email enrichment is the current client
@@ -77,8 +78,9 @@ approval before running it again.
 
 ## Enrich one selected external candidate
 
-For an authorized selection from `outOfNetworkCandidates`, generate a fresh
-random UUID as `requestId` and call `enrich_candidate_email` once with only:
+For an authorized selection from `outOfNetworkCandidates` or
+`adjacentSearch.candidates`, generate a fresh random UUID as `requestId` and
+call `enrich_candidate_email` once with only:
 
 - the unchanged `candidateRef`;
 - the unchanged `selectionToken`; and

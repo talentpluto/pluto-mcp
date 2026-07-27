@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.1.22",
-  "description": "Use TalentPluto's live recruiting workflows and privacy-filtered candidate discovery through a stable, authenticated Pluto connection.",
+  "version": "0.1.24",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -13,6 +13,8 @@
     "candidate email",
     "candidate questions",
     "private assessment",
+    "market snapshot",
+    "talent market",
     "recruiting",
     "pluto",
     "mcp"

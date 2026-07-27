@@ -319,6 +319,14 @@ The response retains four disjoint arrays:
 - `outOfNetworkCandidates`: compact public professional profiles in preserved
   search order, without deep qualification or private personalization.
 
+An optional `adjacentSearch` object is separate from all four arrays. It names
+one `current_company` or `previous_company` substitution, a bounded directional
+reason, `complete | partial` execution status, and up to five compact
+provider-ranked candidates. Require distinct non-empty original and replacement
+companies, valid compact profiles and handles, and no candidate-reference
+overlap with any exact array. Its profiles are exploratory leads, not exact
+matches or evidence for the original company criterion.
+
 Combine every item in `candidates` and `unverifiedCandidates` into the local
 evaluation pool, retaining each person's originating array and index. Never add
 `nearMatches`; their server failure is authoritative. A private failure or
@@ -380,6 +388,11 @@ name, headline, current title and company, location, normalized `profileUrl`,
 and `networkStatus: out_of_network | unknown`. Those summary fields can explain
 professional relevance but are not proof of the complete request.
 
+`adjacentSearch.candidates` uses the same compact public profile shape but
+remains a distinct originating array. Never add it to the exact evaluation
+pool, rerank it, use it to fill a short result, or use its reason as candidate
+evidence. Preserve its returned order and paired opaque handles.
+
 Before rendering a name link, require `profileUrl` to be an absolute HTTPS URL
 whose hostname is `linkedin.com`, `linkedin.cn`, or a subdomain of either. Use
 only that returned field. Never use a legacy fallback field or construct,
@@ -431,6 +444,15 @@ rationale.
 For an out-of-network candidate, use only returned current role, headline,
 company, and location to explain relevance to the recruiter request. Do not
 claim deep qualification or client-preference personalization.
+
+When `adjacentSearch.candidates` is non-empty, render it after the exact
+Candidates table under `### Related company profiles`. State
+`originalCompany → replacementCompany` and the returned directional `reason`
+once, then use a separate Candidate, Current role, and Location table. Preserve
+returned order and link names only through validated returned `profileUrl`
+values. Do not add a Why they fit claim, merge these rows into exact results,
+or imply that they meet the original company requirement. Mention `partial`
+only when it materially limits the exploratory cohort.
 
 Do not automatically display pool candidates whose locally composed required
 expression remains failed or unknown. A candidate originating in
@@ -509,6 +531,7 @@ Discovery never authorizes an outbound action by itself. Do not call
 ranked highly, looks promising, or was included in the shortlist. The user must
 make a clear selection and ask Pluto to act. The candidate-interest skill
 routes a selection from the first three arrays to internal interest and a
-selection from `outOfNetworkCandidates` to dedicated email enrichment. The
-candidate-question skill uses the same retained in-network origin and unchanged
-paired handles; assistant-side display rank never changes either route.
+selection from `outOfNetworkCandidates` or `adjacentSearch.candidates` to
+dedicated email enrichment. The candidate-question skill uses the same retained
+in-network origin and unchanged paired handles; assistant-side display rank
+never changes either route.

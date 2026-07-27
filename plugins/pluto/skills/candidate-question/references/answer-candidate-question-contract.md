@@ -6,6 +6,8 @@
 selected in-network candidate. It accepts only the unchanged `candidateRef` and
 `selectionToken` returned together by `discover_candidates`, the user's
 unchanged single `question`, and an optional exact authorized `projectId`.
+Selections from `outOfNetworkCandidates` or `adjacentSearch.candidates` are
+external and ineligible for this private-assessment route.
 
 The server requires:
 

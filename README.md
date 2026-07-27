@@ -74,6 +74,12 @@ target and approve switching to a direct brief. Pluto evaluates the complete
 returned eligible in-network pool against the server's public criterion plan
 before it selects the concise shortlist.
 
+For a privacy-thresholded US market view:
+
+```text
+@pluto Give me a directional US market snapshot for engineering talent.
+```
+
 ```text
 @pluto How many credits does my organization have left?
 ```
@@ -97,6 +103,7 @@ After Pluto returns candidates, you can select one and ask:
 | Ask Pluto to | MCP tool |
 | --- | --- |
 | Find and qualify candidates against professional criteria | `discover_candidates` |
+| Read a privacy-thresholded US snapshot for one broad role family | `get_market_snapshot` |
 | Check the shared organization credit balance | `get_credit_balance` |
 | Ask one bounded private question about a selected in-network candidate | `answer_candidate_question` |
 | Get the professional email for a selected out-of-network candidate | `enrich_candidate_email` |
@@ -113,8 +120,16 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   complete eligible in-network pool before normally displaying no more than the
   server's recommended in-network shortlist size. A search can return fewer
   people when matches or credits are limited.
+- A separately labeled related-company cohort may accompany a search with one
+  mandatory company criterion. Pluto keeps those exploratory profiles outside
+  the exact results and never implies that they meet the original company
+  requirement.
 - Each returned in-network candidate uses one shared organization credit.
   Out-of-network search results are free.
+- Market snapshots are read-only, use no shared candidate credits, and support
+  one broad US role family at a time. Candidate-reported minimum compensation
+  expectations and sales deal experience remain separate from client-entered
+  role ranges; unavailable privacy-thresholded metrics are never estimated.
 - A private candidate question is free and does not change candidate or
   pipeline records. Pluto answers only from the supported bounded catalog and
   never returns raw private values.

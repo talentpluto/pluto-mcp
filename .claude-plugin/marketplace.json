@@ -10,13 +10,17 @@
     {
       "name": "pluto",
       "source": "./plugins/pluto",
-      "description": "Use TalentPluto's live recruiting workflows and privacy-filtered candidate discovery through a stable, authenticated Pluto connection.",
+      "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
       "category": "productivity",
       "keywords": [
         "candidates",
         "credits",
         "candidate interest",
         "candidate email",
+        "candidate questions",
+        "private assessment",
+        "market snapshot",
+        "talent market",
         "recruiting",
         "pluto",
         "mcp"

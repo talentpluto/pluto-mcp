@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto"
-  short_description: "Route requests to Pluto's live recruiting tools"
-  default_prompt: "Use Pluto's currently available recruiting tools for this request."
+  short_description: "Route requests to Pluto's live recruiting and market tools"
+  default_prompt: "Use Pluto's currently available recruiting or talent-market tools for this request."
 
 dependencies:
   tools:

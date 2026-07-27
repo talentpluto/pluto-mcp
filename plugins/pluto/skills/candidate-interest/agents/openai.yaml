@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate interest"
   short_description: "Act on or enrich a selected candidate"
-  default_prompt: "Use $candidate-interest for the candidate I explicitly selected from my Pluto results, routing internal interest and out-of-network email enrichment safely."
+  default_prompt: "Use $candidate-interest for the candidate I explicitly selected from my Pluto results, routing internal interest and external email enrichment—including a selected related-company profile—safely."
 
 dependencies:
   tools:
