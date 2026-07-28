@@ -242,26 +242,51 @@ Handle each candidate-correlated item exactly:
   about credits. Otherwise relay only its safe message, without discarding
   successful sibling results.
 
-For one candidate with one work email, return it and label the exact
-verification result. Otherwise use one compact table with one row per returned
-work email, preserving candidate and email order:
+Always return a Markdown table, including for one candidate with one work
+email. Use one row per returned work email, repeat the candidate fields when
+there are multiple emails, and preserve candidate and email order:
 
 ```markdown
-| Candidate | Email | Verification or result |
-| --- | --- | --- |
+| LinkedIn URL | Name | Email | Verification or result |
+| --- | --- | --- | --- |
 ```
 
-Map each opaque candidate reference back to the displayed selected candidate,
-or map a direct result to its supplied LinkedIn URL, without exposing the
-reference. Show every returned work email even when
-verification failed or was unavailable. Use the bounded verification
-`reason`, `status`, or `subStatus` only when it materially clarifies a failed
-or unavailable result; do not reinterpret it or claim deliverability beyond
-the returned fields. For unavailable contacts and blocked items, show the safe
-message instead of an email. Do not show the refreshed candidate summary,
-email type, source-reported email status, phone availability, storage details,
-credit usage, or outreach details unless the user specifically asks for an
-allowed field.
+For a successful item, use the returned candidate's `displayName` and
+`profileUrl` when present. For a discovery-selected candidate, the
+already-displayed name and LinkedIn URL are also valid correlation fields. For
+a direct item, use the supplied normalized LinkedIn URL. Never derive a name or
+URL from an opaque candidate reference. If a blocked or unavailable direct
+item never resolved a name, use `Unavailable`; do not guess.
+
+Show every returned work email even when verification failed or was
+unavailable. Label the exact `passed`, `failed`, or `unavailable` result. Use
+the bounded verification `reason`, `status`, or `subStatus` only when it
+materially clarifies a failed or unavailable result; do not reinterpret it or
+claim deliverability beyond the returned fields. Include unavailable and
+blocked candidates in the table with an empty email cell and the safe returned
+message in `Verification or result`, without discarding successful siblings.
+Do not show other refreshed candidate-summary fields, email type,
+source-reported email status, phone availability, storage details, credit
+usage, or outreach details unless the user specifically asks for an allowed
+field.
+
+Immediately after the table, always provide a complete UTF-8 CSV export named
+`candidate-email-enrichment.csv` with this exact header:
+
+```csv
+linkedin_url,name,email,verification_or_result
+```
+
+The CSV must contain one row for every table row in the same order and use the
+same raw values. Use raw LinkedIn URLs rather than Markdown links. Quote every
+field with double quotes and escape an embedded double quote by doubling it so
+commas, newlines, and non-ASCII names remain valid CSV. Do not include opaque
+handles, request IDs, job IDs, internal fields, or provider details. When the
+host supports downloadable file artifacts, create and attach that file. When
+it does not, provide the complete CSV in a fenced `csv` block and label it with
+the filename. Never silently truncate either representation; if the host
+requires multiple consecutive tables or CSV parts, repeat the header and
+preserve row order.
 
 If results are missing, duplicated, reordered, or correlated to the wrong
 candidate; if success lacks stored work emails, a fresh selection token, or

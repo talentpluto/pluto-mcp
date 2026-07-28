@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate interest"
   short_description: "Act on one candidate or enrich work emails"
-  default_prompt: "Use $candidate-interest for candidates I selected from Pluto or LinkedIn profile URLs I directly supplied. Keep an in-network express-interest action separate from a one-to-500-item work-email batch of any network status, prefer the private async start-and-poll flow, preserve every handle pair or direct URL and input order, keep request IDs and job IDs private, return each committed work email with its separate verification outcome, and retain each fresh successful handle privately for an allowed out-of-network campaign."
+  default_prompt: "Use $candidate-interest for candidates I selected from Pluto or LinkedIn profile URLs I directly supplied. Keep an in-network express-interest action separate from a one-to-500-item work-email batch of any network status, prefer the private async start-and-poll flow, preserve every handle pair or direct URL and input order, keep request IDs and job IDs private, return every result in a table with LinkedIn URL, name, email, and verification outcome, provide a complete matching CSV export, and retain each fresh successful handle privately for an allowed out-of-network campaign."
 
 dependencies:
   tools:
