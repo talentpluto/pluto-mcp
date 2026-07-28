@@ -222,8 +222,8 @@ Handle each candidate-correlated item exactly:
   `selectionToken`, and a non-empty `emails` array. The credit value describes
   the candidate lookup, not the email count: `1` for a newly stored contact or
   `0` when reusing the exact disclosure from prior successful enrichment.
-  Every entry is a Fiber contact explicitly typed as `work` and has its own
-  `emailVerification` object whose provider is `zerobounce` and result is
+  Every entry is explicitly typed as `work` and has its own
+  `emailVerification` object whose provider is `email_validation` and result is
   `passed`, `failed`, or `unavailable`. Never disclose personal, unknown-type,
   TalentPluto account, or login emails. Keep the fresh token privately paired
   with the returned `candidateRef`; never display it. An out-of-network result
@@ -231,8 +231,9 @@ Handle each candidate-correlated item exactly:
   makes an in-network candidate campaign-eligible. The `external_contact`
   status names the contact outcome, not the candidate's network status. Return
   every work email for all three verification results. Failed or unavailable
-  verification never suppresses or erases a committed work email. Keep Fiber's
-  separate `emailStatus` classification distinct from this verification result.
+  verification never suppresses or erases a committed work email. Keep the
+  source's separate `emailStatus` classification distinct from this
+  verification result.
 - `contact_unavailable` requires `creditsUsed: 0` and no email. Relay its safe
   message without inferring, synthesizing, revealing an older address, or
   retrying.
@@ -258,9 +259,9 @@ verification failed or was unavailable. Use the bounded verification
 or unavailable result; do not reinterpret it or claim deliverability beyond
 the returned fields. For unavailable contacts and blocked items, show the safe
 message instead of an email. Do not show the refreshed candidate summary,
-email type, Fiber email status, phone availability, storage details, credit
-usage, or outreach details unless the user specifically asks for an allowed
-field.
+email type, source-reported email status, phone availability, storage details,
+credit usage, or outreach details unless the user specifically asks for an
+allowed field.
 
 If results are missing, duplicated, reordered, or correlated to the wrong
 candidate; if success lacks stored work emails, a fresh selection token, or
