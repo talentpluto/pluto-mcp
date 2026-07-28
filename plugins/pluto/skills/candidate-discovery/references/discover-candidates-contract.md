@@ -68,6 +68,19 @@ changed input uses a new UUID. Never retry automatically or weaken the request.
 Pass `projectId` only when the user deliberately selected the exact authorized
 project and its UUID is already available from trusted Pluto context.
 
+## Employer and company criteria
+
+When a role and company attributes must hold for the same employment record,
+keep them together in one complete natural-language criterion. Preserve
+company stage, funding, investor, industry, business-model, size, growth, and
+geography language in the approved brief.
+
+The client must not translate that clause into a company list, annotate it
+with a provider name, or choose a retrieval source. The server decides whether
+the clause needs company-first retrieval, resolves any company universe,
+searches its candidate sources, qualifies the merged evidence, and returns the
+final ranked lanes.
+
 ## Lookalike exclusion
 
 For an approved conversational lookalike, retain only visible public

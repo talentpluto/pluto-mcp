@@ -81,6 +81,19 @@ sold into, and total experience separate from role-specific experience. Never
 invent a name, photo, contact detail, private fact, demographic criterion, or
 other personal criterion the user did not supply.
 
+Keep role and employer attributes that must hold for the same employment
+record together in one complete natural-language criterion. For example,
+preserve `Current or previous role: Founding Engineer at a Series B or later
+software startup with at least $10M in funding` as one criterion instead of
+separating the title from the company clause. Preserve arbitrary company
+stage, funding, investor, industry, business-model, size, growth, and geography
+language exactly enough for the server to interpret the whole clause.
+
+Do not enumerate companies, add provider-routing labels, or decide whether
+Harmonic, Fiber, or TalentPluto should handle a criterion. The server owns
+company-universe discovery, people retrieval, evidence qualification, merged
+ranking, and fallbacks.
+
 Label every assistant-added criterion as `*(suggested)*` and place it under
 **Preferred**. Never silently turn an assumption into a requirement, relax a
 requirement, or invent an exclusion.
@@ -168,6 +181,11 @@ Do not create a client-side supported-field, privacy allowlist, or policy
 blocklist. Do not classify, strip, weaken, sanitize, or rewrite a direct
 request. The server owns authorization, privacy enforcement, request
 interpretation, source selection, and qualification.
+
+Do not pre-resolve a natural-language company criterion into a client-side
+company list. Forward the approved clause intact so the server can decide
+whether to run company-first retrieval and can apply the same employer
+universe to every server-owned candidate source.
 
 A recognizable pasted JD is source material, not a direct candidate-criteria
 ledger. Send it through the tagged raw-JD mode. Do not reinterpret office,
