@@ -91,8 +91,8 @@ language exactly enough for the server to interpret the whole clause.
 
 Do not enumerate companies, add provider-routing labels, or decide whether
 Harmonic, Fiber, or TalentPluto should handle a criterion. The server owns
-company-universe discovery, people retrieval, evidence qualification, merged
-ranking, and fallbacks.
+retrieval strategy, people retrieval, evidence qualification, merged ranking,
+and fallbacks.
 
 Label every assistant-added criterion as `*(suggested)*` and place it under
 **Preferred**. Never silently turn an assumption into a requirement, relax a
@@ -183,9 +183,9 @@ request. The server owns authorization, privacy enforcement, request
 interpretation, source selection, and qualification.
 
 Do not pre-resolve a natural-language company criterion into a client-side
-company list. Forward the approved clause intact so the server can decide
-whether to run company-first retrieval and can apply the same employer
-universe to every server-owned candidate source.
+company list. Forward the approved clause intact so the server can choose its
+retrieval strategy and apply the same complete employer criterion to every
+server-owned candidate source.
 
 A recognizable pasted JD is source material, not a direct candidate-criteria
 ledger. Send it through the tagged raw-JD mode. Do not reinterpret office,
