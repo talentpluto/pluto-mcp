@@ -148,12 +148,13 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   pipeline records. Pluto answers only from the supported bounded catalog and
   never returns raw private values.
 - One email-enrichment call accepts 1–100 explicitly selected out-of-network
-  candidates and preserves their order. Each safely stored and returned email
-  uses one credit and includes a separate passed, failed, or unavailable
-  verification outcome; a failed or unavailable check does not suppress the
-  email. A successful result can continue into drafting or a campaign without
-  another contact-lookup credit. Email enrichment does not create or send
-  outreach.
+  candidates and preserves their order. One new lookup that safely stores and
+  returns one or more emails uses one credit for that candidate; reusing a
+  successful enrichment handle uses zero new lookup credits. Each returned
+  email includes a separate passed, failed, or unavailable verification
+  outcome; a failed or unavailable check does not suppress the email. A
+  successful result can continue into drafting or a campaign without another
+  contact-lookup credit. Email enrichment does not create or send outreach.
 - One outbound campaign accepts 1–100 explicitly selected out-of-network
   candidates from discovery or successful enrichment for one active role.
   Pluto drafts a compact sequence for review when details are missing and

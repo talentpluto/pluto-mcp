@@ -46,7 +46,7 @@ Show the review in this shape, omitting lines that add no value:
 - Sequence: Initial · +3 days · +7 days (day 10)
 - Style: <short description>
 - Contact preparation: up to <count needing a new lookup> shared credits
-- Eligibility: only selected candidates with a campaign-safe verified email
+- Eligibility: only selected candidates whose email passes the server's fresh campaign-safe verification
 - Result: a reviewable campaign is prepared; this request does not send email
 
 **Subject**
@@ -109,8 +109,12 @@ be either a `discover_candidates` card with
 `networkStatus: out_of_network` or a successful enrichment
 `external_contact` result. For enrichment, use the fresh returned
 `candidateRef` and `selectionToken`; it reuses the committed contact without a
-new lookup credit. Preserve each pair together, unchanged, hidden, and in the
-selected order.
+new lookup credit. An `external_contact` may contain committed emails whose
+enrichment verification is `passed`, `failed`, or `unavailable`; that result
+alone does not determine campaign eligibility. Campaign creation performs
+fresh server-enforced campaign-safe verification and prepares only candidates
+with an email that passes it. Preserve each pair together, unchanged, hidden,
+and in the selected order.
 
 Do not substitute a LinkedIn URL, email address, name, internal ID, or stale
 token. Do not silently omit an invalid selection. If the audience contains an

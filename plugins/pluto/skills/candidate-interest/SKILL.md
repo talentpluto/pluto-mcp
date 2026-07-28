@@ -118,8 +118,9 @@ owns one 240-second provider deadline for the batch. Completed emails can
 therefore coexist with safe unavailable or blocked sibling outcomes; never
 discard the completed results or launch a replacement call automatically.
 
-A newly stored and returned contact uses one shared organization credit for
-that candidate. Reusing the exact disclosure from a prior successful
+A newly stored candidate contact that returns one or more emails uses one
+shared organization credit for that candidate, regardless of the number of
+emails returned. Reusing the exact disclosure from a prior successful
 enrichment uses zero new credits. Use the returned per-item and summary
 accounting only to validate the result contract; never infer it from the
 outcome or include it in the normal user-facing response unless the user asks
@@ -143,25 +144,31 @@ agree with the item statuses:
   those counts plus the number of `external_contact` items equal `requested`;
 - `emailsReturned` equals the total number of entries across every successful
   item’s `emails` array;
-- `summary.creditsUsed` equals the sum of present item `creditsUsed` values; and
+- `summary.creditsUsed` equals the sum of present item `creditsUsed` values and
+  therefore counts candidate-level lookups, not returned emails; and
 - the three verification counts sum to `emailsReturned`.
 
 Handle each candidate-correlated item exactly:
 
 - `external_contact` requires `creditsUsed: 0 | 1`, a fresh
-  `selectionToken`, and a non-empty `emails` array. Every email entry has its
-  own `emailVerification` object whose provider is `zerobounce` and result is
-  `passed`, `failed`, or `unavailable`. Keep the fresh token privately paired
-  with the returned `candidateRef` for `draft_candidate_email` or
-  `create_outbound_campaign`; never display it. Return every email for all
-  three verification results. Failed or unavailable verification never
-  suppresses or erases a committed email. Keep Fiber's separate `emailStatus`
-  classification distinct from this verification result.
+  `selectionToken`, and a non-empty `emails` array. The credit value describes
+  the candidate lookup, not the email count: `1` for a newly stored contact or
+  `0` when reusing the exact disclosure from prior successful enrichment.
+  Every email entry has its own `emailVerification` object whose provider is
+  `zerobounce` and result is `passed`, `failed`, or `unavailable`. Keep the
+  fresh token privately paired with the returned `candidateRef` for
+  `draft_candidate_email` or `create_outbound_campaign`; never display it.
+  Return every email for all three verification results. Failed or unavailable
+  verification never suppresses or erases a committed email. Keep Fiber's
+  separate `emailStatus` classification distinct from this verification
+  result.
 - `contact_unavailable` requires `creditsUsed: 0` and no email. Relay its safe
   message without inferring, synthesizing, revealing an older address, or
   retrying.
-- `blocked` contains no email. Relay its safe message and any returned bounded
-  accounting accurately without discarding successful sibling results.
+- `blocked` contains no email. Keep any returned bounded accounting internal
+  for contract reconciliation and expose it only when the user explicitly asks
+  about credits. Otherwise relay only its safe message, without discarding
+  successful sibling results.
 
 For one candidate with one email, return it and label the exact verification
 result. Otherwise use one compact table with one row per returned email,
