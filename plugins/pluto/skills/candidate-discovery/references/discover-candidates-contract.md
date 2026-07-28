@@ -80,6 +80,28 @@ with a provider name, or choose a retrieval source. The server selects its
 retrieval strategy, searches its candidate sources with the complete employer
 criterion, qualifies the merged evidence, and returns the final ranked lanes.
 
+## Private company-graph ranking
+
+The connected client does not collect, construct, or send a company graph.
+When fresh coverage exists for the authenticated client, the server privately
+loads a precomputed graph and selects a bounded projection for the requested
+department. That projection can include aggregate team patterns plus public
+professional backgrounds for founders and relevant leaders.
+
+The server combines that projection with explicit client preferences and
+returned candidate evidence. Its ranking can consider request alignment,
+founder context, team complementarity, hiring trajectory, and evidence
+confidence. The graph cannot establish a recruiter criterion, repair missing
+candidate evidence, or suppress an otherwise relevant result. Missing graph
+coverage is unknown coverage, not proof of a hiring gap.
+
+The output never exposes raw graph nodes, employee identities, provider
+payloads, or the private ranking input. Use only bounded `clientFit`,
+`clientContextReasons`, and `whyThisPerson` returned on candidate cards.
+Preserve server order and never turn this context into culture fit,
+personality, performance, protected-trait inference, or client-side
+requalification.
+
 ## Lookalike exclusion
 
 For an approved conversational lookalike, retain only visible public

@@ -191,6 +191,20 @@ company list. Forward the approved clause intact so the server can choose its
 retrieval strategy and apply the same complete employer criterion to every
 server-owned candidate source.
 
+Do not ask the recruiter for a team roster, founder history, or company graph,
+and do not add any of that material to the search request. When the
+authenticated client has a fresh precomputed company graph, the server
+privately selects the requested department's founder, leadership, and team
+projection. It combines that projection with explicit client preferences and
+may use it to rank the merged candidate pool by request fit, founder context,
+team complementarity, hiring trajectory, and evidence confidence.
+
+This graph is soft ranking context, not a candidate criterion or a source of
+factual qualification. Missing graph coverage does not prove a team gap. The
+client must preserve the returned server order and must not infer culture fit,
+personality, performance, or protected traits from `clientFit` or
+`clientContextReasons`.
+
 A recognizable pasted JD is source material, not a direct candidate-criteria
 ledger. Send it through the tagged raw-JD mode. Do not reinterpret office,
 compensation, benefits, interview, or application text as candidate
