@@ -1,6 +1,6 @@
 ---
 name: candidate-interest
-description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get professional emails for one to 100 external candidates. Routes one rich in-network result to express_candidate_interest and batches compact external results through enrich_candidate_email with separate verification outcomes, while preserving unchanged discovery handles and never sending outreach.
+description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get professional emails for one to 100 external candidates. Routes by the selected search-experience card's authoritative networkStatus while preserving unchanged discovery handles and never sending outreach.
 ---
 
 # Candidate interest and email enrichment
@@ -14,24 +14,25 @@ for discussion never authorizes a tool call.
 If the candidate choice or requested action is ambiguous, ask one focused
 question before calling a tool.
 
-## Choose the route from the returned group
+## Choose the route from network status
 
-Use the candidate's discovery array as the routing source. Do not decode the
-selection token or infer provenance from a name, profile URL, or other field.
+Use the selected search-experience card's returned `networkStatus` as the
+routing source. `bestMatches`, `expandedSuggestions`, and
+`verificationCandidates` are presentation lanes and do not establish network
+membership. Do not decode the selection token or infer provenance from a name,
+profile URL, recommendation, match status, or lane.
 
-- Exactly one selection from `candidates`, `unverifiedCandidates`, or
-  `nearMatches` is an in-network candidate-interest action. Use
-  `express_candidate_interest` only when the user asks to add, select,
-  prospect, or otherwise express interest in that candidate for a role.
-- One to 100 selections from `outOfNetworkCandidates` or
-  `adjacentSearch.candidates` form one external email-enrichment batch. Use
-  `enrich_candidate_email` when the user explicitly asks for their contact
-  information, contact details, available professional emails, or asks Pluto
-  to take those external candidates' supported next step. A broad
-  contact-information request uses this email-only route and does not warrant
-  commentary about phone availability. This applies whether `networkStatus`
-  is `out_of_network` or `unknown`; each originating array, not a display label
-  or exploratory placement, establishes the route.
+- Exactly one selection with `networkStatus: in_network` can use
+  `express_candidate_interest` when the user asks to add, select, prospect, or
+  otherwise express interest in that candidate for a role.
+- One to 100 selections with
+  `networkStatus: out_of_network | unknown` form one external
+  email-enrichment batch. Use `enrich_candidate_email` when the user explicitly
+  asks for contact information, available professional emails, or the supported
+  next step for those external candidates.
+
+If `networkStatus` is missing, report a server/plugin contract mismatch. Do not
+guess the route or try both tools.
 
 Do not call `express_candidate_interest` for an external selection. The server
 now rejects that route; dedicated email enrichment is the only current external
@@ -88,10 +89,10 @@ it again.
 
 ## Enrich one to 100 selected external candidates
 
-For every authorized selection from `outOfNetworkCandidates` or
-`adjacentSearch.candidates`, generate a distinct fresh random UUID as that
-candidate's `requestId`. Call `enrich_candidate_email` once for the whole
-batch, including a one-candidate batch, with only:
+For every authorized selection with
+`networkStatus: out_of_network | unknown`, generate a distinct fresh random
+UUID as that candidate's `requestId`. Call `enrich_candidate_email` once for
+the whole batch, including a one-candidate batch, with only:
 
 ```yaml
 candidates:
@@ -179,7 +180,7 @@ report a server/plugin contract mismatch rather than filling in missing data.
 
 ## Express interest in one selected in-network candidate
 
-For an authorized selection from an in-network array, call
+For an authorized selection with `networkStatus: in_network`, call
 `express_candidate_interest` once with the unchanged candidate handles.
 Supply `projectId` only when the user selected an exact returned active role and
 its project UUID is available. Omit it when the server can resolve the sole
