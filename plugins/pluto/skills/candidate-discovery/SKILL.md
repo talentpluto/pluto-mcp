@@ -21,6 +21,10 @@ in-network candidate, use the `candidate-question` skill. If the user asks to
 use that subject as a search criterion, keep it in the complete discovery
 request.
 
+If the user asks to create an email campaign for explicitly selected
+out-of-network candidates, use the `outbound-campaign` skill. Do not perform
+email enrichment first unless they separately ask for the addresses.
+
 ## Reference
 
 Read [Discover candidates contract](references/discover-candidates-contract.md)

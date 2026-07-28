@@ -98,6 +98,10 @@ After Pluto returns candidates, you can select one or more and ask:
 ```
 
 ```text
+@pluto Draft a concise three-email campaign for these out-of-network candidates, then let me review it before creation.
+```
+
+```text
 @pluto Express interest in this in-network candidate for the Senior Engineer role.
 ```
 
@@ -110,6 +114,7 @@ After Pluto returns candidates, you can select one or more and ask:
 | Check the shared organization credit balance | `get_credit_balance` |
 | Ask one bounded private question about a selected in-network candidate | `answer_candidate_question` |
 | Get and verify professional emails for 1–100 selected out-of-network candidates | `enrich_candidate_email` |
+| Draft, review, and create one email campaign for 1–100 selected out-of-network candidates | `create_outbound_campaign` |
 | Add a selected in-network candidate to a role's prospecting flow | `express_candidate_interest` |
 
 Pluto's live MCP tool descriptions and input schemas are the source of truth.
@@ -140,7 +145,16 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   candidates and preserves their order. Each safely stored and returned email
   uses one credit and includes a separate passed, failed, or unavailable
   verification outcome; a failed or unavailable check does not suppress the
-  email. Pluto does not send outreach.
+  email. A successful result can continue into drafting or a campaign without
+  another contact-lookup credit. Email enrichment does not create or send
+  outreach.
+- One outbound campaign accepts 1–100 explicitly selected out-of-network
+  candidates from discovery or successful enrichment for one active role.
+  Pluto drafts a compact sequence for review when details are missing and
+  prepares a reviewable campaign only after explicit direction. Contact
+  preparation can use up to one credit per candidate not already enriched; the
+  creation request does not send email, and its confirmation is not an
+  email-delivery status.
 - Expressing interest in an in-network candidate can update the TalentPluto
   pipeline and send the normal reconfirm-interest message.
 - Pluto takes an outbound action only after you explicitly select the candidate

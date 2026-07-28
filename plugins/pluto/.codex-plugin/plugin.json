@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.1.28",
-  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk external-candidate email enrichment, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+  "version": "0.1.29",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, external-candidate email enrichment and outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -12,6 +12,8 @@
     "candidate email",
     "bulk candidate email",
     "email verification",
+    "outbound campaign",
+    "email campaign",
     "candidate questions",
     "private assessment",
     "market snapshot",
@@ -24,8 +26,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Pluto",
-    "shortDescription": "Use TalentPluto recruiting, email, and market tools.",
-    "longDescription": "Connect once to use TalentPluto's live recruiting, bulk candidate-email enrichment, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
+    "shortDescription": "Use TalentPluto recruiting, outbound, and market tools.",
+    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, reviewable outbound campaigns, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
     "developerName": "Pluto",
     "category": "Productivity",
     "capabilities": [
@@ -40,6 +42,7 @@
       "How many Pluto credits do I have left, and when do they reset?",
       "Ask whether the selected in-network candidate's recorded preference is compatible with a $180,000 annual base salary.",
       "Get and verify the available professional emails for the out-of-network candidates I selected.",
+      "Draft a concise three-email campaign for the out-of-network candidates I selected, then let me review it before creation.",
       "Continue with the candidate and role I selected in Pluto."
     ],
     "brandColor": "#2563EB",

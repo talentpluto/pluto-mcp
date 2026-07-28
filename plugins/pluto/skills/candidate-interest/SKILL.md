@@ -1,6 +1,6 @@
 ---
 name: candidate-interest
-description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get professional emails for one to 100 external candidates. Routes by the selected search-experience card's authoritative networkStatus while preserving unchanged discovery handles and never sending outreach.
+description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get professional emails for one to 100 external candidates. Routes by the selected search-experience card's authoritative networkStatus while preserving opaque handle pairs. Does not create outbound campaigns.
 ---
 
 # Candidate interest and email enrichment
@@ -10,6 +10,10 @@ candidate or get professional emails for one to 100 external candidates
 returned by `discover_candidates`. Selection alone is not authorization. A
 candidate being highly ranked, shortlisted, described as promising, or opened
 for discussion never authorizes a tool call.
+
+If the user asks to draft, review, create, start, or launch an email campaign
+for selected external candidates, use the `outbound-campaign` skill instead.
+Do not enrich emails first unless the user separately asks for the addresses.
 
 If the candidate choice or requested action is ambiguous, ask one focused
 question before calling a tool.
@@ -114,12 +118,12 @@ owns one 240-second provider deadline for the batch. Completed emails can
 therefore coexist with safe unavailable or blocked sibling outcomes; never
 discard the completed results or launch a replacement call automatically.
 
-A successfully stored and returned email uses one shared organization credit
-for that candidate. No-email, provider, identity, storage, and
-depleted-balance outcomes use zero product credits for that item. Use the exact
-per-item and summary accounting only to validate the result contract; never
-infer it from the outcome or include it in the normal user-facing response
-unless the user asks about credits.
+A newly stored and returned contact uses one shared organization credit for
+that candidate. Reusing the exact disclosure from a prior successful
+enrichment uses zero new credits. Use the returned per-item and summary
+accounting only to validate the result contract; never infer it from the
+outcome or include it in the normal user-facing response unless the user asks
+about credits.
 
 Do not automatically retry a timeout, transport failure, or ambiguous result.
 The first batch may have performed provider work or committed disclosures. If
@@ -135,27 +139,33 @@ return the matching `candidateRef` on every item. Require the summary counts to
 agree with the item statuses:
 
 - `summary.requested` equals the input length;
-- `emailsReturned`, `contactsUnavailable`, and `blocked` equal their respective
-  item counts and sum to `requested`;
-- `summary.creditsUsed` equals the sum of item `creditsUsed` values; and
+- `contactsUnavailable` and `blocked` equal their respective item counts, and
+  those counts plus the number of `external_contact` items equal `requested`;
+- `emailsReturned` equals the total number of entries across every successful
+  item’s `emails` array;
+- `summary.creditsUsed` equals the sum of present item `creditsUsed` values; and
 - the three verification counts sum to `emailsReturned`.
 
 Handle each candidate-correlated item exactly:
 
-- `external_contact` requires the exact stored `email`, `creditsUsed: 1`,
-  `remainingCredits`, and an `emailVerification` object whose provider is
-  `zerobounce` and result is `passed`, `failed`, or `unavailable`. Return the
-  email for all three verification results; failed or unavailable verification
-  never suppresses or erases a committed email. Keep Fiber's separate
-  `emailStatus` classification distinct from this verification result.
+- `external_contact` requires `creditsUsed: 0 | 1`, a fresh
+  `selectionToken`, and a non-empty `emails` array. Every email entry has its
+  own `emailVerification` object whose provider is `zerobounce` and result is
+  `passed`, `failed`, or `unavailable`. Keep the fresh token privately paired
+  with the returned `candidateRef` for `draft_candidate_email` or
+  `create_outbound_campaign`; never display it. Return every email for all
+  three verification results. Failed or unavailable verification never
+  suppresses or erases a committed email. Keep Fiber's separate `emailStatus`
+  classification distinct from this verification result.
 - `contact_unavailable` requires `creditsUsed: 0` and no email. Relay its safe
   message without inferring, synthesizing, revealing an older address, or
   retrying.
-- `blocked` contains no email. Relay its safe message without claiming a credit
-  was used or discarding successful sibling results.
+- `blocked` contains no email. Relay its safe message and any returned bounded
+  accounting accurately without discarding successful sibling results.
 
-For one candidate, return the exact email and label the exact verification
-result. For multiple candidates, use one compact table in returned order:
+For one candidate with one email, return it and label the exact verification
+result. Otherwise use one compact table with one row per returned email,
+preserving candidate and email order:
 
 ```markdown
 | Candidate | Email | Verification or result |
@@ -174,9 +184,9 @@ usage, or outreach details unless the user specifically asks for an allowed
 field.
 
 If results are missing, duplicated, reordered, or correlated to the wrong
-candidate; if success lacks a stored email or verification object; if a
-non-success item reports nonzero credits; or if summary counts do not reconcile,
-report a server/plugin contract mismatch rather than filling in missing data.
+candidate; if success lacks stored emails, a fresh selection token, or
+verification object; or if summary counts do not reconcile, report a
+server/plugin contract mismatch rather than filling in missing data.
 
 ## Express interest in one selected in-network candidate
 
