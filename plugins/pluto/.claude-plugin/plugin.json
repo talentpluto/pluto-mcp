@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.1.29",
-  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk external-candidate email enrichment, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+  "version": "0.1.30",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk external-candidate email enrichment and outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -13,6 +13,8 @@
     "candidate email",
     "bulk candidate email",
     "email verification",
+    "outbound campaign",
+    "email campaign",
     "candidate questions",
     "private assessment",
     "market snapshot",
