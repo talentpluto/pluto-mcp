@@ -6,8 +6,9 @@ description: Use when a user asks Pluto to draft, refine, review, or create an o
 # Outbound campaigns
 
 Use this skill to turn a request such as “do outbound for these candidates” into
-one easy-to-review campaign and, when authorized, create it through
-`create_outbound_campaign`.
+an easy-to-review campaign and, when authorized, create it through
+`create_outbound_campaign`. When the user requests separate campaigns for
+different roles or audiences, build and review each campaign separately.
 
 One candidate and a batch use the same flow. For candidates selected from
 discovery, do not call `enrich_candidate_email` first: campaign creation
@@ -19,7 +20,8 @@ when the user asks for a one-off draft that will not create a campaign.
 
 When material settings are missing, draft a complete campaign with sensible
 defaults and show one compact preview. Do not make the user answer a setup
-questionnaire.
+questionnaire, but do not treat a short opportunity summary or a
+`generationPrompt` as a reviewable campaign.
 
 Default to:
 
@@ -36,6 +38,12 @@ provided. Ask one focused question only when a missing choice would materially
 change the campaign, such as two possible roles or mixed warm and cold
 audiences.
 
+Before the first creation call, the user must either have supplied the exact
+audience, settings, and copy with an explicit instruction to create it, or have
+seen the complete assistant-authored campaign below. If the assistant chooses
+defaults, writes or changes copy, or resolves an audience question, show the
+resulting complete preview before creation.
+
 Show the review in this shape, omitting lines that add no value:
 
 ```markdown
@@ -43,11 +51,14 @@ Show the review in this shape, omitting lines that add no value:
 
 **<campaign name>** · <count> selected candidate(s) · <role or “role chosen at creation”>
 
+- Audience: <selected candidates or concise selected cohort>
+- Type: <cold or warm introduction>
 - Sequence: Initial · +3 days · +7 days (day 10)
 - Style: <short description>
+- Call to action: <the exact ask>
+- Content boundaries: <important inclusions or exclusions>
 - Contact preparation: up to <count needing a new lookup> shared credits
 - Eligibility: only selected candidates whose email passes the server's fresh campaign-safe verification
-- Result: a reviewable campaign is prepared; this request does not send email
 
 **Subject**
 <subject template, or “Generated for each candidate”>
@@ -64,14 +75,37 @@ Show the review in this shape, omitting lines that add no value:
 Reply `create campaign` or tell me what to change.
 ```
 
-Editing or approving copy does not by itself authorize campaign creation. If
-the assistant supplied material settings, wait until the user explicitly says
-to create, start, or launch the reviewed campaign. If the user already supplied
-complete settings and explicitly asked to create it, do not add a redundant
-confirmation step.
+List every selected candidate by displayed name for a small audience. For a
+larger audience, use a concise cohort label plus the count and separately name
+any candidates the user just added or removed. Never make the user infer the
+final audience from earlier messages.
 
-If the user asks to send immediately, explain that this tool prepares a
-reviewable campaign rather than sending email and ask whether to create it.
+For fixed templates, show the complete subject and body of every step, not just
+a prose prompt or list of themes. For recipient-specific generation, show a
+precise per-step content brief covering the subject intent, relevant evidence,
+message purpose, factual boundaries, and call to action so the generated
+campaign is still predictable.
+
+After any material revision, render the complete updated preview rather than
+replying only that isolated choices are “locked in.” Creation authorization
+applies only to the exact latest preview. A later change to the audience, role,
+campaign type, schedule, subject, copy, personalization mode, compensation
+language, or other content boundary invalidates earlier authorization. Show
+the revised preview and wait for a fresh explicit instruction to create it.
+Answering a setup question or approving one edit does not authorize creation.
+
+If the assistant supplied material settings, wait until the user explicitly
+says to create, start, launch, or send the exact reviewed campaign. One clear
+instruction may authorize several separately displayed campaign previews. If
+the user already supplied complete settings and copy and explicitly asked to
+create them, do not add a redundant confirmation step.
+
+Speak in terms of campaign creation. Do not volunteer or speculate about
+internal paused, draft, scheduled, queued, or delivery state, and do not append
+a warning that campaign creation is not an email-delivery status. If the user
+explicitly asks about workflow or delivery state, answer only from state the
+tool actually returns. Never say that an email was sent or delivered unless a
+tool result explicitly confirms that event.
 
 ## Draft safe, useful copy
 
@@ -140,10 +174,10 @@ includes `candidates:outbound`.
 
 ## Create exactly the reviewed campaign
 
-Generate one fresh random UUID for the top-level `requestId`. Reuse it only to
-retry the exact same campaign or to complete that campaign after a
+Generate one fresh random UUID for each campaign's top-level `requestId`. Reuse
+it only to retry the exact same campaign or to complete that campaign after a
 `needs_role` response. Never reuse it after any audience, copy, schedule, or
-role change.
+role change, and never share one request ID across campaigns.
 
 Map the reviewed sequence exactly:
 
@@ -159,20 +193,22 @@ For the default day 0, day 3, and day 10 sequence, pass
 not review. Use `warm_intro` only when a real warm path is established; never
 use it merely to make cold outreach sound friendlier.
 
-Call `create_outbound_campaign` once with the reviewed campaign name, type,
-candidate handles, sequence settings, request ID, and known project ID. The
-operation may use up to one shared organization credit per candidate needing a
-new contact lookup; a successful-enrichment handle uses zero new lookup
-credits.
+Call `create_outbound_campaign` once for each explicitly authorized campaign
+with that campaign's reviewed name, type, candidate handles, sequence settings,
+request ID, and known project ID. Do not merge separate reviewed campaigns.
+The operation may use up to one shared organization credit per candidate
+needing a new contact lookup; a successful-enrichment handle uses zero new
+lookup credits.
 
 Handle the response narrowly:
 
 - `needs_role`: no campaign was created. Show every safe role choice, retain
   its `projectId` privately, and ask the user to choose. Retry only after their
   choice, with that project ID and the same request ID.
-- Success: report only the returned confirmation. Do not add campaign or
-  request identifiers, contact details, email-delivery claims, or inferred
-  workflow state.
+- Success: say the campaign was created and give one compact recap of its
+  reviewed name, audience, role, and sequence. Do not add campaign or request
+  identifiers, contact details, email-delivery claims, inferred workflow
+  state, or a warning about state the result did not return.
 - Blocked or error: relay the safe reason and do not claim success.
 
 Do not automatically retry a timeout, transport failure, or ambiguous result;
