@@ -76,10 +76,9 @@ company stage, funding, investor, industry, business-model, size, growth, and
 geography language in the approved brief.
 
 The client must not translate that clause into a company list, annotate it
-with a provider name, or choose a retrieval source. The server decides whether
-the clause needs company-first retrieval, resolves any company universe,
-searches its candidate sources, qualifies the merged evidence, and returns the
-final ranked lanes.
+with a provider name, or choose a retrieval source. The server selects its
+retrieval strategy, searches its candidate sources with the complete employer
+criterion, qualifies the merged evidence, and returns the final ranked lanes.
 
 ## Lookalike exclusion
 

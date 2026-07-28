@@ -74,8 +74,8 @@ target and approve switching to a direct brief. The server evaluates,
 qualifies, and ranks the complete result, and Pluto presents every returned
 search-experience lane without client-side reranking. Natural-language
 employer clauses remain intact: the client does not choose a provider or
-construct a company list, while the server can resolve a company universe and
-use it consistently across its candidate sources.
+construct a company list, while the server selects the retrieval strategy and
+applies the complete clause across its candidate sources.
 
 For a privacy-thresholded US market view:
 
