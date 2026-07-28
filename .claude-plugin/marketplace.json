@@ -10,7 +10,7 @@
     {
       "name": "pluto",
       "source": "./plugins/pluto",
-      "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, external-candidate email enrichment and outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+      "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, candidate work-email enrichment and outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
       "category": "productivity",
       "keywords": [
         "candidates",
