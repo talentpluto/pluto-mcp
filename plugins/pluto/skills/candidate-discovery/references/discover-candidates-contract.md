@@ -208,6 +208,17 @@ Pluto network, or split the response by source membership.
 Never mention an external data provider or vendor by name in the user-facing
 answer, evidence rationale, limitation, or source description.
 
+Keep each candidate's `candidateRef`, `selectionToken`, `networkStatus`,
+originating lane, and project scope paired exactly for follow-up.
+`networkStatus` is action-specific: exactly one selected in-network candidate
+can route to `express_candidate_interest` or one bounded private question,
+while an explicit work-email request for any selected candidate routes through
+the `candidate-interest` skill. That skill prefers
+`start_candidate_email_enrichment` plus
+`get_candidate_email_enrichment_job` and uses `enrich_candidate_email` only as
+a compatibility fallback. Directly supplied LinkedIn profiles use that same
+email-enrichment skill without invented discovery handles.
+
 Discovery alone never authorizes email enrichment, candidate interest, a
 private candidate question, or an outbound campaign. Those require a later,
 explicit user request and the appropriate Pluto skill.

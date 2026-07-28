@@ -11,10 +11,13 @@ an easy-to-review campaign and, when authorized, create it through
 different roles or audiences, build and review each campaign separately.
 
 One candidate and a batch use the same flow. For candidates selected from
-discovery, do not call `enrich_candidate_email` first: campaign creation
-performs its own campaign-safe contact preparation. If enrichment already
-succeeded, reuse its fresh handle. Use `draft_candidate_email` instead only
-when the user asks for a one-off draft that will not create a campaign.
+discovery, do not call `start_candidate_email_enrichment`, its polling tool, or
+the legacy `enrich_candidate_email` first: campaign creation performs its own
+campaign-safe contact preparation. Use either enrichment route before campaign
+creation only when the user separately asked to receive the addresses. If that
+enrichment already succeeded for an out-of-network candidate, reuse its fresh
+handle. A successful work-email lookup does not make an in-network candidate
+eligible for a campaign.
 
 ## Build and confirm the campaign in one pass
 
@@ -215,12 +218,18 @@ handles or private context.
 
 ## Validate the audience and live contract
 
-Campaign creation requires one to 100 explicit external selections. Each must
-be either a `discover_candidates` card with
-`networkStatus: out_of_network` or a successful enrichment
-`external_contact` result. For enrichment, use the fresh returned
-`candidateRef` and `selectionToken`; it reuses the committed contact without a
-new lookup credit. An `external_contact` may contain committed emails whose
+Campaign creation requires one to 100 explicit out-of-network selections. Each
+must be either a `discover_candidates` card with
+`networkStatus: out_of_network` or an `external_contact` result from a completed
+`get_candidate_email_enrichment_job` response (or the legacy synchronous
+enrichment response). For enrichment, use the fresh returned `candidateRef`
+and `selectionToken`; it reuses the committed contact without a
+new lookup credit. The `external_contact` status describes the work-email
+outcome, not network membership. Do not include a result known to belong to an
+in-network candidate; successful enrichment does not change that boundary. For
+a direct-URL enrichment whose network status was not already known, preserve
+the opaque handle and let the server reauthorize it; an in-network handle fails
+closed. An `external_contact` may contain committed work emails whose
 enrichment verification is `passed`, `failed`, or `unavailable`; that result
 alone does not determine campaign eligibility. Campaign creation performs
 fresh server-enforced campaign-safe verification and prepares only candidates
@@ -230,9 +239,11 @@ and in the selected order.
 Do not substitute a LinkedIn URL, email address, name, internal ID, or stale
 token. Do not silently omit an invalid selection. If the audience contains an
 in-network candidate, ask whether to proceed with only the selected external
-candidates. If network status is missing or unknown, do not guess that the
-campaign route is supported. If the audience exceeds 100, ask the user to
-reduce it; do not split it into several campaigns automatically.
+candidates. A missing or unknown network status on a discovery result is not
+campaign authorization; a successful direct-URL enrichment handle is the only
+case where the server may resolve that boundary during campaign
+reauthorization. If the audience exceeds 100, ask the user to reduce it; do not
+split it into several campaigns automatically.
 
 If a required handle is missing, invalid, or expired, explain which displayed
 candidate is affected and ask before running another metered discovery or

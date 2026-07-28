@@ -12,7 +12,8 @@ review the search plan, and work with the results directly in the conversation.
 - Get a directional, privacy-protected US talent-market snapshot.
 - Ask supported questions about a selected in-network candidate's recorded
   preferences or availability.
-- Find and verify professional emails for selected out-of-network candidates.
+- Find and verify work emails for selected candidates or directly supplied
+  LinkedIn profiles.
 - Review and create an email campaign for selected out-of-network candidates.
 - Express interest in an in-network candidate for an active role.
 - Check your organization's shared Pluto credit balance.
@@ -89,7 +90,7 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 After a search, select the relevant candidates before asking Pluto to continue:
 
 ```text
-@pluto Get and verify the available professional emails for these candidates.
+@pluto Get and verify the available work emails for these candidates.
 
 @pluto Draft a three-email campaign for these candidates and show me the final
 setup before creating it.
@@ -102,9 +103,12 @@ setup before creating it.
 - Search planning and revision do not use credits.
 - Each in-network candidate presented in search uses one shared organization
   credit. Out-of-network search results are free.
-- A new successful professional-email lookup can use one credit for that
-  candidate. Reusing an existing successful lookup does not use another lookup
-  credit.
+- Email enrichment starts one asynchronous job for 1–500 explicitly selected
+  candidates or directly supplied LinkedIn profiles and polls it to completion.
+  The legacy synchronous fallback accepts at most 100. Only work emails are
+  returned.
+- A new successful work-email lookup can use one credit for that candidate.
+  Reusing an existing successful lookup does not use another lookup credit.
 - Market snapshots use aggregated data and omit metrics that do not meet
   privacy thresholds.
 - Private candidate questions return a bounded answer, not the candidate's raw
