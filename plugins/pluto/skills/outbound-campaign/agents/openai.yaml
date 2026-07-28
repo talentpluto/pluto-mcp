@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto outbound campaigns"
   short_description: "Draft, review, and create candidate email campaigns"
-  default_prompt: "Use $outbound-campaign to turn my selected out-of-network candidates into a complete, editable email sequence. Show the audience, role, timing, subject, and every message in one compact preview, preserve every candidate handle, and create only the exact latest campaign I explicitly authorize."
+  default_prompt: "Use $outbound-campaign to turn my selected out-of-network candidates into a prefilled, editable campaign. Show every required field, timing choice, template override, and message step in one explicit confirmation surface; clearly distinguish exact templates with variables from copy generated through the reviewed generation prompt; preserve each candidate handle with its selection token internally for the tool call, never display either in the confirmation or response; and call the creation tool only after I confirm that exact displayed setup."
 
 dependencies:
   tools:

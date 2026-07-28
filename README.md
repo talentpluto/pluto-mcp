@@ -104,7 +104,7 @@ After Pluto returns candidates, you can select one or more and ask:
 ```
 
 ```text
-@pluto Draft a complete three-email campaign for these out-of-network candidates, including the audience, timing, subject, and every message, then let me review it before creation.
+@pluto Prefill a three-email campaign for these out-of-network candidates. Let me review the audience, timing, generation instructions, template values, and whether each message uses an exact template or generated copy before creation.
 ```
 
 ```text
@@ -157,10 +157,14 @@ Pluto's live MCP tool descriptions and input schemas are the source of truth.
   contact-lookup credit. Email enrichment does not create or send outreach.
 - One outbound campaign accepts 1–100 explicitly selected out-of-network
   candidates from discovery or successful enrichment for one active role.
-  Pluto drafts the complete audience, role, sequence, subject, and copy for
-  review when details are missing, then creates exactly the latest reviewed
-  campaign after explicit direction. Contact preparation can use up to one
-  credit per candidate not already enriched.
+  Pluto prefills every required setting for review, including the audience,
+  role, sequence, generation instructions, template values, and copy mode for
+  each message. A template contains exact sendable copy and can use variables
+  such as `{firstName}`; generated copy omits that template and follows the
+  reviewed generation prompt. Pluto always presents the exact final campaign
+  as a confirmation surface, accepts edits, and creates only the latest setup
+  the user explicitly confirms. Contact preparation can use up to one credit
+  per candidate not already enriched.
 - Expressing interest in an in-network candidate can update the TalentPluto
   pipeline and send the normal reconfirm-interest message.
 - Pluto takes an outbound action only after you explicitly select the candidate
