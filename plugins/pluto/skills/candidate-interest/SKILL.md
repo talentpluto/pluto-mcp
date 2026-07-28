@@ -155,20 +155,29 @@ with that batch. Accept only:
 - `status: completed` with the terminal result contract below, which is allowed
   for a sandbox or compatibility runtime.
 
-Keep `jobId` private. For a queued job, wait at least `retryAfterMs`, then call
-`get_candidate_email_enrichment_job` with only that exact unchanged `jobId`.
-Handle each poll result exactly:
+Keep `jobId` private. For one user-authorized polling pass, make at most 20
+calls to `get_candidate_email_enrichment_job`, including transport retries,
+with only that exact unchanged `jobId`. Wait at least the returned
+`retryAfterMs` before each poll. Handle each poll result exactly:
 
-- `queued` or `running`: require `requested` to match the input length and a
-  bounded `retryAfterMs`, wait at least that long, and poll the same job again;
-- `completed`: continue to the terminal result validation below; or
-- `failed`: relay the safe returned message and stop. Do not restart
-  enrichment automatically.
+- `queued` or `running`: require `requested` to match the input length and an
+  integer `retryAfterMs` within the inspected live schema's bounds. If attempts
+  remain, wait at least that long and poll the same job again. At the cap, stop
+  and say the job is still processing without exposing its ID. Preserve the
+  same private `jobId`; only an explicit user request to continue may start a
+  new bounded polling pass with that unchanged ID.
+- `completed`: continue to the terminal result validation below.
+- `failed`: relay only the safe returned message and stop. Do not restart
+  enrichment.
+- Any unknown status, non-object response, missing required field, malformed
+  field, or mismatched `requested` count is a server/plugin contract mismatch.
+  Report it and stop without another poll or a new start call.
 
-A poll transport failure is safe to retry with the same `jobId`; it is not
-authorization to call the start tool again. If the async start tool is absent,
-call the legacy `enrich_candidate_email` tool exactly once with the same batch
-and treat its response as the terminal result.
+A poll transport failure is safe to retry with the same `jobId` while attempts
+remain, but it counts toward the cap and is not authorization to call the start
+tool again. If the async start tool is absent, call the legacy
+`enrich_candidate_email` tool exactly once with the same batch and treat its
+response as the terminal result.
 
 Never pass a `projectId`, email address, provider identifier, or other
 candidate field. A discovery-selected item must not contain a LinkedIn URL;
