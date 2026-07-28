@@ -72,7 +72,10 @@ until it looks right, then ask Pluto to run the search. For a recognizable
 pasted JD, the unchanged JD remains the execution source unless you change the
 target and approve switching to a direct brief. The server evaluates,
 qualifies, and ranks the complete result, and Pluto presents every returned
-search-experience lane without client-side reranking.
+search-experience lane without client-side reranking. Natural-language
+employer clauses remain intact: the client does not choose a provider or
+construct a company list, while the server can resolve a company universe and
+use it consistently across its candidate sources.
 
 For a privacy-thresholded US market view:
 
