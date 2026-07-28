@@ -9,8 +9,8 @@ then polls that job and may read bounded Team DNA while retrieval continues.
 The server owns:
 
 - internal TalentPluto retrieval;
-- primary Fiber natural-language people search;
-- optional alternate Fiber natural-language people search;
+- primary external natural-language people search;
+- optional alternate external natural-language people search;
 - identity resolution and deduplication;
 - evidence acquisition and factual qualification;
 - credit reservation and settlement; and
@@ -101,8 +101,8 @@ For a direct candidate-pool request, the server can run three retrieval lanes
 concurrently:
 
 1. accepted TalentPluto profiles using a faithful internal optimization;
-2. Fiber search using the authoritative natural-language request; and
-3. Fiber search using `alternateExternalSearchQuery`.
+2. external search using the authoritative natural-language request; and
+3. external search using `alternateExternalSearchQuery`.
 
 The alternate lane is omitted when no faithful alternate query is supplied.
 Raw job descriptions are compiled server-side and do not receive a
@@ -183,9 +183,8 @@ returned client-context signal. No numeric goodness score is exposed.
 
 ## Accounting and retries
 
-Each presented in-network person may use one shared organization credit.
-Out-of-network profiles do not use product credits. Never infer credit use from
-counts; use the completed result.
+Never infer credit use from candidate counts or source membership; use the
+completed result's accounting fields.
 
 Do not automatically call `discover_candidates` again after a timeout,
 transport ambiguity, or poll failure. The job exists specifically to separate
@@ -202,7 +201,12 @@ candidate. Surface source-ranked evidence limits and all verification
 questions.
 
 Keep job IDs, search IDs, candidate references, selection tokens, internal
-scores, provider names, and private context hidden.
+scores, provider names, private context, `networkStatus`, and source membership
+hidden. Never describe candidates as in-network or out-of-network, refer to a
+Pluto network, or split the response by source membership.
+
+Never mention an external data provider or vendor by name in the user-facing
+answer, evidence rationale, limitation, or source description.
 
 Discovery alone never authorizes email enrichment, candidate interest, a
 private candidate question, or an outbound campaign. Those require a later,
