@@ -1,6 +1,6 @@
 ---
 name: candidate-interest
-description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get professional emails for one to 100 external candidates. Routes one rich in-network result to express_candidate_interest and batches compact external results through enrich_candidate_email with separate verification outcomes, while preserving unchanged discovery handles and never sending outreach.
+description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get professional emails for one to 100 external candidates. Routes by the selected search-experience card's authoritative networkStatus while preserving opaque handle pairs. Does not create outbound campaigns.
 ---
 
 # Candidate interest and email enrichment
@@ -11,27 +11,32 @@ returned by `discover_candidates`. Selection alone is not authorization. A
 candidate being highly ranked, shortlisted, described as promising, or opened
 for discussion never authorizes a tool call.
 
+If the user asks to draft, review, create, start, or launch an email campaign
+for selected external candidates, use the `outbound-campaign` skill instead.
+Do not enrich emails first unless the user separately asks for the addresses.
+
 If the candidate choice or requested action is ambiguous, ask one focused
 question before calling a tool.
 
-## Choose the route from the returned group
+## Choose the route from network status
 
-Use the candidate's discovery array as the routing source. Do not decode the
-selection token or infer provenance from a name, profile URL, or other field.
+Use the selected search-experience card's returned `networkStatus` as the
+routing source. `bestMatches`, `expandedSuggestions`, and
+`verificationCandidates` are presentation lanes and do not establish network
+membership. Do not decode the selection token or infer provenance from a name,
+profile URL, recommendation, match status, or lane.
 
-- Exactly one selection from `candidates`, `unverifiedCandidates`, or
-  `nearMatches` is an in-network candidate-interest action. Use
-  `express_candidate_interest` only when the user asks to add, select,
-  prospect, or otherwise express interest in that candidate for a role.
-- One to 100 selections from `outOfNetworkCandidates` or
-  `adjacentSearch.candidates` form one external email-enrichment batch. Use
-  `enrich_candidate_email` when the user explicitly asks for their contact
-  information, contact details, available professional emails, or asks Pluto
-  to take those external candidates' supported next step. A broad
-  contact-information request uses this email-only route and does not warrant
-  commentary about phone availability. This applies whether `networkStatus`
-  is `out_of_network` or `unknown`; each originating array, not a display label
-  or exploratory placement, establishes the route.
+- Exactly one selection with `networkStatus: in_network` can use
+  `express_candidate_interest` when the user asks to add, select, prospect, or
+  otherwise express interest in that candidate for a role.
+- One to 100 selections with
+  `networkStatus: out_of_network | unknown` form one external
+  email-enrichment batch. Use `enrich_candidate_email` when the user explicitly
+  asks for contact information, available professional emails, or the supported
+  next step for those external candidates.
+
+If `networkStatus` is missing, report a server/plugin contract mismatch. Do not
+guess the route or try both tools.
 
 Do not call `express_candidate_interest` for an external selection. The server
 now rejects that route; dedicated email enrichment is the only current external
@@ -88,10 +93,10 @@ it again.
 
 ## Enrich one to 100 selected external candidates
 
-For every authorized selection from `outOfNetworkCandidates` or
-`adjacentSearch.candidates`, generate a distinct fresh random UUID as that
-candidate's `requestId`. Call `enrich_candidate_email` once for the whole
-batch, including a one-candidate batch, with only:
+For every authorized selection with
+`networkStatus: out_of_network | unknown`, generate a distinct fresh random
+UUID as that candidate's `requestId`. Call `enrich_candidate_email` once for
+the whole batch, including a one-candidate batch, with only:
 
 ```yaml
 candidates:
@@ -113,12 +118,13 @@ owns one 240-second provider deadline for the batch. Completed emails can
 therefore coexist with safe unavailable or blocked sibling outcomes; never
 discard the completed results or launch a replacement call automatically.
 
-A successfully stored and returned email uses one shared organization credit
-for that candidate. No-email, provider, identity, storage, and
-depleted-balance outcomes use zero product credits for that item. Use the exact
-per-item and summary accounting only to validate the result contract; never
-infer it from the outcome or include it in the normal user-facing response
-unless the user asks about credits.
+A newly stored candidate contact that returns one or more emails uses one
+shared organization credit for that candidate, regardless of the number of
+emails returned. Reusing the exact disclosure from a prior successful
+enrichment uses zero new credits. Use the returned per-item and summary
+accounting only to validate the result contract; never infer it from the
+outcome or include it in the normal user-facing response unless the user asks
+about credits.
 
 Do not automatically retry a timeout, transport failure, or ambiguous result.
 The first batch may have performed provider work or committed disclosures. If
@@ -134,27 +140,39 @@ return the matching `candidateRef` on every item. Require the summary counts to
 agree with the item statuses:
 
 - `summary.requested` equals the input length;
-- `emailsReturned`, `contactsUnavailable`, and `blocked` equal their respective
-  item counts and sum to `requested`;
-- `summary.creditsUsed` equals the sum of item `creditsUsed` values; and
+- `contactsUnavailable` and `blocked` equal their respective item counts, and
+  those counts plus the number of `external_contact` items equal `requested`;
+- `emailsReturned` equals the total number of entries across every successful
+  item’s `emails` array;
+- `summary.creditsUsed` equals the sum of present item `creditsUsed` values and
+  therefore counts candidate-level lookups, not returned emails; and
 - the three verification counts sum to `emailsReturned`.
 
 Handle each candidate-correlated item exactly:
 
-- `external_contact` requires the exact stored `email`, `creditsUsed: 1`,
-  `remainingCredits`, and an `emailVerification` object whose provider is
-  `zerobounce` and result is `passed`, `failed`, or `unavailable`. Return the
-  email for all three verification results; failed or unavailable verification
-  never suppresses or erases a committed email. Keep Fiber's separate
-  `emailStatus` classification distinct from this verification result.
+- `external_contact` requires `creditsUsed: 0 | 1`, a fresh
+  `selectionToken`, and a non-empty `emails` array. The credit value describes
+  the candidate lookup, not the email count: `1` for a newly stored contact or
+  `0` when reusing the exact disclosure from prior successful enrichment.
+  Every email entry has its own `emailVerification` object whose provider is
+  `zerobounce` and result is `passed`, `failed`, or `unavailable`. Keep the
+  fresh token privately paired with the returned `candidateRef` for
+  `draft_candidate_email` or `create_outbound_campaign`; never display it.
+  Return every email for all three verification results. Failed or unavailable
+  verification never suppresses or erases a committed email. Keep Fiber's
+  separate `emailStatus` classification distinct from this verification
+  result.
 - `contact_unavailable` requires `creditsUsed: 0` and no email. Relay its safe
   message without inferring, synthesizing, revealing an older address, or
   retrying.
-- `blocked` contains no email. Relay its safe message without claiming a credit
-  was used or discarding successful sibling results.
+- `blocked` contains no email. Keep any returned bounded accounting internal
+  for contract reconciliation and expose it only when the user explicitly asks
+  about credits. Otherwise relay only its safe message, without discarding
+  successful sibling results.
 
-For one candidate, return the exact email and label the exact verification
-result. For multiple candidates, use one compact table in returned order:
+For one candidate with one email, return it and label the exact verification
+result. Otherwise use one compact table with one row per returned email,
+preserving candidate and email order:
 
 ```markdown
 | Candidate | Email | Verification or result |
@@ -173,13 +191,13 @@ usage, or outreach details unless the user specifically asks for an allowed
 field.
 
 If results are missing, duplicated, reordered, or correlated to the wrong
-candidate; if success lacks a stored email or verification object; if a
-non-success item reports nonzero credits; or if summary counts do not reconcile,
-report a server/plugin contract mismatch rather than filling in missing data.
+candidate; if success lacks stored emails, a fresh selection token, or
+verification object; or if summary counts do not reconcile, report a
+server/plugin contract mismatch rather than filling in missing data.
 
 ## Express interest in one selected in-network candidate
 
-For an authorized selection from an in-network array, call
+For an authorized selection with `networkStatus: in_network`, call
 `express_candidate_interest` once with the unchanged candidate handles.
 Supply `projectId` only when the user selected an exact returned active role and
 its project UUID is available. Omit it when the server can resolve the sole

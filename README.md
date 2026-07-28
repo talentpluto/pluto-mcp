@@ -1,28 +1,52 @@
 # Pluto
 
-Pluto connects your coding agent — OpenAI Codex or Claude Code — to
-TalentPluto. Install it once, sign in, and ask for recruiting help in plain
-English.
+Pluto brings TalentPluto recruiting workflows into OpenAI Codex and Claude
+Code. Describe the person you are looking for or paste a job description,
+review the search plan, and work with the results directly in the conversation.
 
-## Before you start
+## What you can do
 
-You need:
+- Find and qualify candidates from a plain-English request or a full job
+  description.
+- Compare candidates and refine the search criteria.
+- Get a directional, privacy-protected US talent-market snapshot.
+- Ask supported questions about a selected in-network candidate's recorded
+  preferences or availability.
+- Find and verify professional emails for selected out-of-network candidates.
+- Review and create an email campaign for selected out-of-network candidates.
+- Express interest in an in-network candidate for an active role.
+- Check your organization's shared Pluto credit balance.
 
-- Codex desktop, the Codex CLI, or Claude Code
-- A TalentPluto account whose organization has Pluto access
+## How candidate search works
 
-## Install
+1. **Describe the role.** Tell Pluto what is required, preferred, and out of
+   scope, or paste the job description.
+2. **Review the plan.** Pluto drafts an ideal candidate profile and structured
+   search brief. You can change either before using credits.
+3. **Run the search.** Pluto returns ranked candidates and keeps Best matches,
+   related-company suggestions, and candidates needing verification clearly
+   separated.
+4. **Choose what happens next.** Select candidates before asking Pluto to get
+   contact details, create a campaign, answer a private question, or express
+   interest.
+
+Pluto does not change your pipeline or create a campaign from search results
+alone. Consequential actions require an explicit request and, where
+applicable, your review of the final setup.
+
+## Install Pluto
+
+You need Codex desktop, the Codex CLI, or Claude Code, plus a TalentPluto
+account in an organization with Pluto access.
 
 ### Codex desktop
 
-1. Open **Plugins** in Codex.
+1. Open **Plugins**.
 2. Add the marketplace `talentpluto/pluto-mcp`.
 3. Install **Pluto** and complete the TalentPluto sign-in.
-4. Fully quit and reopen Codex, then start a new task.
+4. Start a new task.
 
 ### Codex CLI
-
-Run:
 
 ```bash
 codex plugin marketplace add talentpluto/pluto-mcp
@@ -30,192 +54,72 @@ codex plugin add pluto@talentpluto
 codex mcp login pluto
 ```
 
-Then start a new Codex session.
+Start a new Codex task after sign-in.
 
 ### Claude Code
 
-Run these once inside Claude Code:
+Run these commands inside Claude Code:
 
 ```text
 /plugin marketplace add talentpluto/pluto-mcp
 /plugin install pluto@talentpluto
 ```
 
-Then run `/mcp`, select **pluto**, and complete the TalentPluto sign-in in the
-browser window it opens. Start a new session afterward.
+Then run `/mcp`, select **pluto**, and complete the TalentPluto sign-in. Start
+a new Claude Code session afterward.
 
-Finally, enable auto-update so future plugin releases install on their own:
-run `/plugin`, open the **Marketplaces** tab, select **talentpluto**, and turn
-on auto-update. Claude Code then refreshes the plugin in the background
-shortly after startup and prompts you to run `/reload-plugins` when a new
-version has landed. Auto-update is off by default for third-party
-marketplaces, so without this step you need to run
-`/plugin marketplace update talentpluto` yourself to pick up new versions.
+To receive plugin guidance updates automatically, open `/plugin`, choose the
+**Marketplaces** tab, select **talentpluto**, and enable auto-update.
 
 ## Try it
 
-The `@pluto` mention below is Codex syntax; in Claude Code, just ask in plain
-language ("Use Pluto to find AI engineers…").
+In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 
 ```text
-@pluto Find AI engineers with 1+ years of professional experience in New York.
-```
+@pluto Find senior backend engineers in New York with payments experience.
 
-```text
-@pluto Find people who match this JD:
-[paste the full job description]
-```
+@pluto Find candidates for this role:
+[paste the job description]
 
-For a new or changed search, Pluto first drafts a compact LinkedIn-style
-candidate profile and a structured search brief for you to review. Revise it
-until it looks right, then ask Pluto to run the search. For a recognizable
-pasted JD, the unchanged JD remains the execution source unless you change the
-target and approve switching to a direct brief. Pluto evaluates the complete
-returned eligible in-network pool against the server's public criterion plan
-before it selects the concise shortlist.
-
-For a privacy-thresholded US market view:
-
-```text
 @pluto Give me a directional US market snapshot for engineering talent.
+
+@pluto How many Pluto credits does my organization have left?
 ```
+
+After a search, select the relevant candidates before asking Pluto to continue:
 
 ```text
-@pluto How many credits does my organization have left?
+@pluto Get and verify the available professional emails for these candidates.
+
+@pluto Draft a three-email campaign for these candidates and show me the final
+setup before creating it.
+
+@pluto Express interest in this candidate for the Senior Engineer role.
 ```
 
-After Pluto returns candidates, you can select one or more and ask:
+## Credits and privacy
 
-```text
-@pluto Is this in-network candidate's recorded preference compatible with a $180,000 annual base salary?
-```
+- Search planning and revision do not use credits.
+- Each in-network candidate presented in search uses one shared organization
+  credit. Out-of-network search results are free.
+- A new successful professional-email lookup can use one credit for that
+  candidate. Reusing an existing successful lookup does not use another lookup
+  credit.
+- Market snapshots use aggregated data and omit metrics that do not meet
+  privacy thresholds.
+- Private candidate questions return a bounded answer, not the candidate's raw
+  private information.
 
-```text
-@pluto Get and verify the available professional emails for these three out-of-network candidates.
-```
+## Connection help
 
-```text
-@pluto Express interest in this in-network candidate for the Senior Engineer role.
-```
+- If Pluto is missing from a task that was already open, start one new task or
+  session to refresh the available tools.
+- Sign in again only when Codex or Claude Code reports an authentication
+  problem. Use **Connect Pluto** in Codex desktop, `codex mcp login pluto` in
+  the Codex CLI, or `/mcp` in Claude Code.
+- If Pluto is still unavailable in a fresh task and there is no authentication
+  error, restart the client once.
 
-## What Pluto can do
+Routine server updates do not require reinstalling Pluto or signing in again.
 
-| Ask Pluto to | MCP tool |
-| --- | --- |
-| Find and qualify candidates against professional criteria | `discover_candidates` |
-| Read a privacy-thresholded US snapshot for one broad role family | `get_market_snapshot` |
-| Check the shared organization credit balance | `get_credit_balance` |
-| Ask one bounded private question about a selected in-network candidate | `answer_candidate_question` |
-| Get and verify professional emails for 1–100 selected out-of-network candidates | `enrich_candidate_email` |
-| Add a selected in-network candidate to a role's prospecting flow | `express_candidate_interest` |
-
-Pluto's live MCP tool descriptions and input schemas are the source of truth.
-
-## What to know
-
-- Every candidate search targets 25 distinct people. The server can return up
-  to 15 in-network people overall; candidates without a deterministic or
-  private failure form the evaluation pool, while near matches remain excluded.
-  Out-of-network profiles fill the remaining slots. Pluto evaluates the
-  complete eligible in-network pool before normally displaying no more than the
-  server's recommended in-network shortlist size. A search can return fewer
-  people when matches or credits are limited.
-- A separately labeled related-company cohort may accompany a search with one
-  mandatory company criterion. Pluto keeps those exploratory profiles outside
-  the exact results and never implies that they meet the original company
-  requirement.
-- Each returned in-network candidate uses one shared organization credit.
-  Out-of-network search results are free.
-- Market snapshots are read-only, use no shared candidate credits, and support
-  one broad US role family at a time. Candidate-reported minimum compensation
-  expectations and sales deal experience remain separate from client-entered
-  role ranges; unavailable privacy-thresholded metrics are never estimated.
-- A private candidate question is free and does not change candidate or
-  pipeline records. Pluto answers only from the supported bounded catalog and
-  never returns raw private values.
-- One email-enrichment call accepts 1–100 explicitly selected out-of-network
-  candidates and preserves their order. Each safely stored and returned email
-  uses one credit and includes a separate passed, failed, or unavailable
-  verification outcome; a failed or unavailable check does not suppress the
-  email. Pluto does not send outreach.
-- Expressing interest in an in-network candidate can update the TalentPluto
-  pipeline and send the normal reconfirm-interest message.
-- Pluto takes an outbound action only after you explicitly select the candidate
-  or candidates and ask for that action.
-- A new or changed candidate search first produces a compact LinkedIn-style
-  candidate profile and structured search brief without using credits. Pluto
-  runs the approved execution source only after you have seen the current draft
-  and explicitly ask to search. For a recognizable pasted JD, that source
-  remains the unchanged JD unless you change the target and approve switching
-  to a direct brief.
-- When you run an approved direct search, Pluto forwards the exact approved
-  brief without a client-side privacy-policy classification or rewrite.
-  Server-side authentication, authorization, project scope, and response
-  boundaries remain in force.
-- Rich professional context is returned only for actively consented, verified,
-  published profiles whose agent-visible sections are currently available.
-  It is candidate-published context rather than independent verification and
-  is treated as untrusted data, never as instructions.
-- Revoking consent prevents future reads of rich professional context. It
-  cannot retract context already delivered into a host conversation transcript,
-  so Pluto minimizes what it repeats in its user-facing shortlist.
-- After an in-network candidate is explicitly selected, Pluto can answer one
-  bounded question about a proposed annual USD base salary or OTE, recorded US
-  work authorization or countryless sponsorship needs, recorded job-search
-  status, general relocation willingness, or one work arrangement. The
-  candidate must have a visible active relationship and current consent.
-- A pasted raw JD can include ordinary office, compensation, benefits, and
-  interview-process text. Pluto derives the professional candidate-search
-  brief server-side, reports what it searched, and discloses context it
-  excluded instead of asking you to rewrite the JD.
-
-## If Pluto is not available
-
-1. Pluto rechecks its live tool catalog once before asking you to recover
-   anything.
-2. If a tool is missing from a task or session that predates a server update,
-   start one new one. Do not keep creating tasks if the new one has the same
-   problem.
-3. If your client explicitly asks you to sign in: in Codex Desktop use
-   **Connect Pluto** (CLI fallback `codex mcp login pluto`); in Claude Code run
-   `/mcp` and authenticate **pluto**.
-4. If a fresh task or session still has no Pluto tools and the client shows no
-   authentication error, fully restart the client once. Do not reconnect or
-   clear authorization for an initialization failure.
-
-Normal server updates do not require reinstalling Pluto or signing in again. A
-connector release that adds an OAuth permission is different: after updating,
-an existing grant needs one deliberate reauthorization before the newly scoped
-tool can run.
-
-## For maintainers
-
-The plugin ships dual packaging over one shared `plugins/pluto` directory.
-Codex reads `.agents/plugins/marketplace.json`,
-`plugins/pluto/.codex-plugin/plugin.json`, and `plugins/pluto/.mcp.json`.
-Claude Code reads `.claude-plugin/marketplace.json` and
-`plugins/pluto/.claude-plugin/plugin.json`, whose inline MCP config
-pins the same OAuth permission set, intentionally omits the Codex-only OAuth
-compatibility header, and discovers the resource from the server's metadata.
-Bundled guidance lives in `plugins/pluto/skills` and is shared by both clients,
-so keep it client-neutral.
-
-Anthropic's OAuth callback differs by client surface:
-
-- Hosted Claude and Claude Desktop use the exact callback
-  `https://claude.ai/api/mcp/auth_callback`. Keep it and Anthropic's documented
-  future callback, `https://claude.com/api/mcp/auth_callback`, in the production
-  `CANDIDATE_MCP_OAUTH_REDIRECT_URI_ALLOWLIST`.
-- Claude Code uses `http://localhost:<port>/callback`. Keep the portless
-  `http://localhost/callback` template in
-  `CANDIDATE_MCP_OAUTH_LOOPBACK_REDIRECT_URI_ALLOWLIST`.
-
-If hosted Claude suggests adding an OAuth Client ID during registration,
-verify the exact callback allowlist and redeploy the server. Pluto supports
-dynamic client registration, so a static Client ID is not the normal recovery.
-
-Keep the `pluto` server name, URL, OAuth resource, scopes, compatibility
-headers, and install-time authentication policy stable, and keep the two
-plugin manifests' name, version, and server URL in sync. Ship routine
-capabilities from the TalentPluto MCP server, and update the plugin version
-only when bundled plugin guidance changes.
+Maintaining the connector? See [Maintainer notes](MAINTAINING.md).
