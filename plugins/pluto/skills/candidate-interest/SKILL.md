@@ -155,13 +155,12 @@ Handle each candidate-correlated item exactly:
   the candidate lookup, not the email count: `1` for a newly stored contact or
   `0` when reusing the exact disclosure from prior successful enrichment.
   Every email entry has its own `emailVerification` object whose provider is
-  `zerobounce` and result is `passed`, `failed`, or `unavailable`. Keep the
-  fresh token privately paired with the returned `candidateRef` for
+  `email_validation` and result is `passed`, `failed`, or `unavailable`. Keep
+  the fresh token privately paired with the returned `candidateRef` for
   `draft_candidate_email` or `create_outbound_campaign`; never display it.
   Return every email for all three verification results. Failed or unavailable
-  verification never suppresses or erases a committed email. Keep Fiber's
-  separate `emailStatus` classification distinct from this verification
-  result.
+  verification never suppresses or erases a committed email. Keep the source's
+  separate `emailStatus` classification distinct from this verification result.
 - `contact_unavailable` requires `creditsUsed: 0` and no email. Relay its safe
   message without inferring, synthesizing, revealing an older address, or
   retrying.
@@ -186,9 +185,9 @@ verification failed or was unavailable. Use the bounded verification
 or unavailable result; do not reinterpret it or claim deliverability beyond
 the returned fields. For unavailable contacts and blocked items, show the safe
 message instead of an email. Do not show the refreshed candidate summary,
-email type, Fiber email status, phone availability, storage details, credit
-usage, or outreach details unless the user specifically asks for an allowed
-field.
+email type, source-reported email status, phone availability, storage details,
+credit usage, or outreach details unless the user specifically asks for an
+allowed field.
 
 If results are missing, duplicated, reordered, or correlated to the wrong
 candidate; if success lacks stored emails, a fresh selection token, or
