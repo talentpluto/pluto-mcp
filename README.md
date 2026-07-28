@@ -77,6 +77,12 @@ employer clauses remain intact: the client does not choose a provider or
 construct a company list, while the server selects the retrieval strategy and
 applies the complete clause across its candidate sources.
 
+When the authenticated client has a fresh precomputed company graph, the
+server privately selects the role-relevant founder, leadership, and team
+projection and combines it with explicit client preferences for ranking. The
+graph is never sent by the connected agent, never changes factual
+qualification, and never exposes employee identities or raw graph data.
+
 For a privacy-thresholded US market view:
 
 ```text
