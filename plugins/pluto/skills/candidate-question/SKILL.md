@@ -17,14 +17,19 @@ work authorization, sponsorship, relocation, or work arrangement.
 
 ## Keep discovery and private assessment separate
 
-Use the discovery array as the routing source:
+Use the selected search-experience card's returned `networkStatus` as the
+routing source:
 
-- A candidate from `candidates`, `unverifiedCandidates`, or `nearMatches` is an
-  in-network selection eligible for this workflow when every server-side
-  authorization, relationship, consent, visibility, and evidence check passes.
-- A candidate from `outOfNetworkCandidates` or `adjacentSearch.candidates` is
-  not eligible. Do not use email enrichment, interest, a name, a profile URL,
-  or another candidate's handles as a fallback.
+- `networkStatus: in_network` is eligible for this workflow when every
+  server-side authorization, relationship, consent, visibility, and evidence
+  check passes.
+- `networkStatus: out_of_network | unknown` is not eligible. Do not use email
+  enrichment, interest, a name, a profile URL, or another candidate's handles
+  as a fallback.
+
+The presentation lane does not establish membership. If `networkStatus` is
+missing, report a server/plugin contract mismatch instead of guessing or
+calling the tool.
 
 Discovery alone does not authorize a private assessment. The user must clearly
 select one returned in-network candidate and ask one question about that

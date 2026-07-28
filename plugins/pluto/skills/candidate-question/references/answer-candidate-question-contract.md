@@ -3,11 +3,13 @@
 ## Purpose and eligibility
 
 `answer_candidate_question` answers one free-form question about one explicitly
-selected in-network candidate. It accepts only the unchanged `candidateRef` and
+selected candidate whose search-experience card has
+`networkStatus: in_network`. It accepts only the unchanged `candidateRef` and
 `selectionToken` returned together by `discover_candidates`, the user's
 unchanged single `question`, and an optional exact authorized `projectId`.
-Selections from `outOfNetworkCandidates` or `adjacentSearch.candidates` are
-external and ineligible for this private-assessment route.
+Cards with `networkStatus: out_of_network | unknown` are external and
+ineligible. Presentation lane does not establish membership; missing
+`networkStatus` is a contract mismatch.
 
 The server requires:
 
