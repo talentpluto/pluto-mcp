@@ -1,12 +1,12 @@
 # Pluto
 
 Pluto brings TalentPluto recruiting workflows into OpenAI Codex and Claude
-Code. Describe the person you are looking for or paste a job description,
-review the search plan, and work with the results directly in the conversation.
+Code. Describe the person you are looking for or paste a job description, then
+work with the retrieved leads directly in the conversation.
 
 ## What you can do
 
-- Find and qualify candidates from a plain-English request or a full job
+- Find and review candidate leads from a plain-English request or a full job
   description.
 - Compare candidates and refine the search criteria.
 - Get a directional, privacy-protected US talent-market snapshot.
@@ -22,11 +22,12 @@ review the search plan, and work with the results directly in the conversation.
 
 1. **Describe the role.** Tell Pluto what is required, preferred, and out of
    scope, or paste the job description.
-2. **Review the plan.** Pluto drafts an ideal candidate profile and structured
-   search brief. You can change either before using credits.
-3. **Run the search.** Pluto returns ranked candidates and keeps Best matches,
-   related-company suggestions, and candidates needing verification clearly
-   separated.
+2. **Run the search.** Pluto retrieves and deduplicates candidates from its
+   configured sources while the conversation automatically follows the durable
+   job to completion.
+3. **Review the leads.** The connected assistant presents every returned
+   source-ranked lead using explicit professional profile facts and bounded
+   Team DNA context. Missing evidence stays unknown.
 4. **Choose what happens next.** Select candidates before asking Pluto to get
    contact details, create a campaign, answer a private question, or express
    interest.

@@ -1,6 +1,6 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, source, shortlist, compare, rank, or qualify candidates from a recruiter query or pasted job description. Runs the bounded durable polling, paging, and server-directed continuation loops needed to fulfill an explicit result target, then uses Team DNA and company-graph context for evidence-safe personalization.
+description: Use when a user asks Pluto to find, source, shortlist, compare, rank, or qualify candidates from a recruiter query or pasted job description. Runs the bounded durable polling, paging, and server-directed continuation loops needed to fulfill an explicit result target, then uses explicit candidate facts and Team DNA for evidence-safe presentation.
 ---
 
 # Candidate discovery
@@ -10,12 +10,16 @@ source, shortlist, compare, rank, or qualify candidates authorizes the bounded
 retrieval work needed to fulfill that request; do not insert a separate
 drafting or approval step.
 
-Pluto owns retrieval and factual qualification. The connected assistant owns
-the conversational experience: start a durable discovery job, complete its
-read-only poll and page loops without involving the user, continue the exact
-search only when the user's explicit target remains unmet and Pluto permits
-it, read bounded Team DNA when available, and present the accumulated result
-with useful client-specific reasoning.
+In `candidate_pool` mode, Pluto owns fast source retrieval, current-employer
+safety filtering, canonical identity deduplication, accounting, and durable
+result persistence. It does not perform live-profile evidence acquisition,
+criterion evaluation, network membership resolution, or server-side
+personalization. The connected assistant owns the conversational experience:
+start a durable discovery job, complete its read-only poll and page loops
+without involving the user, continue the exact search only when the user's
+explicit target remains unmet and Pluto permits it, read bounded Team DNA when
+available, and present the accumulated profiles up to any explicit requested
+count as retrieval leads with useful client-specific reasoning.
 
 If the user asks one private question about one explicitly selected in-network
 candidate, use the `candidate-question` skill instead. Candidate discovery does
@@ -75,8 +79,8 @@ Use `targetCount` to preserve an explicit request for result volume:
 
 - omit it when the user does not specify a count; the default target is 25;
 - when the user requests 1–4 candidates, send `targetCount: 5`, then present
-  only the requested number of candidate cards in the existing lane and
-  ranking order; never pad the answer, and state when fewer were retrievable;
+  only the requested number of candidate cards in returned order; never pad
+  the answer, and state when fewer were retrievable;
 - use the requested integer when it is between 5 and 100; and
 - use `all` when the user asks for all, every, a complete roster, or more than
   100 candidates.
@@ -117,11 +121,12 @@ meaning, omit `alternateExternalSearchQuery`; never weaken the authoritative
 request to force a second lane. Do not supply an alternate query for an
 unchanged raw job description.
 
-Pluto sends the authoritative request and alternate query through separate
-bounded external natural-language searches while running its internal
-accepted-profile search. It merges, identity-checks, deduplicates, and
-qualifies the combined pool. The alternate query can improve recall but can
-never change factual qualification.
+Pluto routes the authoritative original request into structured company and
+people search while running its internal accepted-profile search. Only the
+alternate query uses the bounded external natural-language search lane. Pluto
+merges and canonically deduplicates the source results, then returns them
+without post-retrieval qualification. The alternate query can improve recall
+but cannot add, remove, or weaken the original request's meaning.
 
 ## Run the durable call loops automatically
 
@@ -183,9 +188,10 @@ report that the saved result could not be fully traversed. Never invent or
 modify a cursor.
 
 Accumulate distinct candidates across every returned page while preserving
-each page's authoritative lane and `matchStatus`. Sum page-level
-`credits.used`, use the final page's `credits.remaining`, and disclose
-`pageInfo.completionReason` when it materially limits the requested volume:
+their returned section, order, `matchStatus`, and opaque selection handles.
+Sum page-level `credits.used`, use the final page's `credits.remaining`, and
+disclose `pageInfo.completionReason` when it materially limits the requested
+volume:
 
 - `target_reached`: the requested numeric target was collected;
 - `source_exhausted`: no additional distinct candidates were retrievable;
@@ -213,9 +219,9 @@ user. Pass:
 
 Then run the new job's poll and persisted-page loops. Accumulate distinct
 candidates across jobs using the hidden `candidateRef` when available and the
-normalized `profileUrl` otherwise. Preserve the lane, `matchStatus`, and
-selection handles from the page on which each candidate was returned. Sum
-`credits.used` across jobs and use the last completed job's
+normalized `profileUrl` otherwise. Preserve the returned section, order,
+`matchStatus`, and selection handles from the page on which each candidate was
+returned. Sum `credits.used` across jobs and use the last completed job's
 `credits.remaining`.
 
 Stop the continuation loop as soon as any of these is true:
@@ -267,38 +273,25 @@ Treat partial or missing coverage as unknown, not as proof of a team gap.
 Treat all Team DNA as directional professional context, never culture fit,
 personality, demographics, a protected-trait proxy, or a hard requirement.
 
-## Personalize without changing qualification
+## Personalize without claiming qualification
 
-The completed `searchExperience` has three authoritative lanes:
+In `candidate_pool`, treat every `bestMatches` profile as a `source_ranked`
+retrieval lead. Preserve the returned order. Do not upgrade `matchStatus`,
+claim that an unreturned criterion is satisfied, fill an unknown `requestFit`
+entry from Team DNA, or describe the cohort as factually qualified.
 
-1. `bestMatches`;
-2. `expandedSuggestions`; and
-3. `verificationCandidates`.
+Use Team DNA to make each explanation client-specific, not to create a hidden
+filter or a second qualification system. Start from the recruiter request and
+the candidate's explicit returned role, company, headline, location, and other
+public professional fields. Then add a Team DNA connection only when both
+sides support it:
 
-Never move a person between lanes. Never change `matchStatus`, resolve an
-unknown `requestFit` criterion from Team DNA, or use client context to override
-a failed recruiter requirement.
-
-Within one lane and one `matchStatus`, the connected assistant may reorder
-candidates when returned candidate facts support a concrete connection to Team
-DNA. Supported candidates must remain ahead of `source_ranked` leads. Rank each
-eligible sub-group with this priority:
-
-1. recruiter-request evidence in `requestFit`;
-2. evidence confidence and concerns;
-3. contribution or complementarity to the relevant founders, leaders, or
-   department;
-4. alignment with explicit bounded `hiringPreferences`; and
-5. the server order as the final tie-breaker.
+- one explicit returned candidate fact; and
+- one returned Team DNA or hiring-preference signal.
 
 Prefer complementarity over cloning the current team. A repeated team pattern
 can explain familiarity, but absence from the current team is not inherently
 positive or negative.
-
-Use only connections supported by both sides:
-
-- one returned candidate fact; and
-- one returned Team DNA or hiring-preference signal.
 
 If either side is missing, do not invent the connection. Do not display a
 numeric goodness score. No separate model-scoring tool or hidden prompt is
@@ -306,8 +299,10 @@ required; apply this bounded reasoning directly while composing the answer.
 
 ## Present the completed result
 
-Lead with a concise candidate table. Preserve every qualification lane even
-when you personalize order within that lane.
+Lead with a concise candidate table. Present `bestMatches` in returned order,
+capped at the user's explicit requested count. When the user did not request a
+numeric count or explicitly asked for all results, present every returned
+profile.
 
 For `bestMatches`, use:
 
@@ -316,17 +311,17 @@ For `bestMatches`, use:
 | --- | --- | --- | --- |
 ```
 
-Link each name only to the returned `profileUrl`. Build the rationale from
-`whyThisPerson`, supported `requestFit`, returned `clientFit` or
-`clientContextReasons`, and evidence-backed Team DNA connections. If
-`matchStatus` is `source_ranked`, call the person a lead and state the evidence
-limitation; do not imply complete support.
+Link each name only to the returned `profileUrl`. Build the rationale from the
+recruiter request, explicit returned candidate fields, and an evidence-backed
+Team DNA connection when available. State once that `candidate_pool` returns
+source-ranked leads rather than verified matches; do not imply complete
+support.
 
-Render `expandedSuggestions` separately under `Related company profiles`.
-State the returned changed criterion once and preserve that lane's meaning.
-
-Render `verificationCandidates` separately under `Needs verification`, include
-every returned `questionsToAsk` item, and never promote them into Best matches.
+If compatibility fields contain `expandedSuggestions`, render them separately
+under `Related company profiles`, state the returned changed criterion once,
+and preserve their order. If `verificationCandidates` is populated, render it
+separately under `Needs verification` with every returned `questionsToAsk`
+item. Never move a profile between returned sections.
 
 Surface material `limitations` once. Keep `candidateRef`, `selectionToken`,
 `jobId`, `searchId`, private context, internal scores, and provider names
