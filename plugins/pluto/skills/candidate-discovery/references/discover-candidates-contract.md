@@ -12,10 +12,9 @@ target remains unmet and the server permits continuation.
 The server owns:
 
 - internal TalentPluto retrieval;
-- primary external natural-language people search;
-- optional alternate external natural-language people search;
-- identity resolution and deduplication;
-- evidence acquisition and factual qualification;
+- structured company and people routing for the authoritative original request;
+- optional external natural-language search for the alternate request only;
+- current-employer safety filtering and canonical identity deduplication;
 - credit reservation and settlement; and
 - persistence of each completed `searchExperience` page.
 
@@ -25,8 +24,15 @@ The connected assistant owns:
 - creating a faithful alternate query when possible;
 - automatic job polling and persisted-page traversal;
 - bounded continuation across durable jobs for an unmet explicit target;
-- bounded Team DNA personalization; and
+- comparison of the request with explicit returned candidate facts;
+- bounded Team DNA personalization without factual qualification; and
 - user-facing presentation.
+
+`candidate_pool` deliberately skips network membership resolution,
+live-profile evidence acquisition, criterion evaluation, private-project
+qualification, and server-side personalization. The separate
+`qualified_matches` compatibility mode retains the legacy server qualification
+path; new connected clients use `candidate_pool`.
 
 ## Discovery input
 
@@ -108,7 +114,8 @@ job read. It must never cause a second metered discovery call.
 For a completed job, `pageInfo.hasMore` means another persisted page exists.
 Pass `pageInfo.nextCursor` unchanged with the same `jobId` until `hasMore` is
 false. These reads do not rerun retrieval or consume more credits. Accumulate
-distinct candidates without changing their lane or `matchStatus`.
+distinct candidates without changing their returned section, order,
+`matchStatus`, or opaque selection handles.
 
 `pageInfo.completionReason` is `target_reached`, `source_exhausted`,
 `safety_limit`, or `partial_failure`. A partial failure is terminal but retains
@@ -144,9 +151,9 @@ hidden `searchId`; generate a fresh `requestId`; and set `targetCount` to the
 remaining count when it is at most 100 or `all` when more than 100 remain.
 
 Accumulate only distinct candidates, preferring hidden `candidateRef` for
-identity and normalized `profileUrl` as fallback. Preserve the returned lane,
-`matchStatus`, and selection handles. Sum `credits.used` across jobs and use
-the last completed job's `credits.remaining`.
+identity and normalized `profileUrl` as fallback. Preserve the returned
+section, order, `matchStatus`, and selection handles. Sum `credits.used` across
+jobs and use the last completed job's `credits.remaining`.
 
 Stop when the target is reached, continuation is unavailable, the source is
 exhausted, a continuation adds no distinct candidate, a job fails or partially
@@ -162,17 +169,19 @@ For a direct candidate-pool request, the server can run three retrieval lanes
 concurrently:
 
 1. accepted TalentPluto profiles using a faithful internal optimization;
-2. external search using the authoritative natural-language request; and
-3. external search using `alternateExternalSearchQuery`.
+2. structured company and people search routed from the authoritative original
+   request; and
+3. external natural-language search using `alternateExternalSearchQuery`.
 
 The alternate lane is omitted when no faithful alternate query is supplied.
 Raw job descriptions are compiled server-side and do not receive a
 client-authored alternate query.
 
-The server accumulates all returned profiles, resolves known accepted-member
-identities, removes duplicates, acquires bounded evidence, evaluates recruiter
-criteria, and constructs the final search experience. Retrieval source does
-not by itself establish fit.
+The server accumulates the returned profiles, applies current-employer safety
+filtering, removes canonical identity duplicates, and persists the result
+without resolving network membership, enriching live profiles, evaluating
+criteria, or applying private client personalization. Retrieval source and
+source rank do not establish factual fit.
 
 ## Team DNA contract
 
@@ -200,13 +209,14 @@ It never returns raw graph nodes, employee profile evidence, employee
 identities, client notes, project history, private criteria, or instructions.
 Unavailable data and incomplete coverage remain unknown.
 
-Team DNA can support personalization only after factual qualification. It
+Team DNA can support a client-specific explanation of a retrieved lead. It
 cannot:
 
 - satisfy or fail a recruiter criterion;
-- move someone between response lanes;
+- move someone between response sections;
 - change `matchStatus`;
 - become a hard filter;
+- establish a candidate fact that the returned profile does not contain;
 - justify culture-fit, personality, demographic, or protected-trait claims; or
 - prove a workforce gap from missing coverage.
 
@@ -215,10 +225,11 @@ cannot:
 The completed poll result uses
 `talentpluto.candidate-search-experience.v1` and contains:
 
-- `bestMatches`: the primary exact-query shortlist;
-- `expandedSuggestions`: an optional separately labeled related-company lane;
-- `verificationCandidates`: profiles with unresolved required evidence and
-  bounded questions;
+- `bestMatches`: the source-ranked candidate-pool leads;
+- `expandedSuggestions`: a compatibility section for separately labeled
+  related-company leads when returned;
+- `verificationCandidates`: a compatibility section for bounded verification
+  questions when returned;
 - `assessment`: interpreted request, source status, and whether bounded client
   context already contributed;
 - `limitations`;
@@ -226,21 +237,15 @@ The completed poll result uses
 - `iteration`; and
 - hidden continuation and candidate-selection handles.
 
-`matchStatus` and `requestFit` are authoritative. Team DNA and returned
-`clientFit` are directional professional context only.
+In `candidate_pool`, expect `matchStatus: source_ranked` and do not treat a
+missing or unknown `requestFit` entry as satisfied. The assistant compares the
+request only with explicit returned public professional fields. Team DNA and
+returned client-context fields are directional professional context only.
 
-The assistant may reorder candidates only within their existing lane and
-`matchStatus`; supported candidates remain ahead of `source_ranked` leads.
-Within each eligible sub-group, use:
-
-1. request evidence;
-2. evidence confidence and concerns;
-3. evidence-backed founder or team complementarity;
-4. bounded explicit hiring preferences; and
-5. original server order as the final tie-breaker.
-
-Every personalized reason needs a concrete candidate fact and a concrete
-returned client-context signal. No numeric goodness score is exposed.
+Preserve the server order. Every personalized reason needs a concrete returned
+candidate fact and a concrete returned client-context signal. If either side
+is missing, omit the personalized connection. Do not expose a numeric goodness
+score.
 
 ## Accounting and retries
 
@@ -258,10 +263,12 @@ UUID. A continuation must also carry the prior `searchId`.
 
 ## Presentation and follow-up
 
-Present Best matches first, Related company profiles second when present, and
-Needs verification last. Do not merge lanes or use Team DNA to promote a
-candidate. Surface source-ranked evidence limits and all verification
-questions.
+Present every Best matches profile in returned order and describe the cohort
+as source-ranked leads rather than verified matches. Use only explicit
+candidate fields and supported Team DNA connections in the explanation.
+Present Related company profiles and Needs verification separately if those
+compatibility sections are populated. Surface the source-ranked evidence
+limitation once and include all returned verification questions.
 
 Keep job IDs, search IDs, candidate references, selection tokens, internal
 scores, provider names, private context, `networkStatus`, and source membership
