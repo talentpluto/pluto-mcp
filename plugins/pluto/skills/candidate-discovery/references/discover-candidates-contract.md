@@ -14,7 +14,7 @@ The server owns:
 - identity resolution and deduplication;
 - evidence acquisition and factual qualification;
 - credit reservation and settlement; and
-- persistence of the final `searchExperience`.
+- persistence of each completed `searchExperience` page.
 
 The connected assistant owns:
 
@@ -33,6 +33,7 @@ request: <complete recruiter query>
 alternateExternalSearchQuery: <optional faithful structured restatement>
 requestId: <fresh UUID>
 resultMode: candidate_pool
+targetCount: <optional integer 5..100 or all>
 ```
 
 For a recognizable raw job description:
@@ -43,11 +44,18 @@ request:
   text: <unchanged source>
 requestId: <fresh UUID>
 resultMode: candidate_pool
+targetCount: <optional integer 5..100 or all>
 ```
 
 Omit `limit`. Include `projectId` only for an explicitly selected authorized
 project. Include `searchId` only for a deliberate continuation of the exact
 same completed search.
+
+Omit `targetCount` for the default target of 25. Preserve an explicit requested
+count from 5 through 100. Use `all` only for an explicit all/every/complete
+request or a requested count above 100. The server then continues until
+retrievable sources are exhausted or the current 100-candidate safety ceiling
+is reached. A target is not a guarantee that the real-world cohort is complete.
 
 The direct `request` remains authoritative. Preserve every criterion,
 threshold, preference, exclusion, temporal distinction, and Boolean group.
@@ -66,6 +74,7 @@ The normal `discover_candidates` result is:
 jobId: <opaque UUID>
 status: queued | working
 pollAfterMs: <bounded delay>
+targetCount: <normalized numeric target>
 schemaVersion: talentpluto.candidate-search-job.v1
 ```
 
@@ -79,16 +88,27 @@ Call:
 ```yaml
 get_candidate_search:
   jobId: <unchanged job ID>
+  cursor: <omit for the first page; otherwise exact nextCursor>
 ```
 
 The poll returns one of:
 
-- `queued` or `working`: wait `pollAfterMs`, then poll again;
-- `completed`: consume the nested `result`;
+- `queued` or `working`: read optional checkpoint `progress`, wait
+  `pollAfterMs`, then poll again;
+- `completed`: consume the nested `result` page and its `pageInfo`;
 - `failed`: report the safe message and stop.
 
 Polling is automatic and read-only. A transient poll failure may retry the same
 job read. It must never cause a second metered discovery call.
+
+For a completed job, `pageInfo.hasMore` means another persisted page exists.
+Pass `pageInfo.nextCursor` unchanged with the same `jobId` until `hasMore` is
+false. These reads do not rerun retrieval or consume more credits. Accumulate
+distinct candidates without changing their lane or `matchStatus`.
+
+`pageInfo.completionReason` is `target_reached`, `source_exhausted`,
+`safety_limit`, or `partial_failure`. A partial failure is terminal but retains
+every page checkpointed before the later failure.
 
 The job is bound to the authenticated user, OAuth client, organization, and
 original request. Another principal receives no result. The server retains the

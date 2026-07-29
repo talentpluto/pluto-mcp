@@ -68,6 +68,17 @@ Set `resultMode: candidate_pool`, omit `limit`, and generate a fresh random
 UUID for `requestId`. Include `projectId` only when the user deliberately
 selected that exact authorized TalentPluto project.
 
+Use `targetCount` to preserve an explicit request for result volume:
+
+- omit it when the user does not specify a count; the default target is 25;
+- use the requested integer when it is between 5 and 100; and
+- use `all` when the user asks for all, every, a complete roster, or more than
+  100 candidates.
+
+`all` means every retrievable result up to the server's current 100-candidate
+safety ceiling, not every person who exists in the real world. Do not turn
+words such as "shortlist" or "some" into an invented numeric target.
+
 ### Add the second external retrieval lane
 
 When the live schema exposes `alternateExternalSearchQuery`, provide one
@@ -114,6 +125,7 @@ response is a durable job acknowledgement containing:
 - `jobId`;
 - `status: queued | working`;
 - `pollAfterMs`; and
+- the normalized numeric `targetCount`; and
 - `schemaVersion: talentpluto.candidate-search-job.v1`.
 
 Do not present this acknowledgement as the search result. Keep `jobId` hidden
@@ -132,8 +144,26 @@ returns `failed`, report its safe message. Only a user-directed retry of the
 identical discovery operation may reuse its original `requestId`; a changed or
 deliberately repeated search uses a new UUID.
 
-When status is `completed`, use the nested `result` as the final
-`searchExperience`. Do not continue polling.
+While status is `working`, `progress` may report the durable candidate and page
+counts already checkpointed. Treat this as progress only, not as a result.
+
+When status is `completed`, use the nested `result` as the first completed
+`searchExperience` page and read `pageInfo`. If `pageInfo.hasMore` is true,
+call `get_candidate_search` again with the same `jobId` and the exact opaque
+`pageInfo.nextCursor`. Continue until `hasMore` is false. Page reads are
+automatic, read-only, and do not rerun discovery or consume more credits. Do
+not ask the user to paginate.
+
+Accumulate distinct candidates across every returned page while preserving
+each page's authoritative lane and `matchStatus`. Sum page-level
+`credits.used`, use the final page's `credits.remaining`, and disclose
+`pageInfo.completionReason` when it materially limits the requested volume:
+
+- `target_reached`: the requested numeric target was collected;
+- `source_exhausted`: no additional distinct candidates were retrievable;
+- `safety_limit`: the current server safety ceiling was reached; and
+- `partial_failure`: earlier checkpointed pages were preserved after a later
+  retrieval failure.
 
 ## Read Team DNA alongside the job
 
@@ -250,15 +280,22 @@ request and the relevant Pluto skill.
 
 ## More results and refinements
 
-When the user asks for more distinct candidates from the exact same completed
-search and `iteration.canContinue` is true, start a new durable discovery call
-with:
+First exhaust every persisted page from the completed job by following
+`pageInfo.nextCursor`. Never call `discover_candidates` merely to reveal an
+already persisted page.
+
+After all persisted pages are consumed, when the user asks for more distinct
+candidates from the exact same completed search and the final
+`iteration.canContinue` is true, start a new durable discovery call with:
 
 - the same `request`;
 - the same `alternateExternalSearchQuery`, when originally used;
 - the same `projectId` and `resultMode`;
 - the prior hidden `searchId`; and
 - a new `requestId`.
+
+Set a new `targetCount` from the user's additional requested volume. Do not
+reuse the original job cursor with the new discovery call.
 
 A refinement changes the search target, so omit `searchId` and use a new
 `requestId`. Never silently relax a required criterion.
