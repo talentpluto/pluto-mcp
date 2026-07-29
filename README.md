@@ -93,8 +93,8 @@ After a search, select the relevant candidates before asking Pluto to continue:
 ```text
 @pluto Get and verify the available work emails for these candidates.
 
-@pluto Draft a three-email campaign for these candidates and show me the final
-setup before creating it.
+@pluto Create a campaign for these candidates. Guide me through the sequence
+and each email, show me a representative example, then let me launch it.
 
 @pluto Express interest in this candidate for the Senior Engineer role.
 ```
