@@ -36,10 +36,13 @@ editable and include it in the final confirmation surface.
 
 1. **Initial subject.** Ask for the exact subject line. Explain that it may use
    supported single-brace variables, such as `{firstName}` or `{roleTitle}`.
-   Store reviewed subject copy in `initialSubjectTemplate`. Do not generate or
-   omit the subject unless the user explicitly requests a generated subject;
-   in that case, collect a precise subject brief for `generationPrompt` and
-   omit `initialSubjectTemplate`.
+   Store reviewed subject copy in `initialSubjectTemplate`. Treat “you decide”
+   or “draft it” at this stage as an explicit generated-subject request: write
+   a precise subject-generation brief in `generationPrompt` and omit
+   `initialSubjectTemplate`. Use exactly one subject mode. Template mode sets
+   `initialSubjectTemplate` without a subject-generation instruction; generated
+   mode omits `initialSubjectTemplate` and includes that precise instruction.
+   Never populate both subject representations or proceed with neither.
 2. **Initial email body.** Ask the user to choose one of two modes:
    - **Template:** paste complete, sendable body copy, optionally using
      supported `{variables}`. Store it in `initialBodyTemplate`.
@@ -54,6 +57,10 @@ editable and include it in the final confirmation surface.
    day. For example, “day 3, then day 10” maps to `[3, 7]`. Each delay must be a
    whole number from 1 through 30. Collect `followUpSendTimes` only when the
    user requests exact send times, and explain their America/New_York basis.
+   Require exactly one `followUpDelays` entry per requested follow-up and, when
+   `followUpSendTimes` is present, exactly one send time per follow-up. Before
+   rendering confirmation, reject a length mismatch and return to this stage
+   for the missing or corrected values.
 4. **Follow-up bodies.** Skip this stage when the follow-up count is zero.
    Otherwise ask whether each follow-up should be an exact template or
    generated from a prompt, using the same two modes as the initial body. The
@@ -311,8 +318,11 @@ The optional `initialSubjectTemplate` is at most 240 characters.
 `initialBodyTemplate` and each `followUpTemplates[].bodyTemplate` are at most
 12,000 characters. The optional `clientName`, `companyName`, `projectName`, and
 `roleTitle` values in `templateVariableOverrides` are each at most 240
-characters. Validate these limits before showing the final setup and again
-before creation.
+characters. Before showing the final setup and again before creation, validate
+these limits, the exclusive subject mode, and every sequence-array length. If
+`followUpDelays.length !== totalStepCount - 1`, or a present
+`followUpSendTimes` has any other length, return to the applicable guided stage;
+do not render the confirmation question or call the creation tool.
 
 For the default day 0, day 3, and day 10 sequence, pass
 `followUpDelays: [3, 7]`. Omit optional templates and send times the user did
