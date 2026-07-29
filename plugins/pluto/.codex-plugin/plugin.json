@@ -1,6 +1,6 @@
 {
   "name": "pluto",
-  "version": "0.1.38",
+  "version": "0.1.39",
   "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment and outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
@@ -42,7 +42,7 @@
       "How many Pluto credits do I have left, and when do they reset?",
       "Ask whether the selected in-network candidate's recorded preference is compatible with a $180,000 annual base salary.",
       "Get and verify the available work emails for the candidates I selected.",
-      "Draft a complete three-email campaign for the out-of-network candidates I selected, including the audience, timing, subject, and every message, then let me review it before creation.",
+      "Create a campaign for the out-of-network candidates I selected. Guide me through the sequence and each email, show me a representative example, then let me launch it.",
       "Continue with the candidate and role I selected in Pluto."
     ],
     "brandColor": "#2563EB",
