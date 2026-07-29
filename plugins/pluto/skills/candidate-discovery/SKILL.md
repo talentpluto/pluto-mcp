@@ -18,8 +18,8 @@ personalization. The connected assistant owns the conversational experience:
 start a durable discovery job, complete its read-only poll and page loops
 without involving the user, continue the exact search only when the user's
 explicit target remains unmet and Pluto permits it, read bounded Team DNA when
-available, and present every accumulated profile as a retrieval lead with
-useful client-specific reasoning.
+available, and present the accumulated profiles up to any explicit requested
+count as retrieval leads with useful client-specific reasoning.
 
 If the user asks one private question about one explicitly selected in-network
 candidate, use the `candidate-question` skill instead. Candidate discovery does
@@ -299,8 +299,10 @@ required; apply this bounded reasoning directly while composing the answer.
 
 ## Present the completed result
 
-Lead with a concise candidate table. Present every `bestMatches` profile in
-returned order.
+Lead with a concise candidate table. Present `bestMatches` in returned order,
+capped at the user's explicit requested count. When the user did not request a
+numeric count or explicitly asked for all results, present every returned
+profile.
 
 For `bestMatches`, use:
 

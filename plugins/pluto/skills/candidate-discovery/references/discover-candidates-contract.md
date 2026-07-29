@@ -263,12 +263,16 @@ UUID. A continuation must also carry the prior `searchId`.
 
 ## Presentation and follow-up
 
-Present every Best matches profile in returned order and describe the cohort
-as source-ranked leads rather than verified matches. Use only explicit
-candidate fields and supported Team DNA connections in the explanation.
-Present Related company profiles and Needs verification separately if those
-compatibility sections are populated. Surface the source-ranked evidence
-limitation once and include all returned verification questions.
+Present Best matches in returned order, capped at the user's explicit requested
+count, and describe the cohort as source-ranked leads rather than verified
+matches. For a request of 1–4 candidates, the server target is normalized to
+five but the assistant displays only the original requested count. When no
+numeric count was requested or the user explicitly requested all results,
+present every returned profile. Use only explicit candidate fields and
+supported Team DNA connections in the explanation. Present Related company
+profiles and Needs verification separately if those compatibility sections are
+populated. Surface the source-ranked evidence limitation once and include all
+returned verification questions.
 
 Keep job IDs, search IDs, candidate references, selection tokens, internal
 scores, provider names, private context, `networkStatus`, and source membership
