@@ -3,8 +3,11 @@
 ## Purpose
 
 Candidate discovery is a durable orchestration boundary. One user-authorized
-`discover_candidates` call creates a server-owned job. The connected assistant
-then polls that job and may read bounded Team DNA while retrieval continues.
+recruiter request may require several short MCP calls. Each
+`discover_candidates` call creates one server-owned durable job. The connected
+assistant polls and pages that job, may read bounded Team DNA while retrieval
+continues, and may start a bounded continuation job when an explicit numeric
+target remains unmet and the server permits continuation.
 
 The server owns:
 
@@ -20,7 +23,8 @@ The connected assistant owns:
 
 - forwarding the complete recruiter request;
 - creating a faithful alternate query when possible;
-- automatic job polling;
+- automatic job polling and persisted-page traversal;
+- bounded continuation across durable jobs for an unmet explicit target;
 - bounded Team DNA personalization; and
 - user-facing presentation.
 
@@ -115,6 +119,43 @@ original request. Another principal receives no result. The server retains the
 job long enough for ordinary host polling and uses the original `requestId` to
 make the initial operation retry-safe.
 
+## Client call state machine
+
+Treat polling, paging, and continuation as separate loops:
+
+```text
+discover_candidates
+  -> queued or working: get_candidate_search(jobId) until terminal
+  -> completed: get_candidate_search(jobId, nextCursor) until hasMore=false
+  -> explicit target still unmet and canContinue=true:
+       discover_candidates(searchId, fresh requestId, remaining target)
+       then repeat the poll and page loops
+  -> otherwise: present accumulated candidates
+```
+
+Polling and paging are read-only and automatic. A clear candidate-search
+request authorizes those calls without another user message. A continuation
+job may consume credits, so it is authorized automatically only to fulfill the
+user's original explicit numeric target.
+
+Track the numeric target across jobs. For a continuation, preserve the exact
+original request, alternate query, project, and result mode; pass the prior
+hidden `searchId`; generate a fresh `requestId`; and set `targetCount` to the
+remaining count when it is at most 100 or `all` when more than 100 remain.
+
+Accumulate only distinct candidates, preferring hidden `candidateRef` for
+identity and normalized `profileUrl` as fallback. Preserve the returned lane,
+`matchStatus`, and selection handles. Sum `credits.used` across jobs and use
+the last completed job's `credits.remaining`.
+
+Stop when the target is reached, continuation is unavailable, the source is
+exhausted, a continuation adds no distinct candidate, a job fails or partially
+fails, or the live contract rejects continuation. A safety limit is terminal
+unless the original request was an explicit numeric target above 100 and
+`iteration.canContinue` remains true. Never automatically continue a
+default-volume search or push an explicit `all` request past the server's
+reported safety ceiling.
+
 ## Retrieval behavior
 
 For a direct candidate-pool request, the server can run three retrieval lanes
@@ -206,12 +247,14 @@ returned client-context signal. No numeric goodness score is exposed.
 Never infer credit use from candidate counts or source membership; use the
 completed result's accounting fields.
 
-Do not automatically call `discover_candidates` again after a timeout,
-transport ambiguity, or poll failure. The job exists specifically to separate
-long provider work from short MCP calls.
+Do not start a replacement `discover_candidates` job after a timeout,
+transport ambiguity, or poll failure. Retry the same read-only job poll when
+appropriate. The job exists specifically to separate long provider work from
+short MCP calls.
 
 A user-directed retry of the exact same operation reuses its original
-`requestId`. A deliberate repeat or changed search uses a new UUID.
+`requestId`. A continuation, deliberate repeat, or changed search uses a new
+UUID. A continuation must also carry the prior `searchId`.
 
 ## Presentation and follow-up
 

@@ -1,18 +1,21 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, source, shortlist, compare, rank, or qualify candidates from a recruiter query or pasted job description. Starts one durable search immediately for a clear request, polls it automatically, and uses bounded Team DNA and company-graph context for evidence-safe personalization.
+description: Use when a user asks Pluto to find, source, shortlist, compare, rank, or qualify candidates from a recruiter query or pasted job description. Runs the bounded durable polling, paging, and server-directed continuation loops needed to fulfill an explicit result target, then uses Team DNA and company-graph context for evidence-safe personalization.
 ---
 
 # Candidate discovery
 
 Use this skill for a Pluto candidate search. A clear request to find, search,
-source, shortlist, compare, rank, or qualify candidates authorizes one search;
-do not insert a separate drafting or approval step.
+source, shortlist, compare, rank, or qualify candidates authorizes the bounded
+retrieval work needed to fulfill that request; do not insert a separate
+drafting or approval step.
 
 Pluto owns retrieval and factual qualification. The connected assistant owns
-the conversational experience: make one durable discovery request, poll it
-without involving the user, read bounded Team DNA when available, and present
-the completed result with useful client-specific reasoning.
+the conversational experience: start a durable discovery job, complete its
+read-only poll and page loops without involving the user, continue the exact
+search only when the user's explicit target remains unmet and Pluto permits
+it, read bounded Team DNA when available, and present the accumulated result
+with useful client-specific reasoning.
 
 If the user asks one private question about one explicitly selected in-network
 candidate, use the `candidate-question` skill instead. Candidate discovery does
@@ -117,10 +120,25 @@ accepted-profile search. It merges, identity-checks, deduplicates, and
 qualifies the combined pool. The alternate query can improve recall but can
 never change factual qualification.
 
-## Start once, then poll automatically
+## Run the durable call loops automatically
 
-Call `discover_candidates` exactly once for the deliberate search. A normal
-response is a durable job acknowledgement containing:
+Multiple short MCP calls are normal for one user request. Keep these three
+loops distinct:
+
+1. a job poll loop reads one running durable job;
+2. a persisted-page loop reads every completed page from that same job; and
+3. a continuation-job loop may start another durable job for the exact same
+   search when an explicit numeric target remains unmet.
+
+The first two loops are read-only. They never need another user message or
+approval. The third loop can consume additional credits, so run it only within
+the volume the user already requested and only when Pluto explicitly returns
+`iteration.canContinue: true`.
+
+### Poll one durable job
+
+Call `discover_candidates` exactly once per durable job. A normal response is
+a durable job acknowledgement containing:
 
 - `jobId`;
 - `status: queued | working`;
@@ -139,13 +157,15 @@ open while waiting for providers. The durable job may continue beyond a
 client's 55- or 60-second request deadline.
 
 If one poll has a transient transport failure, retry the same read-only poll
-with the same `jobId`. Do not call `discover_candidates` again. If the job
+with the same `jobId`. Do not start a replacement discovery job. If the job
 returns `failed`, report its safe message. Only a user-directed retry of the
-identical discovery operation may reuse its original `requestId`; a changed or
-deliberately repeated search uses a new UUID.
+identical failed discovery operation may reuse its original `requestId`; a
+changed search or a continuation job uses a new UUID.
 
 While status is `working`, `progress` may report the durable candidate and page
 counts already checkpointed. Treat this as progress only, not as a result.
+
+### Read every persisted page
 
 When status is `completed`, use the nested `result` as the first completed
 `searchExperience` page and read `pageInfo`. If `pageInfo.hasMore` is true,
@@ -153,6 +173,11 @@ call `get_candidate_search` again with the same `jobId` and the exact opaque
 `pageInfo.nextCursor`. Continue until `hasMore` is false. Page reads are
 automatic, read-only, and do not rerun discovery or consume more credits. Do
 not ask the user to paginate.
+
+Treat cursors as opaque. If the server repeats a cursor or a page adds no
+distinct candidates while still claiming another page exists, stop paging and
+report that the saved result could not be fully traversed. Never invent or
+modify a cursor.
 
 Accumulate distinct candidates across every returned page while preserving
 each page's authoritative lane and `matchStatus`. Sum page-level
@@ -164,6 +189,47 @@ each page's authoritative lane and `matchStatus`. Sum page-level
 - `safety_limit`: the current server safety ceiling was reached; and
 - `partial_failure`: earlier checkpointed pages were preserved after a later
   retrieval failure.
+
+### Continue an unmet explicit target
+
+Track the user's explicit numeric target across jobs, not per page. After every
+persisted page from the current job has been consumed, calculate the remaining
+target from distinct accumulated candidates.
+
+When the remaining target is positive and the final
+`iteration.canContinue` is true, start another durable job without asking the
+user. Pass:
+
+- the unchanged original `request`;
+- the unchanged original `alternateExternalSearchQuery`, if supplied;
+- the unchanged `projectId` and `resultMode`;
+- the prior hidden `searchId`;
+- a fresh `requestId`; and
+- `targetCount` equal to the remaining target when it is at most 100, or `all`
+  when more than 100 remain.
+
+Then run the new job's poll and persisted-page loops. Accumulate distinct
+candidates across jobs using the hidden `candidateRef` when available and the
+normalized `profileUrl` otherwise. Preserve the lane, `matchStatus`, and
+selection handles from the page on which each candidate was returned. Sum
+`credits.used` across jobs and use the last completed job's
+`credits.remaining`.
+
+Stop the continuation loop as soon as any of these is true:
+
+- the explicit numeric target has been reached;
+- `iteration.canContinue` is false;
+- the source is exhausted;
+- the server reports a safety limit, unless the original request was an
+  explicit numeric target above 100 and `iteration.canContinue` remains true;
+- the next job produces no new distinct candidates;
+- a job fails or ends with a partial failure; or
+- the live schema or server rejects the requested continuation.
+
+Do not automatically continue a default 25-result search. Do not continue an
+explicit `all` request beyond the server's reported safety ceiling. In either
+case, a later user request for more authorizes a new continuation when
+`iteration.canContinue` permits it.
 
 ## Read Team DNA alongside the job
 
@@ -284,9 +350,10 @@ First exhaust every persisted page from the completed job by following
 `pageInfo.nextCursor`. Never call `discover_candidates` merely to reveal an
 already persisted page.
 
-After all persisted pages are consumed, when the user asks for more distinct
-candidates from the exact same completed search and the final
-`iteration.canContinue` is true, start a new durable discovery call with:
+The continuation-job loop above automatically fulfills an explicit numeric
+target that required more than one job. Separately, when the user later asks
+for more distinct candidates from the exact same completed search and the
+final `iteration.canContinue` is true, start a new durable discovery call with:
 
 - the same `request`;
 - the same `alternateExternalSearchQuery`, when originally used;
