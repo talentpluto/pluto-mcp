@@ -1,6 +1,6 @@
 ---
 name: outbound-campaign
-description: Use when a user asks Pluto to draft, refine, review, or create an outbound recruiting email campaign for one to 100 explicitly selected out-of-network candidates from discovery or successful email enrichment. Prefills one editable campaign, presents the exact final setup for confirmation, distinguishes exact templates from generated copy, preserves every opaque handle, and calls create_outbound_campaign only after the user confirms that setup.
+description: Use when a user asks Pluto to draft, refine, review, or create an outbound recruiting email campaign for one to 100 explicitly selected out-of-network candidates from discovery or successful email enrichment. Walks the user through the subject, initial copy, follow-up count and cadence, and follow-up copy; presents the exact final setup for confirmation; preserves every opaque handle; and calls create_outbound_campaign only after the user confirms that setup.
 ---
 
 # Outbound campaigns
@@ -19,29 +19,65 @@ enrichment already succeeded for an out-of-network candidate, reuse its fresh
 handle. A successful work-email lookup does not make an in-network candidate
 eligible for a campaign.
 
-## Build and confirm the campaign in one pass
+## Walk the user through the campaign
 
-When material settings are missing, prefill a complete campaign setup with
-sensible defaults and let the user edit it in one pass. Do not make the user
-answer a setup questionnaire or translate their choices into raw JSON. Do not
-treat a short opportunity summary or an unreviewed `generationPrompt` as a
-reviewable campaign.
+Once the audience and exact role are known, collect missing campaign content in
+the four stages below. Ask only the next unanswered question, then continue to
+the following stage after the user responds. Do not combine all unanswered
+stages into one questionnaire, ask the user for raw JSON, silently invent copy,
+or re-ask an exact choice the user already supplied. If the opening request
+already contains one or more answers, retain them and start at the first
+missing stage.
 
-Default to:
+Briefly reflect each answer so the user can catch a misunderstanding. A request
+such as “you decide,” “draft it,” or “build them” authorizes Pluto to propose
+copy for that stage, not to create the campaign. Keep every proposed value
+editable and include it in the final confirmation surface.
 
-- `cold_intro`, unless the user describes a genuinely warm introduction;
-- three emails: the initial message, a follow-up after three days, and a final
-  follow-up seven days later;
-- concise, conversational, professional copy with one low-pressure call to
-  action; and
-- fixed editable templates, using recipient-specific generation instead only
-  when the user explicitly asks for personalized copy.
+1. **Initial subject.** Ask for the exact subject line. Explain that it may use
+   supported single-brace variables, such as `{firstName}` or `{roleTitle}`.
+   Store reviewed subject copy in `initialSubjectTemplate`. Treat “you decide”
+   or “draft it” at this stage as an explicit generated-subject request: write
+   a precise subject-generation brief in `generationPrompt` and omit
+   `initialSubjectTemplate`. Use exactly one subject mode. Template mode sets
+   `initialSubjectTemplate` without a subject-generation instruction; generated
+   mode omits `initialSubjectTemplate` and includes that precise instruction.
+   Never populate both subject representations or proceed with neither.
+2. **Initial email body.** Ask the user to choose one of two modes:
+   - **Template:** paste complete, sendable body copy, optionally using
+     supported `{variables}`. Store it in `initialBodyTemplate`.
+   - **Generated:** provide a prompt or instructions describing the email Pluto
+     should generate for each candidate. Omit `initialBodyTemplate` and include
+     the reviewed instructions as the Email 1 purpose in `generationPrompt`.
+3. **Follow-up count and cadence.** Ask how many follow-ups the campaign should
+   have and after how many days each should be sent. Ask in user-facing
+   follow-up counts, from zero through 20; translate that to
+   `totalStepCount = follow-up count + 1`. Make clear that each value in
+   `followUpDelays` is the delay after the preceding email, not the cumulative
+   day. For example, “day 3, then day 10” maps to `[3, 7]`. Each delay must be a
+   whole number from 1 through 30. Collect `followUpSendTimes` only when the
+   user requests exact send times, and explain their America/New_York basis.
+   Require exactly one `followUpDelays` entry per requested follow-up and, when
+   `followUpSendTimes` is present, exactly one send time per follow-up. Before
+   rendering confirmation, reject a length mismatch and return to this stage
+   for the missing or corrected values.
+4. **Follow-up bodies.** Skip this stage when the follow-up count is zero.
+   Otherwise ask whether each follow-up should be an exact template or
+   generated from a prompt, using the same two modes as the initial body. The
+   user may choose one mode for all follow-ups or mix modes by step. Let the
+   user paste every template or prompt in one response. If they ask Pluto to
+   build the follow-ups, draft a distinct progression for every step from the
+   reviewed initial message, cadence, opportunity, and call to action, then
+   show all of it in the final confirmation.
 
-Use the role, company, tone, schedule, and call to action the user already
-provided. Ask one focused question only when a missing choice would materially
-change the campaign, such as two possible roles or mixed warm and cold
-audiences. Otherwise make a useful recommendation, label it as editable, and
-include it in the setup.
+Use the role, company, tone, content boundaries, and call to action the user
+already provided throughout the guided flow. Infer a concise campaign name
+when none was supplied. Default to `cold_intro` unless the user describes a
+genuinely warm introduction; ask only when the audience mixes warm and cold
+paths. When the user delegates writing choices, recommend concise,
+conversational, professional copy with one low-pressure call to action. When
+the user delegates cadence, recommend two follow-ups: three days after the
+initial email and seven days after the preceding follow-up.
 
 Resolve one exact role and its `projectId` before presenting a confirmation
 question. An earlier incomplete setup may show that role selection is required,
@@ -50,12 +86,13 @@ campaign authorization. If the role is selected after an earlier setup or a
 `needs_role` response, render the complete campaign again with the exact role
 and obtain fresh confirmation before creation.
 
-Always show the complete confirmation surface below before the first creation
-call, even when the user's opening request says to create, start, launch, or
-send a campaign. Treat that opening request as intent to build the campaign,
-not confirmation of unseen defaults or assistant-authored copy. The only
-creation authorization that counts is an explicit response to the latest
-complete confirmation surface.
+After all four applicable stages are complete, always show the complete
+confirmation surface below before the first creation call, even when the
+user's opening request says to create, start, launch, or send a campaign. Treat
+that opening request as intent to build the campaign, not confirmation of
+unseen defaults or assistant-authored copy. The only creation authorization
+that counts is an explicit response to the latest complete confirmation
+surface.
 
 Show every required campaign field and every relevant optional field. Mark an
 optional field as `Not set` instead of silently hiding it when the choice is
@@ -73,9 +110,10 @@ Show the review in this shape:
 
 - Audience: <count> selected candidate(s)
 - Type: <cold or warm introduction>
-- Total emails (`totalStepCount`): 3
-- Follow-up delays (`followUpDelays`): 3 days, then 7 days
-- Follow-up send times (`followUpSendTimes`): Not set — use the platform default
+- Total emails (`totalStepCount`): <initial email plus follow-ups>
+- Follow-ups: <count>
+- Follow-up delays (`followUpDelays`): <delay after each preceding email, or “None”>
+- Follow-up send times (`followUpSendTimes`): <reviewed times, or “Not set — use the platform default”>
 - Style: <short description>
 - Call to action: <the exact ask>
 - Content boundaries: <important inclusions or exclusions>
@@ -103,23 +141,16 @@ Show the review in this shape:
 
 <show the complete fixed body here when Template is selected>
 
-#### Email 2 — follow-up after 3 days
+#### Email <number> — follow-up <number> after <delay> days (day <cumulative day>)
 
-- Send time: Platform default
-- Body (`followUpTemplates[0].bodyTemplate`): <Template or Generated>
+- Send time: <reviewed time, or “Platform default”>
+- Body (`followUpTemplates[<index>].bodyTemplate`): <Template or Generated>
   - If Template: <complete sendable body with any variables>
-  - If Generated: <precise Email 2 brief included in generationPrompt>
+  - If Generated: <precise numbered brief included in generationPrompt>
 
 <show the complete fixed body here when Template is selected>
 
-#### Email 3 — follow-up after another 7 days
-
-- Send time: Platform default
-- Body (`followUpTemplates[1].bodyTemplate`): <Template or Generated>
-  - If Template: <complete sendable body with any variables>
-  - If Generated: <precise Email 3 brief included in generationPrompt>
-
-<show the complete fixed body here when Template is selected>
+<repeat one section for every follow-up in the reviewed cadence>
 
 **Confirm this exact campaign?**
 
@@ -287,8 +318,11 @@ The optional `initialSubjectTemplate` is at most 240 characters.
 `initialBodyTemplate` and each `followUpTemplates[].bodyTemplate` are at most
 12,000 characters. The optional `clientName`, `companyName`, `projectName`, and
 `roleTitle` values in `templateVariableOverrides` are each at most 240
-characters. Validate these limits before showing the final setup and again
-before creation.
+characters. Before showing the final setup and again before creation, validate
+these limits, the exclusive subject mode, and every sequence-array length. If
+`followUpDelays.length !== totalStepCount - 1`, or a present
+`followUpSendTimes` has any other length, return to the applicable guided stage;
+do not render the confirmation question or call the creation tool.
 
 For the default day 0, day 3, and day 10 sequence, pass
 `followUpDelays: [3, 7]`. Omit optional templates and send times the user did
