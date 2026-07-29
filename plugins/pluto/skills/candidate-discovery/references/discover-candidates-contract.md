@@ -3,8 +3,11 @@
 ## Purpose
 
 Candidate discovery is a durable orchestration boundary. One user-authorized
-`discover_candidates` call creates a server-owned job. The connected assistant
-then polls that job and may read bounded Team DNA while retrieval continues.
+recruiter request may require several short MCP calls. Each
+`discover_candidates` call creates one server-owned durable job. The connected
+assistant polls and pages that job, may read bounded Team DNA while retrieval
+continues, and may start a bounded continuation job when an explicit numeric
+target remains unmet and the server permits continuation.
 
 The server owns:
 
@@ -14,13 +17,14 @@ The server owns:
 - identity resolution and deduplication;
 - evidence acquisition and factual qualification;
 - credit reservation and settlement; and
-- persistence of the final `searchExperience`.
+- persistence of each completed `searchExperience` page.
 
 The connected assistant owns:
 
 - forwarding the complete recruiter request;
 - creating a faithful alternate query when possible;
-- automatic job polling;
+- automatic job polling and persisted-page traversal;
+- bounded continuation across durable jobs for an unmet explicit target;
 - bounded Team DNA personalization; and
 - user-facing presentation.
 
@@ -33,6 +37,7 @@ request: <complete recruiter query>
 alternateExternalSearchQuery: <optional faithful structured restatement>
 requestId: <fresh UUID>
 resultMode: candidate_pool
+targetCount: <optional integer 5..100 or all>
 ```
 
 For a recognizable raw job description:
@@ -43,11 +48,18 @@ request:
   text: <unchanged source>
 requestId: <fresh UUID>
 resultMode: candidate_pool
+targetCount: <optional integer 5..100 or all>
 ```
 
 Omit `limit`. Include `projectId` only for an explicitly selected authorized
 project. Include `searchId` only for a deliberate continuation of the exact
 same completed search.
+
+Omit `targetCount` for the default target of 25. Preserve an explicit requested
+count from 5 through 100. Use `all` only for an explicit all/every/complete
+request or a requested count above 100. The server then continues until
+retrievable sources are exhausted or the current 100-candidate safety ceiling
+is reached. A target is not a guarantee that the real-world cohort is complete.
 
 The direct `request` remains authoritative. Preserve every criterion,
 threshold, preference, exclusion, temporal distinction, and Boolean group.
@@ -66,6 +78,7 @@ The normal `discover_candidates` result is:
 jobId: <opaque UUID>
 status: queued | working
 pollAfterMs: <bounded delay>
+targetCount: <normalized numeric target>
 schemaVersion: talentpluto.candidate-search-job.v1
 ```
 
@@ -79,21 +92,69 @@ Call:
 ```yaml
 get_candidate_search:
   jobId: <unchanged job ID>
+  cursor: <omit for the first page; otherwise exact nextCursor>
 ```
 
 The poll returns one of:
 
-- `queued` or `working`: wait `pollAfterMs`, then poll again;
-- `completed`: consume the nested `result`;
+- `queued` or `working`: read optional checkpoint `progress`, wait
+  `pollAfterMs`, then poll again;
+- `completed`: consume the nested `result` page and its `pageInfo`;
 - `failed`: report the safe message and stop.
 
 Polling is automatic and read-only. A transient poll failure may retry the same
 job read. It must never cause a second metered discovery call.
 
+For a completed job, `pageInfo.hasMore` means another persisted page exists.
+Pass `pageInfo.nextCursor` unchanged with the same `jobId` until `hasMore` is
+false. These reads do not rerun retrieval or consume more credits. Accumulate
+distinct candidates without changing their lane or `matchStatus`.
+
+`pageInfo.completionReason` is `target_reached`, `source_exhausted`,
+`safety_limit`, or `partial_failure`. A partial failure is terminal but retains
+every page checkpointed before the later failure.
+
 The job is bound to the authenticated user, OAuth client, organization, and
 original request. Another principal receives no result. The server retains the
 job long enough for ordinary host polling and uses the original `requestId` to
 make the initial operation retry-safe.
+
+## Client call state machine
+
+Treat polling, paging, and continuation as separate loops:
+
+```text
+discover_candidates
+  -> queued or working: get_candidate_search(jobId) until terminal
+  -> completed: get_candidate_search(jobId, nextCursor) until hasMore=false
+  -> explicit target still unmet and canContinue=true:
+       discover_candidates(searchId, fresh requestId, remaining target)
+       then repeat the poll and page loops
+  -> otherwise: present accumulated candidates
+```
+
+Polling and paging are read-only and automatic. A clear candidate-search
+request authorizes those calls without another user message. A continuation
+job may consume credits, so it is authorized automatically only to fulfill the
+user's original explicit numeric target.
+
+Track the numeric target across jobs. For a continuation, preserve the exact
+original request, alternate query, project, and result mode; pass the prior
+hidden `searchId`; generate a fresh `requestId`; and set `targetCount` to the
+remaining count when it is at most 100 or `all` when more than 100 remain.
+
+Accumulate only distinct candidates, preferring hidden `candidateRef` for
+identity and normalized `profileUrl` as fallback. Preserve the returned lane,
+`matchStatus`, and selection handles. Sum `credits.used` across jobs and use
+the last completed job's `credits.remaining`.
+
+Stop when the target is reached, continuation is unavailable, the source is
+exhausted, a continuation adds no distinct candidate, a job fails or partially
+fails, or the live contract rejects continuation. A safety limit is terminal
+unless the original request was an explicit numeric target above 100 and
+`iteration.canContinue` remains true. Never automatically continue a
+default-volume search or push an explicit `all` request past the server's
+reported safety ceiling.
 
 ## Retrieval behavior
 
@@ -186,12 +247,14 @@ returned client-context signal. No numeric goodness score is exposed.
 Never infer credit use from candidate counts or source membership; use the
 completed result's accounting fields.
 
-Do not automatically call `discover_candidates` again after a timeout,
-transport ambiguity, or poll failure. The job exists specifically to separate
-long provider work from short MCP calls.
+Do not start a replacement `discover_candidates` job after a timeout,
+transport ambiguity, or poll failure. Retry the same read-only job poll when
+appropriate. The job exists specifically to separate long provider work from
+short MCP calls.
 
 A user-directed retry of the exact same operation reuses its original
-`requestId`. A deliberate repeat or changed search uses a new UUID.
+`requestId`. A continuation, deliberate repeat, or changed search uses a new
+UUID. A continuation must also carry the prior `searchId`.
 
 ## Presentation and follow-up
 
