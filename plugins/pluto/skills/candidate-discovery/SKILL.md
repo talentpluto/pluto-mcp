@@ -74,6 +74,9 @@ selected that exact authorized TalentPluto project.
 Use `targetCount` to preserve an explicit request for result volume:
 
 - omit it when the user does not specify a count; the default target is 25;
+- when the user requests 1–4 candidates, send `targetCount: 5`, then present
+  only the requested number of candidate cards in the existing lane and
+  ranking order; never pad the answer, and state when fewer were retrievable;
 - use the requested integer when it is between 5 and 100; and
 - use `all` when the user asks for all, every, a complete roster, or more than
   100 candidates.
