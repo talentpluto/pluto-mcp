@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto outbound campaigns"
   short_description: "Guide, preview, and launch candidate email campaigns"
-  default_prompt: "Use $outbound-campaign to guide me through a campaign for my selected out-of-network candidates. First ask how many emails and the cadence, then walk through each email in order and let me choose AI-written recipient-specific copy from my instructions or an exact template. Show one representative full-sequence example plus the exact settings and selected audience, keep candidate handles and selection tokens private, and call the creation tool only after I explicitly launch that reviewed setup."
+  default_prompt: "Use $outbound-campaign to guide me through a campaign for my selected out-of-network candidates. Start by extracting any requested email count and cadence from my initial request, preserving values already provided and asking only for missing sequence details, then walk through each email in order and let me choose AI-written recipient-specific copy from my instructions or an exact template. Show one representative full-sequence example plus the exact settings and selected audience, keep candidate handles and selection tokens private, and call the creation tool only after I explicitly launch that reviewed setup."
 
 dependencies:
   tools:
