@@ -43,7 +43,7 @@ request: <complete recruiter query>
 alternateExternalSearchQuery: <optional faithful structured restatement>
 requestId: <fresh UUID>
 resultMode: candidate_pool
-targetCount: <optional integer 5..100 or all>
+targetCount: <optional integer 5..250 or all>
 ```
 
 For a recognizable raw job description:
@@ -54,18 +54,43 @@ request:
   text: <unchanged source>
 requestId: <fresh UUID>
 resultMode: candidate_pool
-targetCount: <optional integer 5..100 or all>
+targetCount: <optional integer 5..250 or all>
 ```
+
+For a lookalike search from one user-supplied LinkedIn profile ("find more
+people like this person"):
+
+```yaml
+request:
+  type: reference_profile
+  linkedinUrl: <the supplied LinkedIn profile URL>
+  notes: <optional extra criteria, at most 300 characters>
+requestId: <fresh UUID>
+resultMode: candidate_pool
+targetCount: <optional integer 5..250 or all>
+```
+
+A profile URL is valid only inside `reference_profile`; an ordinary string
+request containing a URL is rejected. The server resolves the public profile,
+derives a lookalike brief from its primary current role, employer peers, and
+seniority, returns that brief as `searchInterpretation.request`, and excludes
+the reference person from every result section. Present the returned brief so
+the user can refine it; forward extra spoken criteria in `notes` unchanged.
 
 Omit `limit`. Include `projectId` only for an explicitly selected authorized
 project. Include `searchId` only for a deliberate continuation of the exact
 same completed search.
 
 Omit `targetCount` for the default target of 25. Preserve an explicit requested
-count from 5 through 100. Use `all` only for an explicit all/every/complete
-request or a requested count above 100. The server then continues until
-retrievable sources are exhausted or the current 100-candidate safety ceiling
+count from 5 through 250. Use `all` only for an explicit all/every/complete
+request or a requested count above 250. The server then continues until
+retrievable sources are exhausted or the current 250-candidate safety ceiling
 is reached. A target is not a guarantee that the real-world cohort is complete.
+
+External profiles consume provider credits as they are retrieved, and
+completed pages may include a notice reporting the estimated total external
+roster for the search. Relay that estimate when the user weighs asking for
+more, and never inflate a target beyond the user's stated volume.
 
 The direct `request` remains authoritative. Preserve every criterion,
 threshold, preference, exclusion, temporal distinction, and Boolean group.
@@ -148,7 +173,7 @@ user's original explicit numeric target.
 Track the numeric target across jobs. For a continuation, preserve the exact
 original request, alternate query, project, and result mode; pass the prior
 hidden `searchId`; generate a fresh `requestId`; and set `targetCount` to the
-remaining count when it is at most 100 or `all` when more than 100 remain.
+remaining count when it is at most 250 or `all` when more than 250 remain.
 
 Accumulate only distinct candidates, preferring hidden `candidateRef` for
 identity and normalized `profileUrl` as fallback. Preserve the returned
@@ -158,7 +183,7 @@ jobs and use the last completed job's `credits.remaining`.
 Stop when the target is reached, continuation is unavailable, the source is
 exhausted, a continuation adds no distinct candidate, a job fails or partially
 fails, or the live contract rejects continuation. A safety limit is terminal
-unless the original request was an explicit numeric target above 100 and
+unless the original request was an explicit numeric target above 250 and
 `iteration.canContinue` remains true. Never automatically continue a
 default-volume search or push an explicit `all` request past the server's
 reported safety ceiling.
@@ -175,7 +200,11 @@ concurrently:
 
 The alternate lane is omitted when no faithful alternate query is supplied.
 Raw job descriptions are compiled server-side and do not receive a
-client-authored alternate query.
+client-authored alternate query. Reference profiles are likewise resolved
+server-side into a lookalike brief — the person's primary role at companies
+similar to their employer, at a similar seniority — and do not receive a
+client-authored alternate query; the reference person is excluded from
+results.
 
 The server accumulates the returned profiles, applies current-employer safety
 filtering, removes canonical identity duplicates, and persists the result
