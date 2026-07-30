@@ -14,7 +14,8 @@ work with the retrieved leads directly in the conversation.
   preferences or availability.
 - Find and verify work emails for selected candidates or directly supplied
   LinkedIn profiles.
-- Review and create an email campaign for selected out-of-network candidates.
+- Review and create an email campaign for selected out-of-network candidates,
+  using either TalentPluto-managed delivery or one connected Gmail inbox.
 - Express interest in an in-network candidate for an active role.
 - Check your organization's shared Pluto credit balance.
 
@@ -93,8 +94,9 @@ After a search, select the relevant candidates before asking Pluto to continue:
 ```text
 @pluto Get and verify the available work emails for these candidates.
 
-@pluto Create a campaign for these candidates. Guide me through the sequence
-and each email, show me a representative example, then let me launch it.
+@pluto Create a campaign for these candidates. Let me choose TalentPluto or a
+connected Gmail inbox, guide me through the sequence and each email, show me a
+representative example, then let me launch it.
 
 @pluto Express interest in this candidate for the Senior Engineer role.
 ```
@@ -110,6 +112,9 @@ and each email, show me a representative example, then let me launch it.
   returned.
 - A new successful work-email lookup can use one credit for that candidate.
   Reusing an existing successful lookup does not use another lookup credit.
+- Connected-inbox campaigns create the first Gmail draft after copy generation
+  and later drafts one at a time on cumulative days measured from campaign
+  creation. Each draft is sent manually from Gmail.
 - Market snapshots use aggregated data and omit metrics that do not meet
   privacy thresholds.
 - Private candidate questions return a bounded answer, not the candidate's raw
