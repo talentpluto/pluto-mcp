@@ -139,8 +139,7 @@ fact is visible, use an explicit placeholder such as
 
 For template emails, render an example with clearly labeled sample variable
 values and also show the exact underlying template. Do not call
-`create_outbound_campaign`, email enrichment, or the historical
-`draft_candidate_email` tool to obtain a preview.
+`create_outbound_campaign` or email enrichment to obtain a preview.
 
 ### Stage 4 of 4: Launch
 
