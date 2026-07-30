@@ -1,6 +1,6 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, source, shortlist, compare, rank, or qualify candidates from a recruiter query or pasted job description. Runs the bounded durable polling, paging, and server-directed continuation loops needed to fulfill an explicit result target, then uses explicit candidate facts and Team DNA for evidence-safe presentation.
+description: Use when a user asks Pluto to find, source, shortlist, compare, rank, or qualify candidates from a recruiter query, a pasted job description, or one reference LinkedIn profile ("find more people like this person"). Runs the bounded durable polling, paging, and server-directed continuation loops needed to fulfill an explicit result target, then uses explicit candidate facts and Team DNA for evidence-safe presentation.
 ---
 
 # Candidate discovery
@@ -71,6 +71,24 @@ request:
 Do not compile, shorten, or rewrite a raw job description. The server derives
 the effective professional request.
 
+When the user supplies one person's LinkedIn profile URL and asks for more
+people like them, pass:
+
+```yaml
+request:
+  type: reference_profile
+  linkedinUrl: <the supplied LinkedIn profile URL>
+  notes: <optional short extra criteria, such as a location>
+```
+
+Never paste a profile URL into an ordinary string request; the server rejects
+URLs there. The server resolves the public profile, derives a lookalike brief
+from its primary role, employer peers, and seniority, reports that brief in
+`searchInterpretation.request`, and excludes the reference person from
+results. Present the returned brief so the user can refine it, and put any
+extra spoken criteria ("but in New York") into `notes` rather than rewriting
+the brief client-side.
+
 Set `resultMode: candidate_pool`, omit `limit`, and generate a fresh random
 UUID for `requestId`. Include `projectId` only when the user deliberately
 selected that exact authorized TalentPluto project.
@@ -81,13 +99,20 @@ Use `targetCount` to preserve an explicit request for result volume:
 - when the user requests 1–4 candidates, send `targetCount: 5`, then present
   only the requested number of candidate cards in returned order; never pad
   the answer, and state when fewer were retrievable;
-- use the requested integer when it is between 5 and 100; and
+- use the requested integer when it is between 5 and 250; and
 - use `all` when the user asks for all, every, a complete roster, or more than
-  100 candidates.
+  250 candidates.
 
-`all` means every retrievable result up to the server's current 100-candidate
+`all` means every retrievable result up to the server's current 250-candidate
 safety ceiling, not every person who exists in the real world. Do not turn
 words such as "shortlist" or "some" into an invented numeric target.
+
+External profiles consume provider credits as they are retrieved. Completed
+pages may include a notice with the estimated total external roster for the
+search. Before starting a pull materially above the default 25 — including
+`all` — tell the user that approximate scope when you have it (or that it will
+be reported by the first page) and rely on their explicit requested volume as
+the authorization; never inflate a target the user did not state.
 
 ### Add the second external retrieval lane
 
@@ -119,7 +144,7 @@ Exclude:
 Omit empty sections. If the request cannot be restated without changing its
 meaning, omit `alternateExternalSearchQuery`; never weaken the authoritative
 request to force a second lane. Do not supply an alternate query for an
-unchanged raw job description.
+unchanged raw job description or a reference-profile lookalike search.
 
 Pluto routes the authoritative original request into structured company and
 people search while running its internal accepted-profile search. Only the
@@ -214,8 +239,8 @@ user. Pass:
 - the unchanged `projectId` and `resultMode`;
 - the prior hidden `searchId`;
 - a fresh `requestId`; and
-- `targetCount` equal to the remaining target when it is at most 100, or `all`
-  when more than 100 remain.
+- `targetCount` equal to the remaining target when it is at most 250, or `all`
+  when more than 250 remain.
 
 Then run the new job's poll and persisted-page loops. Accumulate distinct
 candidates across jobs using the hidden `candidateRef` when available and the
@@ -230,7 +255,7 @@ Stop the continuation loop as soon as any of these is true:
 - `iteration.canContinue` is false;
 - the source is exhausted;
 - the server reports a safety limit, unless the original request was an
-  explicit numeric target above 100 and `iteration.canContinue` remains true;
+  explicit numeric target above 250 and `iteration.canContinue` remains true;
 - the next job produces no new distinct candidates;
 - a job fails or ends with a partial failure; or
 - the live schema or server rejects the requested continuation.
