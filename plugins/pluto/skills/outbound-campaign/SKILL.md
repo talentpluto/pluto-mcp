@@ -38,6 +38,11 @@ sequence question: resolve it once after Stage 1 and before writing Email 1.
 Do not ask the user for a project UUID. If the user requested several roles or
 audiences, run this workflow separately for each campaign.
 
+Outbound campaigns are intentionally not associated with TalentPluto
+projects. Treat the reviewed role title as outreach and copy context only:
+never look up, retain, or pass a `projectId`, and never expect a campaign
+`needs_role` response.
+
 Ask only the next unanswered question. Never combine the remaining workflow
 into one questionnaire, ask for raw JSON, silently invent instructions, or
 re-ask an exact choice the user already supplied. If the opening request
@@ -191,18 +196,15 @@ professional copy with one low-pressure call to action. When the user
 delegates cadence, recommend two follow-ups: three days after the initial email
 and seven days after the preceding follow-up.
 
-Resolve one exact role title before Stage 3. Reuse its `projectId` from trusted
-conversation or tool context when available; never ask the user to supply an
-internal UUID. When the intended role is known but only the creation tool can
-resolve its active project, show that role in the review and omit `projectId`
-from the explicitly authorized launch call. The tool may select the sole active
-role or return `needs_role`. A `needs_role` result creates nothing: show every
-safe role choice, let the user select one, then render a fresh complete review
-with that exact role and obtain a new launch instruction.
+Resolve one exact role title before Stage 3 when the copy needs it. The title
+is reviewed campaign context, not a TalentPluto project association. Never
+look up or pass `projectId`, even when trusted conversation or tool context
+contains one. `create_outbound_campaign` does not select an active project and
+does not return `needs_role`.
 
 Show every user-controlled campaign field and every relevant optional field.
-Keep request IDs, project IDs, candidate references, and selection tokens
-hidden. Mark an optional field as `Not set` instead of silently hiding it when
+Keep request IDs, candidate references, and selection tokens hidden. Mark an
+optional field as `Not set` instead of silently hiding it when
 the choice is useful for review. Use human-readable labels followed by the
 exact schema field in parentheses only where that detail helps the user
 understand what will be created.
@@ -411,13 +413,10 @@ If a required handle is missing, invalid, or expired, explain which displayed
 candidate is affected and ask before running another metered discovery or
 enrichment operation.
 
-One exact active role applies to the entire campaign. Include its `projectId`
-when trusted context already provides it and show the role title in the review.
-When the project ID is unavailable, omit it only in the explicitly authorized
-launch call so the server can select the sole active role or return
-`needs_role`; never call early merely to probe the role list. Do not present a
-review while the intended role title is missing or combine candidates intended
-for different roles into one campaign.
+One exact outreach role title applies to the entire campaign when the copy uses
+role context. Show that title in the review, but never map it to or pass a
+TalentPluto project. Do not present a review while required copy context is
+missing or combine candidates intended for different roles into one campaign.
 
 One exact delivery route also applies to the entire campaign. Use
 `delivery: { method: 'talentpluto' }` for TalentPluto-managed delivery. Use
@@ -438,12 +437,10 @@ includes `candidates:outbound`.
 ## Create exactly the reviewed campaign
 
 Generate one fresh random UUID for each campaign's initial creation call. Reuse
-it only for an explicit `needs_role` or `needs_sender` continuation after the
-user selects one returned option, reviews the complete updated campaign, and
-launches it again. If the unchanged campaign requires both continuations,
-retain the same request ID while resolving them one at a time. Never reuse it
-after an audience, delivery route, sender, copy, or schedule change, for any
-other retry, or across different campaigns.
+it only for an explicit `needs_sender` continuation after the user selects one
+returned option, reviews the complete updated campaign, and launches it again.
+Never reuse it after an audience, delivery route, sender, copy, or schedule
+change, for any other retry, or across different campaigns.
 
 Map the reviewed sequence exactly:
 
@@ -482,19 +479,15 @@ draft. Omit optional templates and send times the user did not review.
 
 Call `create_outbound_campaign` once initially for each explicitly authorized
 campaign with that campaign's reviewed name, delivery, candidate handles,
-sequence settings, request ID, and the project ID when known. Additional calls
-with the same request ID are allowed only for explicit `needs_role` or
-`needs_sender` continuations after a fresh complete review and launch
-instruction. Do not merge separate reviewed campaigns. The operation may use
-up to one shared organization credit per candidate needing a new contact
-lookup; a successful-enrichment handle uses zero new lookup credits.
+sequence settings, and request ID. Never include `projectId`. Additional calls
+with the same request ID are allowed only for an explicit `needs_sender`
+continuation after a fresh complete review and launch instruction. Do not merge
+separate reviewed campaigns. The operation may use up to one shared
+organization credit per candidate needing a new contact lookup; a
+successful-enrichment handle uses zero new lookup credits.
 
 Handle the response narrowly:
 
-- `needs_role`: no campaign was created. Show every safe role choice and retain
-  each `projectId` privately. After the user chooses, re-render the complete
-  campaign with that exact role and obtain a fresh launch instruction. Only
-  then retry with the selected project ID and the same request ID.
 - `needs_sender`: no campaign was created. Show every returned
   `senderOptions` entry by safe `email` and optional `displayName`, while
   retaining each `connectionId` privately. Let the user choose exactly one
