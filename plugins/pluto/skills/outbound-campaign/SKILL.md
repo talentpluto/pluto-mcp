@@ -1,6 +1,6 @@
 ---
 name: outbound-campaign
-description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected out-of-network candidates from discovery or successful email enrichment. Runs a directed sequence, per-email writing, representative-preview, and launch workflow; preserves every opaque handle; and calls create_outbound_campaign only after the user launches the reviewed setup.
+description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected out-of-network candidates from discovery or successful email enrichment. Guides the user through delivery by TalentPluto or one authorized connected inbox, the sequence, per-email writing, representative preview, and launch; preserves every opaque handle; and calls create_outbound_campaign only after the user launches the reviewed setup.
 ---
 
 # Outbound campaigns
@@ -8,7 +8,9 @@ description: Use when a user asks Pluto to draft, refine, review, create, or lau
 Use this skill to turn a request such as “do outbound for these candidates” into
 an easy-to-review campaign and, when authorized, create it through
 `create_outbound_campaign`. When the user requests separate campaigns for
-different roles or audiences, build and review each campaign separately.
+different roles, audiences, delivery routes, or connected senders, build and
+review each campaign separately. One campaign always has exactly one delivery
+route and, for connected-inbox delivery, exactly one sender.
 
 One candidate and a batch use the same flow. For candidates selected from
 discovery, do not call `start_candidate_email_enrichment`, its polling tool, or
@@ -24,7 +26,7 @@ eligible for a campaign.
 As soon as the user asks to create or launch a campaign, tell them the workflow
 in one short orientation:
 
-1. Choose the sequence.
+1. Choose delivery and the sequence.
 2. Write each email.
 3. Review one representative example.
 4. Launch the campaign.
@@ -48,13 +50,35 @@ eligibility problem, state the problem once inside the active stage and offer
 a direct correction or choice. Do not leave the guided workflow to lecture
 about general outreach strategy.
 
-### Stage 1 of 4: Choose the sequence
+### Stage 1 of 4: Choose delivery and the sequence
 
 Start with this progress label:
 
 ```markdown
-### Campaign setup — 1 of 4: Sequence
+### Campaign setup — 1 of 4: Delivery and sequence
 ```
+
+First ask the user to choose exactly one delivery route:
+
+1. **TalentPluto-managed.** TalentPluto handles delivery after its own internal
+   confirmation. Creating the campaign does not mean that confirmation has
+   happened or that an email has been sent.
+2. **Connected Gmail inbox.** Use one Gmail inbox the user owns or that was
+   explicitly shared with their workspace. Pluto creates the first draft after
+   copy generation. The user approves each email by manually sending its draft
+   from Gmail.
+
+If trusted tool context already identifies an authorized inbox selected by the
+user, retain its email address and hidden `connectionId`. Otherwise retain the
+connected-inbox choice with no sender yet. Do not ask for an internal UUID,
+invent inbox options, or accept an arbitrary connection ID. An authorized
+launch without a sender may return `needs_sender`; handle that response as
+described below, then show the complete campaign again with the selected inbox.
+
+If the user wants both TalentPluto and a connected inbox, or wants more than
+one connected inbox, explain that each route or sender must be a separate
+campaign. Do not duplicate or split the campaign until the user explicitly
+chooses the audience and setup for each one.
 
 Ask how many total emails each candidate should receive, from one through 21.
 Call each email one step and make clear that the total includes the initial
@@ -69,6 +93,13 @@ user requests them, and explain their America/New_York basis. Require exactly
 one `followUpDelays` entry per follow-up and, when `followUpSendTimes` is
 present, exactly one send time per follow-up. Reflect the resulting timeline
 before moving to Stage 2.
+
+For connected-inbox delivery, also show the cumulative draft days measured
+from campaign creation. For example, `[3, 7]` creates later drafts on campaign
+day 3 and campaign day 10. Explain that drafts appear one step at a time when
+each cumulative offset becomes due, regardless of whether the preceding draft
+was sent. Never imply that all follow-up drafts appear when the campaign is
+created or that sending an earlier draft starts or gates the next timer.
 
 ### Stage 2 of 4: Write each email
 
@@ -152,12 +183,13 @@ complete Stage 3 review and Stage 4 launch question.
 
 Use the role, company, tone, content boundaries, and call to action the user
 already provided throughout the guided flow. Infer a concise campaign name
-when none was supplied. Default to `cold_intro` unless the user describes a
-genuinely warm introduction; ask only when the audience mixes warm and cold
-paths. When the user delegates writing choices, recommend concise,
-conversational, professional copy with one low-pressure call to action. When
-the user delegates cadence, recommend two follow-ups: three days after the
-initial email and seven days after the preceding follow-up.
+when none was supplied. Campaign type is not a user-controlled setting: never
+ask for it, show it in a review, accept it as a campaign choice, or pass a
+`campaignType` field. The server records every MCP campaign as cold outreach.
+When the user delegates writing choices, recommend concise, conversational,
+professional copy with one low-pressure call to action. When the user
+delegates cadence, recommend two follow-ups: three days after the initial email
+and seven days after the preceding follow-up.
 
 Resolve one exact role title before Stage 3. Reuse its `projectId` from trusted
 conversation or tool context when available; never ask the user to supply an
@@ -185,7 +217,9 @@ Show the review in this shape:
 **<campaign name>** · <count> selected candidate(s) · <exact role title>
 
 - Audience: <count> selected candidate(s)
-- Type: <cold or warm introduction>
+- Delivery (`delivery.method`): <TalentPluto-managed or Connected Gmail inbox>
+- Sender: <“TalentPluto-managed” or the selected authorized inbox email; if unresolved, “Choose after launch from the authorized inboxes Pluto returns”>
+- Approval and draft behavior: <“TalentPluto confirms internally before sending” or “First draft after generation; later drafts appear one at a time on campaign-relative cumulative days whether or not an earlier draft was sent; manually send each draft from Gmail”>
 - Sequence (`totalStepCount`): <total email count>
 - Timeline (`followUpDelays`): <initial email and each delay after the preceding email>
 - Follow-up send times (`followUpSendTimes`): <reviewed times, or “Not set — use the platform default”>
@@ -243,6 +277,13 @@ Reply `launch campaign`, or tell me what to change. You can switch any email
 between `AI-written` and `Template`.
 ```
 
+For connected-inbox delivery, make clear immediately before the launch
+question that launching creates the campaign and its draft schedule; it does
+not send an email. Each Gmail draft still requires the user's manual send. For
+TalentPluto-managed delivery, make clear that TalentPluto's internal
+confirmation remains required before sending. These are stable route
+properties, not claims about the state of a specific campaign.
+
 When every email is templated, replace the illustrative-example warning with
 `Rendered with the sample values shown below` and list those sample values.
 When the campaign is hybrid, mark which example emails are illustrative and
@@ -285,10 +326,11 @@ body, not a prose summary or list of themes.
 After any material revision, render the complete updated setup rather than
 replying only that isolated choices are “locked in.” Creation authorization
 applies only to the exact latest setup. A later change to the audience, role,
-campaign type, schedule, subject, copy, personalization mode, compensation
-language, or other content boundary invalidates earlier authorization. Show
-the revised setup and wait for a fresh explicit instruction to launch it.
-Answering a setup question or approving one edit does not authorize creation.
+delivery route, connected sender, schedule, subject, copy, personalization
+mode, compensation language, or other content boundary invalidates earlier
+authorization. Show the revised setup and wait for a fresh explicit instruction
+to launch it. Answering a setup question or approving one edit does not
+authorize creation.
 
 Accept `launch campaign`, `confirm and create`, `create this campaign`, or an
 equally explicit reference to the latest displayed setup. A bare “yes” counts
@@ -297,9 +339,9 @@ intervening edit or topic change occurred. When the user has reviewed several
 campaigns, require them to launch all of them explicitly or identify which one
 to launch.
 
-Speak in terms of campaign creation. Do not volunteer or speculate about
-internal paused, draft, scheduled, queued, or delivery state, and do not append
-a warning that campaign creation is not an email-delivery status. If the user
+Speak in terms of campaign creation. You may explain the stable route behavior
+reviewed above, but do not speculate that a specific campaign was internally
+confirmed, drafted, scheduled, queued, sent, or delivered. If the user
 explicitly asks about workflow or delivery state, answer only from state the
 tool actually returns. Never say that an email was sent or delivered unless a
 tool result explicitly confirms that event.
@@ -377,6 +419,16 @@ launch call so the server can select the sole active role or return
 review while the intended role title is missing or combine candidates intended
 for different roles into one campaign.
 
+One exact delivery route also applies to the entire campaign. Use
+`delivery: { method: 'talentpluto' }` for TalentPluto-managed delivery. Use
+`delivery: { method: 'connected_inbox', connectionId }` only after the user has
+selected that exact authorized inbox. Keep `connectionId` hidden and pair it
+with the displayed email from trusted tool context. If the user selected
+connected-inbox delivery but no authorized sender is known, the first
+explicitly authorized launch may omit `connectionId` so the tool can return
+`needs_sender`; never omit it after the user selects an inbox. Never place two
+routes or two connection IDs in one campaign.
+
 Before creation, confirm that the live Pluto catalog exposes
 `create_outbound_campaign` and inspect its current input schema. If it is
 missing or unusable, follow the `connection-recovery` skill, then resume here
@@ -386,13 +438,21 @@ includes `candidates:outbound`.
 ## Create exactly the reviewed campaign
 
 Generate one fresh random UUID for each campaign's initial creation call. Reuse
-it only for the explicit `needs_role` continuation after the user selects one
-of the returned roles, reviews the complete updated campaign, and launches it
-again. Never reuse it after an audience, copy, or schedule change, for any
+it only for an explicit `needs_role` or `needs_sender` continuation after the
+user selects one returned option, reviews the complete updated campaign, and
+launches it again. If the unchanged campaign requires both continuations,
+retain the same request ID while resolving them one at a time. Never reuse it
+after an audience, delivery route, sender, copy, or schedule change, for any
 other retry, or across different campaigns.
 
 Map the reviewed sequence exactly:
 
+- `delivery` is required. Pass exactly `{ method: 'talentpluto' }` or
+  `{ method: 'connected_inbox', connectionId }`. Omit `connectionId` from an
+  initial connected-inbox call only when the user selected that route but no
+  authorized sender option is available yet;
+- never pass `campaignType`; the server always records MCP campaigns as cold
+  outreach;
 - `totalStepCount` is the total number of emails and must be from 1 through 21;
 - `generationPrompt` is required, must be from 1 through 4,000 characters, and
   contains instructions rather than sendable template copy;
@@ -416,18 +476,18 @@ these limits, the exclusive subject mode, and every sequence-array length. If
 do not render the Stage 4 launch question or call the creation tool.
 
 For the default day 0, day 3, and day 10 sequence, pass
-`followUpDelays: [3, 7]`. Omit optional templates and send times the user did
-not review. Use `warm_intro` only when a real warm path is established; never
-use it merely to make cold outreach sound friendlier.
+`followUpDelays: [3, 7]`. For a connected inbox, those are cumulative campaign
+days 3 and 10 after creation, not timers started by sending the preceding
+draft. Omit optional templates and send times the user did not review.
 
 Call `create_outbound_campaign` once initially for each explicitly authorized
-campaign with that campaign's reviewed name, type, candidate handles, sequence
-settings, request ID, and the project ID when known. A second call is allowed
-only for the explicit `needs_role` continuation with the same request ID after
-a fresh review and launch instruction. Do not merge separate reviewed
-campaigns. The operation may use up to one shared organization credit per
-candidate needing a new contact lookup; a successful-enrichment handle uses
-zero new lookup credits.
+campaign with that campaign's reviewed name, delivery, candidate handles,
+sequence settings, request ID, and the project ID when known. Additional calls
+with the same request ID are allowed only for explicit `needs_role` or
+`needs_sender` continuations after a fresh complete review and launch
+instruction. Do not merge separate reviewed campaigns. The operation may use
+up to one shared organization credit per candidate needing a new contact
+lookup; a successful-enrichment handle uses zero new lookup credits.
 
 Handle the response narrowly:
 
@@ -435,6 +495,13 @@ Handle the response narrowly:
   each `projectId` privately. After the user chooses, re-render the complete
   campaign with that exact role and obtain a fresh launch instruction. Only
   then retry with the selected project ID and the same request ID.
+- `needs_sender`: no campaign was created. Show every returned
+  `senderOptions` entry by safe `email` and optional `displayName`, while
+  retaining each `connectionId` privately. Let the user choose exactly one
+  inbox. Then re-render the complete campaign with that sender and the
+  connected-inbox timing and manual-send behavior, obtain a fresh launch
+  instruction, and retry with its connection ID and the same request ID. Do
+  not present inboxes from memory or outside the returned authorized options.
 - `success`: repeat the tool-returned `message` exactly. The current contract
   intentionally returns no campaign ID, request ID, final audience, contact
   details, prompt, or workflow state. Do not manufacture a recap from the
