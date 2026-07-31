@@ -19,6 +19,22 @@ The plugin ships dual packaging over one shared `plugins/pluto` directory.
 
 Keep the two plugin manifests' name, version, and server URL in sync.
 
+## Server contract alignment
+
+The webapp is the contract's source of truth: `CANDIDATE_MCP_SERVER_INFO`
+in `lib/mcp/candidates/server-config.ts` and the generated snapshot in
+`contracts/candidate-mcp.json` (regenerated with `npm run
+mcp:contract:update`). The skills here pin the version they were written
+against at the top of
+`plugins/pluto/skills/candidate-discovery/references/discover-candidates-contract.md`.
+
+Any webapp change that bumps the contract version must open a paired PR in
+this repo reviewing every skill against the new contract — numbers (page
+size, target ceiling), response fields, and presentation rules. Deploy order
+is server first: new server fields are additive and old skills degrade
+gracefully, but a new skill referencing fields an old server never returns
+does not.
+
 ## OAuth callbacks
 
 Anthropic uses different OAuth callbacks across client surfaces:
