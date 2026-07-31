@@ -44,6 +44,13 @@ For a connected inbox, pair the private `connectionId` only with its safe email
 from trusted context or a `needs_sender` response. Never place two delivery
 routes or two senders in one campaign.
 
+Connected-inbox copy must represent the real person and organization behind
+that inbox. Never write as TalentPluto unless it is the sender's actual
+organization, and never impersonate an employee of a separate hiring company.
+Describe the sender as recruiting for or working with that company when
+appropriate. Do not add TalentPluto's managed-delivery mailing-address or
+unsubscribe footer.
+
 When the user chose connected-inbox delivery but no authorized sender is
 known, the first confirmed call may omit `connectionId`. The tool can then
 return `needs_sender` without creating a campaign. After a returned sender is
@@ -78,6 +85,9 @@ For exact shared copy, put the reviewed sendable copy in the corresponding
 template field. A fully templated campaign still needs a `generationPrompt`
 that records the opportunity, audience, tone, factual boundaries, purpose of
 each step, and call to action.
+
+Every non-empty connected-inbox body template must include `{senderName}`.
+Never hard-code a person's name in a connected-inbox signoff.
 
 For a hybrid campaign:
 
