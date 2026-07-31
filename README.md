@@ -94,9 +94,10 @@ After a search, select the relevant candidates before asking Pluto to continue:
 ```text
 @pluto Get and verify the available work emails for these candidates.
 
-@pluto Create a campaign for these candidates. Let me choose TalentPluto or a
-connected Gmail inbox, guide me through the sequence and each email, show me a
-representative example, then let me launch it.
+@pluto Create a campaign for these candidates. Prefill the basics, let me
+choose whether to write exact shared copy, provide generation instructions, or
+have Pluto draft the emails for me, then show the complete editable sequence
+and ask me to confirm the final review.
 
 @pluto Express interest in this candidate for the Senior Engineer role.
 ```
