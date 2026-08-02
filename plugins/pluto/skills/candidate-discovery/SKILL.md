@@ -402,6 +402,20 @@ Disclose the honesty channel once each, when present:
   shown and the estimated external total when known, phrased as an estimate
   of how many more may be available — then ask whether to pull the next
   page, a specific number, or everything.
+- `assessment.feasibility`: a pre-flight count measured before retrieval.
+  When `estimatedMatching` is small and `basis` is `exact`, set expectations
+  once — for example: only about 4 people match every stated requirement,
+  and the tenure requirement is the main limiter. A full roster near a small
+  exact count means the requested world is small, not that the search
+  failed; suggest which stated requirement to relax rather than promising
+  more volume.
+- `assessment.searchStrategy`: the automatic self-correction rounds the
+  search ran after observing its own first pass (revising its filter
+  vocabulary, adding or removing a search direction, or concluding the
+  criteria cannot be met). Mention at most once when presenting — for
+  example: the search corrected itself once after a judged sample showed
+  the first pass missing the request. Absent means the first plan needed
+  no correction; never present the rounds as user-actionable steps.
 
 If `alternateQueryMatches` is returned, render it as its own short section
 after the main table, introduced with its returned query text; never blend

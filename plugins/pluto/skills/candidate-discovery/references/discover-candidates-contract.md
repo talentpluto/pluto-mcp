@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `0.43.0`. When the live server reports a newer
+Aligned to server contract `0.45.0`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict.
 
@@ -100,6 +100,18 @@ pages report concrete roster numbers in `assessment.roster` (people shown on
 the page and the estimated external total when known); notices may restate
 the estimate. Relay those numbers when the user weighs asking for more, and
 never inflate a target beyond the user's stated volume.
+
+`assessment.feasibility`, when present, reports a pre-flight count measured
+before retrieval: how many public profiles matched ALL stated criteria
+(`estimatedMatching`, with `basis` saying whether the count is exact or an
+estimate) and which stated requirement limits the search hardest
+(`limitingConstraint`). When the exact count is small, set expectations once
+when presenting — a full roster near a small exact count means the world is
+small, not that the search failed. `assessment.searchStrategy`, when present,
+lists the automatic self-correction rounds the server ran after observing its
+own first pass (revise_constraints, add_lane, kill_lane, or
+conclude_infeasible, with what fired each round). Mention at most once when
+presenting; absent means the first plan needed no correction.
 
 The direct `request` remains authoritative. Preserve every criterion,
 threshold, preference, exclusion, temporal distinction, and Boolean group.
