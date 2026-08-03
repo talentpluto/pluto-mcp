@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.1.49",
-  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, TalentPluto-managed or connected-inbox outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+  "version": "0.1.50",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, candidate-to-Team-DNA alignment scoring, TalentPluto-managed or connected-inbox outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -17,6 +17,8 @@
     "profile enrichment",
     "team connection",
     "warm introduction",
+    "team dna",
+    "team alignment",
     "outbound campaign",
     "email campaign",
     "cancel campaign",

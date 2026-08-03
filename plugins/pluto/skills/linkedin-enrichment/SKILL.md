@@ -21,6 +21,10 @@ Keep neighboring requests on their own routes:
 - One URL plus "who on my team knows or is most connected to this person"
   is a team-connection request; use the `team-connection` skill. Profile
   enrichment returns full profiles, not shared-history matches.
+- One URL plus "score or assess this person against our team DNA" is a
+  Team DNA assessment; use the `team-dna-scoring` skill, which may run
+  this skill's enrichment contract first for the candidate's public
+  profile facts.
 - Campaigns and outreach use the `outbound-campaign` skill. Profile
   enrichment returns no `candidateRef` or `selectionToken` and never creates
   campaign eligibility, pipeline state, or interest.

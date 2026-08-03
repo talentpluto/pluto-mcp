@@ -20,6 +20,11 @@ work with the retrieved leads directly in the conversation.
   employers, overlapping tenure, or shared schools when it exists, lighter
   background common ground or a suggested team contact when it does not —
   as warm-introduction context.
+- Assess selected candidates against your company's stored Team DNA — shared
+  prior companies, titles, seniority, locations, schools, recent-joiner
+  patterns, founder backgrounds, and published hiring-preference signals —
+  as a labeled, evidence-cited alignment readout rather than a numeric fit
+  score.
 - Review and create an email campaign for selected out-of-network candidates,
   using either TalentPluto-managed delivery or one connected Gmail inbox.
 - Cancel an existing outbound campaign after confirming the exact one,
@@ -98,6 +103,9 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 @pluto Who on my team has the strongest connection to this candidate?
 [paste one LinkedIn profile URL]
 
+@pluto How does this candidate line up against our engineering team's DNA?
+[paste one LinkedIn profile URL, or select a returned candidate]
+
 @pluto Give me a directional US market snapshot for engineering talent.
 
 @pluto How many Pluto credits does my organization have left?
@@ -144,6 +152,11 @@ and ask me to confirm the final review.
   team connect appears with its labeled-strength reason, for up to the first
   25 results per response. No member contact data or profile URLs are
   returned.
+- Team DNA assessments read your company's stored, bounded Team DNA
+  projection and use no candidate credits. Alignment is descriptive
+  professional overlap with cited evidence — never a numeric fit score,
+  culture-fit judgment, ranking, or qualification evidence — and non-founder
+  employees appear only as aggregate patterns.
 - Connected-inbox campaigns create the first Gmail draft after copy generation
   and later drafts one at a time on cumulative days measured from campaign
   creation. Each draft is sent manually from Gmail.
