@@ -1,6 +1,6 @@
 ---
 name: team-connection
-description: Use when a user explicitly supplies one candidate LinkedIn profile URL and asks Pluto who on their own team is most connected or similar to that candidate. Calls find_team_connection once per supplied profile and presents at most three returned team members with their concrete shared-history facts as warm-introduction and outreach-personalization context, never as culture fit, a protected-trait proxy, qualification evidence, or a roster listing.
+description: Use when a user explicitly supplies one candidate LinkedIn profile URL and asks Pluto who on their own team is most connected or similar to that candidate. Calls find_team_connection once per supplied profile and presents at most three returned team members at their labeled connection strength — concrete shared history, light background affinity, or a suggested outreach anchor — as warm-introduction and outreach-personalization context, never as culture fit, a protected-trait proxy, qualification evidence, or a roster listing.
 ---
 
 # Team connection
@@ -15,7 +15,7 @@ The tool is read-only, uses zero shared organization candidate credits, and
 requires only the `candidates:read` permission already present in every
 saved Pluto grant.
 
-This skill was written against server contract `0.50.0`. On any conflict,
+This skill was written against server contract `0.51.0`. On any conflict,
 prefer the live tool description and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
@@ -39,7 +39,10 @@ Before promising a result, confirm that the current host context exposes
 exactly one `linkedinUrl` string. Loading this skill does not prove that
 Pluto initialized or that the connected server is new enough to advertise
 this tool; `find_team_connection` ships with server contract `0.50.0`, so
-an older deployed server may not expose it.
+an older deployed server may not expose it. The `weak` affinity tier and
+the suggested-contact fallback ship with `0.51.0`; a `0.50.0` server names
+members only on concrete shared history and may return empty
+`connections`.
 
 If the tool is absent or its schema differs, follow the
 `connection-recovery` skill. If recovery does not expose it, report that
@@ -51,10 +54,14 @@ search.
 
 Call only after the user explicitly supplies the candidate's LinkedIn
 profile URL and clearly asks who on their team knows, overlaps with, or is
-most connected or similar to that candidate. A URL being visible,
-shortlisted, or under discussion never authorizes a call by itself. Never
-derive a URL from an opaque handle or an internal field, and never guess
-one from a name.
+most connected or similar to that candidate. One other route is
+authorized: the `candidate-discovery` skill's bounded connection-annotation
+pass calls this tool once per presented search result's returned
+`profileUrl` as part of fulfilling a discovery request, and that pass
+follows the discovery skill's own bounds and stop rules. Outside those two
+routes, a URL being visible, shortlisted, or under discussion never
+authorizes a call by itself. Never derive a URL from an opaque handle or an
+internal field, and never guess one from a name.
 
 Each call takes exactly one URL. If the user explicitly supplies several
 profiles and asks for team connections for each, make one call per profile
@@ -87,7 +94,8 @@ Require:
 - `status: complete | candidate_profile_unavailable | insufficient_data`;
 - a `candidate` object or null, `companyName`, and `generatedAt`;
 - `connections` with at most 3 members, each carrying `displayName`,
-  `department`, `roleCategory`, `connectionStrength: moderate | strong`,
+  `department`, `roleCategory`,
+  `connectionStrength: strong | moderate | weak` (`weak` from `0.51.0`),
   and 1–8 `overlaps` that each carry `kind` and `detail`; and
 - separate `methodology`, `notices`, `provenance`, and `rosterCoverage`
   fields.
@@ -106,9 +114,11 @@ instead of reconstructing or completing the result.
   Team DNA or company intelligence first, then retrying — and never fill
   the gap by naming team members from memory.
 - `complete` with empty `connections`: report that no roster member shared
-  an employer, school, or overlapping tenure with this candidate across
-  the `rosterCoverage.comparedMemberCount` members compared. That is an
-  absence of stored shared history, not proof that no relationship exists.
+  any professional history or background affinity with this candidate
+  across the `rosterCoverage.comparedMemberCount` members compared. That
+  is an absence of stored shared evidence, not proof that no relationship
+  exists. On a `0.50.0` server this is the common result whenever concrete
+  shared history is absent.
 
 ## Present the connections
 
@@ -119,15 +129,29 @@ department, role category, location, `connectionStrength`, and each
 overlap's `detail` with its `overlapMonths` when present. Do not add
 numeric scores or reorder members.
 
-Overlap kinds split into two groups. Concrete shared history —
-`shared_employer`, `shared_employer_overlapping_tenure`, `shared_school`,
-and `worked_together_at_client_company` — is what names a member; every
-returned member has at least one. Similarity signals —
-`same_current_title`, `same_location`, and `same_seniority` — only
-strengthen an existing match; present them as secondary context, never as
-a connection on their own. If the user asked for the "most similar" team
-member and no one shares concrete history, explain that Pluto names a
-member only when concrete shared history exists.
+Overlap kinds split into three groups, and `connectionStrength` labels the
+evidence honestly.
+
+Concrete shared history — `shared_employer`,
+`shared_employer_overlapping_tenure`, `shared_school`, and
+`worked_together_at_client_company` — is what makes a connection `strong`
+or `moderate`. Up to three members with concrete history are named; state
+their shared facts plainly.
+
+Background affinities — `same_discipline`, `same_school_group`,
+`same_metro_area`, `same_current_title`, `same_location`, and
+`same_seniority` — strengthen a concrete match as secondary context. From
+`0.51.0`, when no roster member shares concrete history, affinities alone
+name the single best member with `connectionStrength: weak`; present that
+member as light common ground for an opener, never as an established
+relationship, and relay the returned affinities-only notice.
+
+A `suggested_contact` overlap (from `0.51.0`) marks the best-available
+outreach anchor when nothing overlaps at all. The person is chosen from
+the roster alone and is identical for every candidate, so repeated lookups
+cannot enumerate the roster. Present them as a suggestion — who could own
+the outreach — never as a connection to this candidate, and relay the
+returned suggestion notice.
 
 Frame every overlap as a warm-introduction or outreach-personalization
 angle: who could provide context on the candidate, or which shared
