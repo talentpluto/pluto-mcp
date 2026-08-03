@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto LinkedIn profile enrichment"
+  short_description: "Get full profiles for supplied LinkedIn URLs"
+  default_prompt: "Use $linkedin-enrichment when I explicitly supply up to 100 LinkedIn profile URLs, or select returned candidates with visible LinkedIn URLs, and ask for full public profile details. Start one async enrichment job with only the unique URLs in my order, keep the jobId private, poll no faster than retryAfterMs until completed or failed, present each enriched or not-found profile in input order from returned fields only, never name or infer the underlying source, and never return emails or phone numbers."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated TalentPluto recruiting MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"

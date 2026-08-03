@@ -1,20 +1,25 @@
 ---
 name: candidate-interest
-description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get work emails for one to 500 candidates, including directly supplied LinkedIn profile URLs. Routes enrichment through the async start-and-poll contract when available, preserves opaque handles, and does not create outbound campaigns.
+description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get available work and personal emails for one to 500 candidates, including directly supplied LinkedIn profile URLs. Routes enrichment through the async start-and-poll contract when available, preserves opaque handles, and does not create outbound campaigns.
 ---
 
 # Candidate interest and email enrichment
 
 Use this skill only when the user clearly asks Pluto to act on one in-network
-candidate, get work emails for one to 500 candidates returned by
+candidate, get available emails for one to 500 candidates returned by
 `discover_candidates`, or enrich one to 500 LinkedIn profile URLs the user
-directly supplied for work emails. Selection or URL submission alone is not
+directly supplied for email addresses. Selection or URL submission alone is not
 authorization. A candidate being highly ranked, shortlisted, described as
 promising, or opened for discussion never authorizes a tool call.
 
 If the user asks to draft, review, create, start, or launch an email campaign
 for selected external candidates, use the `outbound-campaign` skill instead.
 Do not enrich emails first unless the user separately asks for the addresses.
+
+If the user asks for full public profile details for supplied LinkedIn
+profile URLs or selected candidates, rather than contact information, use the
+`linkedin-enrichment` skill instead. Email enrichment returns contact emails,
+not profiles.
 
 If the candidate choice or requested action is ambiguous, ask one focused
 question before calling a tool.
@@ -36,7 +41,7 @@ profile URL, recommendation, match status, or lane.
   `get_candidate_email_enrichment_job`. Use the synchronous
   `enrich_candidate_email` compatibility path only when the async start tool
   is absent. Run either route only when the user explicitly asks for contact
-  information or available work emails.
+  information or available emails.
 
 If a discovery result's `networkStatus` is missing, report a server/plugin
 contract mismatch. Do not guess an action-specific route or try both tools.
@@ -47,7 +52,7 @@ select a role, add anyone to TalentPluto, create a campaign, send outreach,
 start onboarding, or contact a candidate.
 
 A direct batch of one to 500 LinkedIn profile URLs can use the same
-email-enrichment route when the user explicitly asks for work emails. Do not
+email-enrichment route when the user explicitly asks for email addresses. Do not
 run discovery first and do not invent a `networkStatus`, `candidateRef`, or
 `selectionToken`. The server resolves the profile identity and safely blocks an
 unverifiable profile; in-network status does not itself block email enrichment.
@@ -161,8 +166,12 @@ with only that exact unchanged `jobId`. Wait at least the returned
 `retryAfterMs` before each poll. Handle each poll result exactly:
 
 - `queued` or `running`: require `requested` to match the input length and an
-  integer `retryAfterMs` within the inspected live schema's bounds. If attempts
-  remain, wait at least that long and poll the same job again. At the cap, stop
+  integer `retryAfterMs` within the inspected live schema's bounds. The
+  response may also carry bounded progress counters across the server's
+  internal lookup, primary lookup and validation, secondary fallback and
+  validation, and finalization work; relay progress only in those neutral
+  terms and never echo a raw phase identifier, which can hint at a provider.
+  If attempts remain, wait at least that long and poll the same job again. At the cap, stop
   and say the job is still processing without exposing its ID. Preserve the
   same private `jobId`; only an explicit user request to continue may start a
   new bounded polling pass with that unchanged ID.
@@ -191,13 +200,18 @@ Completed work emails can coexist with safe unavailable or blocked sibling
 outcomes; never discard completed results or launch a replacement call
 automatically.
 
-A newly stored candidate contact that returns one or more work emails uses one
-shared organization credit for that candidate, regardless of the number of
-work emails returned. Reusing the exact disclosure from a prior successful
-enrichment uses zero new credits. Use the returned per-item and summary
-accounting only to validate the result contract; never infer it from the
-outcome or include it in the normal user-facing response unless the user asks
-about credits.
+A successful disclosure uses one shared organization credit for that
+candidate, regardless of how many emails it returns, unless the operation was
+first admitted while the candidate's TalentPluto profile is accepted_partial
+or accepted_complete, in which case it uses zero; this is independent of
+whether the email came from authorized internal storage or an external
+lookup. The zero-or-one price is pinned when the candidate operation is first
+admitted and stays unchanged for exact retries. Reusing the exact disclosure
+from a prior successful enrichment uses zero new credits, and a confirmed
+no-email outcome uses zero. Use the returned per-item and summary accounting
+only to validate the result contract; never infer it from the outcome or
+include it in the normal user-facing response unless the user asks about
+credits.
 
 Do not automatically retry an async start call, a legacy enrichment call, or
 an ambiguous terminal result. The first call may have queued provider work or
@@ -222,27 +236,39 @@ counts to agree with the item statuses:
 - `emailsReturned` equals the total number of entries across every successful
   item’s `emails` array;
 - `summary.creditsUsed` equals the sum of present item `creditsUsed` values and
-  therefore counts candidate-level lookups, not returned emails; and
-- the three verification counts sum to `emailsReturned`.
+  therefore counts candidate-level lookups, not returned emails;
+- the three provider-status counts sum to `emailsReturned`; and
+- the three verification counts sum to at most `emailsReturned`: an entry
+  whose validation was not performed is counted in none of them.
 
 Handle each candidate-correlated item exactly:
 
 - `external_contact` requires `creditsUsed: 0 | 1`, a fresh
   `selectionToken`, and a non-empty `emails` array. The credit value describes
-  the candidate lookup, not the email count: `1` for a newly stored contact or
-  `0` when reusing the exact disclosure from prior successful enrichment.
-  Every entry is explicitly typed as `work` and has its own
-  `emailVerification` object whose provider is `email_validation` and result is
-  `passed`, `failed`, or `unavailable`. Never disclose personal, unknown-type,
-  TalentPluto account, or login emails. Keep the fresh token privately paired
-  with the returned `candidateRef`; never display it. An out-of-network result
-  can continue to `create_outbound_campaign`, but successful enrichment never
-  makes an in-network candidate campaign-eligible. The `external_contact`
-  status names the contact outcome, not the candidate's network status. Return
-  every work email for all three verification results. Failed or unavailable
-  verification never suppresses or erases a committed work email. Keep the
-  source's separate `emailStatus` classification distinct from this
-  verification result.
+  the candidate lookup, not the email count: `1` when the lookup incurs the
+  candidate email credit, or `0` for an operation first admitted while the
+  candidate's TalentPluto profile is accepted_partial or accepted_complete,
+  an enrichment-issued handle replay, or a duplicate item. Every entry is
+  explicitly typed `work` or `personal` and carries its own `providerStatus`
+  of `valid`, `risky`, or `unknown` — the contact source's classification,
+  not send-safety verification — plus, when validation ran, an
+  `emailVerification` object whose provider is `email_validation` and result
+  is `passed`, `failed`, or `unavailable`. The server excludes unknown-type
+  and malformed addresses; work and personal emails are both intentional
+  output. An account/login email can appear only after the server's final
+  account read reconfirms the exact candidate identity: it arrives with
+  `providerStatus: unknown`, its `emailType` is a personal-domain heuristic
+  rather than a provider-grade classification, and campaign delivery never
+  uses it. Keep the fresh token privately paired with the returned
+  `candidateRef`; never display it. An out-of-network result can continue to
+  `create_outbound_campaign`, which applies its own server-side
+  address-eligibility policy; successful enrichment never makes an in-network
+  candidate campaign-eligible. The `external_contact` status names the
+  contact outcome, not the candidate's network status. Return every returned
+  email for every verification outcome: failed, unavailable, or absent
+  validation never suppresses or erases a committed email. Keep
+  `providerStatus` (and its legacy `emailStatus` normalization) distinct from
+  the independent verification result.
 - `contact_unavailable` requires `creditsUsed: 0` and no email. Relay its safe
   message without inferring, synthesizing, revealing an older address, or
   retrying.
@@ -251,13 +277,13 @@ Handle each candidate-correlated item exactly:
   about credits. Otherwise relay only its safe message, without discarding
   successful sibling results.
 
-Always return a Markdown table, including for one candidate with one work
-email. Use one row per returned work email, repeat the candidate fields when
-there are multiple emails, and preserve candidate and email order:
+Always return a Markdown table, including for one candidate with one
+returned email. Use one row per returned email, repeat the candidate fields
+when there are multiple emails, and preserve candidate and email order:
 
 ```markdown
-| LinkedIn URL | Name | Email | Verification or result |
-| --- | --- | --- | --- |
+| LinkedIn URL | Name | Email | Type | Provider status | Verification or result |
+| --- | --- | --- | --- | --- | --- |
 ```
 
 For a successful item, use the returned candidate's `displayName` and
@@ -267,23 +293,26 @@ a direct item, use the supplied normalized LinkedIn URL. Never derive a name or
 URL from an opaque candidate reference. If a blocked or unavailable direct
 item never resolved a name, use `Unavailable`; do not guess.
 
-Show every returned work email even when verification failed or was
-unavailable. Label the exact `passed`, `failed`, or `unavailable` result. Use
-the bounded verification `reason`, `status`, or `subStatus` only when it
-materially clarifies a failed or unavailable result; do not reinterpret it or
-claim deliverability beyond the returned fields. Include unavailable and
-blocked candidates in the table with an empty email cell and the safe returned
-message in `Verification or result`, without discarding successful siblings.
-Do not show other refreshed candidate-summary fields, email type,
-source-reported email status, phone availability, storage details, credit
-usage, or outreach details unless the user specifically asks for an allowed
-field.
+Show every returned email even when verification failed, was unavailable, or
+was not performed. Fill `Type` with the returned `emailType` and
+`Provider status` with the returned `providerStatus`. In
+`Verification or result`, label the exact `passed`, `failed`, or
+`unavailable` result, or `not verified` when the entry has no verification
+object. Use the bounded verification `reason`, `status`, or `subStatus` only
+when it materially clarifies a failed or unavailable result; do not
+reinterpret it or claim deliverability beyond the returned fields. Include
+unavailable and blocked candidates in the table with empty email, type, and
+provider cells and the safe returned message in `Verification or result`,
+without discarding successful siblings. Do not show other refreshed
+candidate-summary fields, the legacy source-status normalization, phone
+availability, storage details, credit usage, or outreach details unless the
+user specifically asks for an allowed field.
 
 Immediately after the table, always provide a complete UTF-8 CSV export named
 `candidate-email-enrichment.csv` with this exact header:
 
 ```csv
-linkedin_url,name,email,verification_or_result
+linkedin_url,name,email,email_type,provider_status,verification_or_result
 ```
 
 The CSV must contain one row for every table row in the same order and use the
