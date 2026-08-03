@@ -15,9 +15,11 @@ work with the retrieved leads directly in the conversation.
 - Find and verify available work and personal emails for selected candidates
   or directly supplied LinkedIn profiles.
 - Pull full public profile details for LinkedIn profile URLs you supply.
-- See which of your team members share concrete professional history —
-  shared employers, overlapping tenure, or shared schools — with a candidate
-  whose LinkedIn profile URL you supply, as warm-introduction context.
+- See which of your team members are best connected to a candidate whose
+  LinkedIn profile URL you supply — concrete shared history such as shared
+  employers, overlapping tenure, or shared schools when it exists, lighter
+  background common ground or a suggested team contact when it does not —
+  as warm-introduction context.
 - Review and create an email campaign for selected out-of-network candidates,
   using either TalentPluto-managed delivery or one connected Gmail inbox.
 - Cancel an existing outbound campaign after confirming the exact one,
@@ -135,9 +137,10 @@ and ask me to confirm the final review.
   information.
 - Team-connection lookups compare one supplied profile against stored team
   roster evidence and use no candidate credits. At most three team members
-  are named, each with only the specific shared-history facts; similarity
-  alone never names a member, and no member contact data or profile URLs are
-  returned.
+  are named with their specific shared-history facts; background common
+  ground alone names a single member as a light connection, and when nothing
+  overlaps one stable team contact is offered as a suggestion. No member
+  contact data or profile URLs are returned.
 - Connected-inbox campaigns create the first Gmail draft after copy generation
   and later drafts one at a time on cumulative days measured from campaign
   creation. Each draft is sent manually from Gmail.
