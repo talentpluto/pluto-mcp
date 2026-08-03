@@ -18,6 +18,9 @@ Keep neighboring requests on their own routes:
   never returns emails, and phone numbers are never requested.
 - One URL plus "find more people like this person" is a discovery request;
   use the `candidate-discovery` skill's reference-profile search.
+- One URL plus "who on my team knows or is most connected to this person"
+  is a team-connection request; use the `team-connection` skill. Profile
+  enrichment returns full profiles, not shared-history matches.
 - Campaigns and outreach use the `outbound-campaign` skill. Profile
   enrichment returns no `candidateRef` or `selectionToken` and never creates
   campaign eligibility, pipeline state, or interest.
