@@ -12,8 +12,9 @@ work with the retrieved leads directly in the conversation.
 - Get a directional, privacy-protected US talent-market snapshot.
 - Ask supported questions about a selected in-network candidate's recorded
   preferences or availability.
-- Find and verify work emails for selected candidates or directly supplied
-  LinkedIn profiles.
+- Find and verify available work and personal emails for selected candidates
+  or directly supplied LinkedIn profiles.
+- Pull full public profile details for LinkedIn profile URLs you supply.
 - Review and create an email campaign for selected out-of-network candidates,
   using either TalentPluto-managed delivery or one connected Gmail inbox.
 - Express interest in an in-network candidate for an active role.
@@ -84,6 +85,9 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 @pluto Find candidates for this role:
 [paste the job description]
 
+@pluto Get the full public profiles for these LinkedIn profile URLs:
+[paste the URLs]
+
 @pluto Give me a directional US market snapshot for engineering talent.
 
 @pluto How many Pluto credits does my organization have left?
@@ -92,7 +96,7 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 After a search, select the relevant candidates before asking Pluto to continue:
 
 ```text
-@pluto Get and verify the available work emails for these candidates.
+@pluto Get and verify the available emails for these candidates.
 
 @pluto Create a campaign for these candidates. Prefill the basics, let me
 choose whether to write exact shared copy, provide generation instructions, or
@@ -109,10 +113,16 @@ and ask me to confirm the final review.
   credit. Out-of-network search results are free.
 - Email enrichment starts one asynchronous job for 1–500 explicitly selected
   candidates or directly supplied LinkedIn profiles and polls it to completion.
-  The legacy synchronous fallback accepts at most 100. Only work emails are
-  returned.
-- A new successful work-email lookup can use one credit for that candidate.
-  Reusing an existing successful lookup does not use another lookup credit.
+  The legacy synchronous fallback accepts at most 100. Returned addresses are
+  work or personal emails, each labeled with its type, source status, and
+  independent verification result.
+- A successful email lookup can use one credit for that candidate. It uses
+  none when the candidate already has an accepted TalentPluto profile, when
+  reusing an earlier successful lookup, or when no email is found.
+- LinkedIn profile enrichment runs one asynchronous job for 1–100 supplied
+  profile URLs, reuses a stored profile fetched within the last 3 months, and
+  uses no candidate credits. It returns public profile details, not contact
+  information.
 - Connected-inbox campaigns create the first Gmail draft after copy generation
   and later drafts one at a time on cumulative days measured from campaign
   creation. Each draft is sent manually from Gmail.

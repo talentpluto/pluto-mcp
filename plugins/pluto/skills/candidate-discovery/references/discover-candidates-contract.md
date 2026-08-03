@@ -1,8 +1,10 @@
 # Discover candidates contract
 
-Aligned to server contract `0.43.0`. When the live server reports a newer
+Aligned to server contract `0.48.0`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
-and schema field descriptions on any conflict.
+and schema field descriptions on any conflict. Optional assessment fields
+added after `0.43.0` may be absent on an older deployed server; treat every
+rule about them as conditional on the field being returned.
 
 ## Purpose
 
@@ -286,8 +288,11 @@ The completed poll result uses
 - `assessment`: interpreted request, source status, whether bounded client
   context contributed, and the honesty channel — `roster` (shown and
   estimated external total), `judged` (strong, plausible, rejected),
-  `coverage` (crossVerified and independentlyAdded), `searchLanes`, and
-  `unenforcedRequestCriteria`;
+  `coverage` (crossVerified and independentlyAdded), `searchLanes`,
+  `unenforcedRequestCriteria`, and, when returned, `feasibility` (pre-flight
+  matching count with `basis` exact or estimate and an optional
+  `limitingConstraint`), `searchStrategy` (bounded automatic self-correction
+  rounds), and `disambiguation` (same-name company clarification);
 - `limitations`;
 - `credits`;
 - `iteration`; and
@@ -339,6 +344,25 @@ supported Team DNA connections in the explanation. Present Related company
 profiles and Needs verification separately if those compatibility sections are
 populated. Surface the source-ranked evidence limitation once and include all
 returned verification questions.
+
+When `assessment.feasibility` is returned, set expectations once:
+`estimatedMatching` is how many public profiles matched every stated
+criterion in a pre-flight count — an exact index count when `basis` is
+`exact`, otherwise an estimate — and `limitingConstraint` names the hardest
+stated requirement when identified. A small exact count above a full roster
+means the stated world is small, not that the search failed. When
+`assessment.searchStrategy` is returned, mention at most once that the
+search corrected itself automatically, using only the returned round fields;
+its absence means the first plan needed no correction.
+
+When `assessment.disambiguation` is returned, two or more companies share
+the exact requested name and nothing in the request says which one is meant.
+External retrieval was skipped instead of guessing. Present each returned
+company option — name, domain, headcount range, and industries — ask the
+user which company they meant, and then issue a new search (a fresh request
+without `searchId`) whose request text includes the chosen company's website
+domain. Never pick silently and never present that response as an empty or
+failed result.
 
 Keep job IDs, search IDs, candidate references, selection tokens, internal
 scores, provider names, private context, `networkStatus`, and source membership

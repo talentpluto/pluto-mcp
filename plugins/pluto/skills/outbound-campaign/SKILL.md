@@ -48,9 +48,11 @@ selected audience. Validate its size, unique handle pairs, known network
 eligibility, and one-role boundary. Resolve a real problem before Stage 1, but
 do not narrate passing checks, expose handles, or run a metered lookup. When
 the user intends to create the campaign, also confirm that the live catalog
-exposes `create_outbound_campaign`. If it is missing or unusable, follow the
-`connection-recovery` skill before Stage 1 and resume only when recovery
-succeeds.
+exposes `create_outbound_campaign`. When the live catalog also exposes
+`get_outbound_campaign_job`, creation is asynchronous: require that poll tool
+before the creation call and expect a `queued` result. If a required tool is
+missing or unusable, follow the `connection-recovery` skill before Stage 1
+and resume only when recovery succeeds.
 
 ### Stage 1 of 4: Confirm the basics
 
@@ -314,7 +316,22 @@ Handle the result narrowly:
   When no options exist, relay the returned connection guidance and let the
   user connect Gmail or switch to TalentPluto-managed delivery. Switching
   routes requires a fresh request ID and a new complete review.
-- **`success`:** Repeat the returned `message` exactly. Do not add a
+- **`queued`:** The reviewed campaign was accepted for asynchronous creation.
+  Keep the returned `jobId` private, wait at least the returned
+  `retryAfterMs`, and poll `get_outbound_campaign_job` with that exact
+  unchanged `jobId` — at most 20 calls for one user-authorized pass,
+  including transport retries — repeating while status is `queued` or
+  `running`. On `completed`, repeat the returned message exactly; completion
+  means the campaign and its eligible enrollments exist and personalized
+  copy generation was queued in the background, not that copy generation,
+  Gmail draft creation, or delivery finished. On `failed`, relay only the
+  safe returned message and do not restart creation. At the poll cap, say
+  creation is still processing without exposing the job ID; only an explicit
+  user request to continue may start a new bounded polling pass with the
+  same unchanged `jobId`. Never call `create_outbound_campaign` again to
+  check on a queued campaign.
+- **`success`:** A compatibility runtime may return this terminal result
+  directly. Repeat the returned `message` exactly. Do not add a
   reconstructed recap or claim that any email was sent, scheduled, delivered,
   or internally confirmed.
 - **Blocked or error:** Relay the safe reason and do not claim success.

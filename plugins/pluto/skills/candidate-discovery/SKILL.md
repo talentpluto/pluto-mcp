@@ -402,6 +402,25 @@ Disclose the honesty channel once each, when present:
   shown and the estimated external total when known, phrased as an estimate
   of how many more may be available — then ask whether to pull the next
   page, a specific number, or everything.
+- `assessment.feasibility`: state once how many public profiles matched
+  every stated criterion in the pre-flight count — an exact index count when
+  `basis` is `exact`, otherwise an estimate — and name the returned
+  `limitingConstraint` when present (for example: the tenure requirement is
+  the main limiter). A small exact count above a full roster means the
+  stated world is small, not that the search failed.
+- `assessment.searchStrategy`: mention at most once that the search
+  corrected itself automatically (for example: one correction round after a
+  judged sample showed the first pass missing the request). Use only the
+  returned round fields and never expose internal plan details beyond them.
+
+If the completed assessment returns `disambiguation`, the search stopped
+before external retrieval because two or more companies share the exact
+requested name. Present each returned company option — name, domain,
+headcount range, and industries — and ask the user which company they meant.
+Then run a new search (a fresh request without `searchId`) whose request
+text includes the chosen company's website domain. Never choose silently,
+never treat the clarification as a failed or empty search, and never invent
+companies beyond the returned options.
 
 If `alternateQueryMatches` is returned, render it as its own short section
 after the main table, introduced with its returned query text; never blend
@@ -429,8 +448,8 @@ mention a provider or vendor by name in the answer, evidence rationale,
 limitation, or source description, even when internal metadata contains it.
 
 Do not automatically browse for replacements, weaken the search, enrich
-contacts, express interest, or start outbound work. Those require a new user
-request and the relevant Pluto skill.
+contacts or profiles, express interest, or start outbound work. Those require
+a new user request and the relevant Pluto skill.
 
 ## More results and refinements
 
