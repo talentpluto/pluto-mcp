@@ -139,6 +139,12 @@ Treat “write it for me,” “draft it,” or “you decide” as choice 3 unl
 user asks for recipient-specific personalization. Treat “use this prompt,”
 “generate for each person,” or “personalize it” as choice 2.
 
+Candidate-facing copy asks only questions a human recruiter would naturally
+ask. When search evidence left a criterion unverified, phrase it as a normal
+conversational question about the person's experience; never enumerate
+verification checklists, cite tiers or evidence labels, or reference any
+search, judging, or scoring process in an email.
+
 Do not repeat the mode question for every email. Apply the selected approach to
 the whole sequence by default. If the user asks to mix approaches across
 emails, subjects, or bodies, support that as an advanced edit.

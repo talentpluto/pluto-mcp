@@ -60,6 +60,15 @@ answer-format wording. Preserve every required or preferred clause, numeric
 threshold, exclusion, current-versus-previous distinction, and grouped
 AND/OR/NOT meaning.
 
+Never embellish the request. Do not add a seniority, skill, location,
+industry, or any other criterion the user did not state — not in the request
+text, not in the alternate query, and not in the presented interpretation.
+When a bare broad role noun ("engineers", "sales people", "designers")
+carries no scope at all and the surrounding conversation does not narrow it,
+ask one short scoping question (function or seniority) before searching;
+when context does narrow it, proceed and state the interpretation you used
+once when presenting.
+
 For a recognizable pasted job description, pass:
 
 ```yaml
@@ -330,8 +339,11 @@ In `candidate_pool`, `bestMatches` profiles are retrieval leads that Pluto's
 server-side judge may additionally tier against the request. When cards carry
 `tier` and `assessment.judged` is present, the roster arrives strong tier
 first with rejected leads already removed: preserve that order, never
-re-tier, cite `judgedEvidence` entries when explaining fit, and treat
-`basis: unverifiable` evidence as a screening question rather than a failure.
+re-tier, and never re-verify a judged tier by re-deriving fit from the raw
+fields — the server already judged every card against the request once,
+uniformly. Cite `judgedEvidence` entries when explaining fit, and treat
+`basis: unverifiable` evidence as a screening question rather than a
+failure.
 A `plausible` tier is not a verified match. When no judged fields are
 returned, the roster shipped unjudged; treat every profile as a
 `source_ranked` retrieval lead.
@@ -371,22 +383,27 @@ For `bestMatches`, use:
 | --- | --- | --- | --- |
 ```
 
-Link each name only to the returned `profileUrl`. Build the rationale from the
-recruiter request, explicit returned candidate fields, `judgedEvidence` when
-present, and an evidence-backed Team DNA connection when available. When
+Link each name only to the returned `profileUrl`; the linked URL is
+mandatory for every presented candidate — a person without a returned
+`profileUrl` is not presentable. Write a specific rationale for each person
+from the recruiter request, that person's explicit returned fields,
+`judgedEvidence` when present, and an evidence-backed Team DNA connection
+when available; never reuse one generic sentence across rows. When
 `assessment.judged` is present, state the rejected count once (for example:
 18 retrieval leads did not match the request and were removed) instead of the
 source-ranked caveat; when it is absent, state once that the roster contains
 source-ranked leads rather than verified matches. Do not imply complete
 support either way.
 
-Disclose the honesty channel once each, when present:
+Fold the honesty channel into one confident footnote after the table — a
+single short paragraph, one clause per item, only the items actually
+returned and material. Lead with what the search did well; disclose limits
+plainly without hedging every row. Draw the clauses from:
 
-- `assessment.coverage`: say that `crossVerified` people were confirmed by
-  two independent data sources and `independentlyAdded` people were found
-  that a single source would have missed. A card-level `crossVerified` flag
-  is a strength worth one mention; its absence means single-source, never
-  unverified.
+- `assessment.coverage`: one clause — how many people two independent
+  sources confirmed and how many a single source would have missed. A
+  card-level `crossVerified` flag is a strength worth one mention; its
+  absence means single-source, never unverified.
 - `assessment.searchLanes`: Pluto also ran those labeled sub-searches
   (including an automatic broadened follow-up when the first pass
   under-delivered). Keep everyone in one roster, mention the lanes once when
@@ -410,13 +427,17 @@ Disclose the honesty channel once each, when present:
   stated world is small, not that the search failed.
 - `assessment.searchStrategy`: mention at most once that the search
   corrected itself automatically (for example: one correction round after a
-  judged sample showed the first pass missing the request). Use only the
-  returned round fields and never expose internal plan details beyond them.
+  judged sample showed the first pass missing the request). Rounds with
+  trigger `agentic` mean the search ran adaptively end to end; say that at
+  most once in plain words. Use only the returned round fields and never
+  expose internal plan details, tool names, or step transcripts.
 
-If the completed assessment returns `disambiguation`, the search stopped
-before external retrieval because two or more companies share the exact
-requested name. Present each returned company option — name, domain,
-headcount range, and industries — and ask the user which company they meant.
+If the completed assessment returns `disambiguation`, the search stopped to
+ask instead of guessing — usually because two or more companies share the
+exact requested name, occasionally with a more specific returned `reason`.
+Relay the returned reason, present each returned company option — name,
+domain, headcount range, and industries when present — and ask the user
+which company they meant.
 Then run a new search (a fresh request without `searchId`) whose request
 text includes the chosen company's website domain. Never choose silently,
 never treat the clarification as a failed or empty search, and never invent
@@ -431,6 +452,10 @@ under `Related company profiles`, state the returned changed criterion once,
 and preserve their order. If `verificationCandidates` is populated, render it
 separately under `Needs verification` with every returned `questionsToAsk`
 item. Never move a profile between returned sections.
+
+If the user asks about cost, explain credits in one line: one organization
+credit per unique candidate this search returned, wherever that person was
+found; continuation pages never re-bill someone already shown.
 
 Surface material `limitations` once. Keep `candidateRef`, `selectionToken`,
 `jobId`, `searchId`, private context, internal scores, and provider names

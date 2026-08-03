@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `0.48.0`. When the live server reports a newer
+Aligned to server contract `0.49.0`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict. Optional assessment fields
 added after `0.43.0` may be absent on an older deployed server; treat every
@@ -102,6 +102,11 @@ pages report concrete roster numbers in `assessment.roster` (people shown on
 the page and the estimated external total when known); notices may restate
 the estimate. Relay those numbers when the user weighs asking for more, and
 never inflate a target beyond the user's stated volume.
+
+`credits.used` bills one organization credit per unique candidate the search
+returns, wherever that person was found. Continuation pages of the same
+search never re-bill someone already shown. If the user asks what a search
+cost, explain it in exactly those terms; do not invent per-source pricing.
 
 The direct `request` remains authoritative. Preserve every criterion,
 threshold, preference, exclusion, temporal distinction, and Boolean group.
@@ -353,11 +358,15 @@ stated requirement when identified. A small exact count above a full roster
 means the stated world is small, not that the search failed. When
 `assessment.searchStrategy` is returned, mention at most once that the
 search corrected itself automatically, using only the returned round fields;
-its absence means the first plan needed no correction.
+its absence means the first plan needed no correction. Rounds with trigger
+`agentic` mean an autonomous server-side search agent drove the retrieval
+end to end; if mentioned at all, say the search was conducted adaptively —
+never expose tool names or internal step details.
 
-When `assessment.disambiguation` is returned, two or more companies share
-the exact requested name and nothing in the request says which one is meant.
-External retrieval was skipped instead of guessing. Present each returned
+When `assessment.disambiguation` is returned, the search stopped to ask
+instead of guessing — usually because two or more companies share the exact
+requested name, and occasionally with a more specific returned `reason` from
+the search itself. Relay the returned reason. Present each returned
 company option — name, domain, headcount range, and industries — ask the
 user which company they meant, and then issue a new search (a fresh request
 without `searchId`) whose request text includes the chosen company's website
