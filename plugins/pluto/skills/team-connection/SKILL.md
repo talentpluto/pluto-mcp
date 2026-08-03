@@ -62,10 +62,14 @@ search.
 
 Call only after the user explicitly supplies the candidate's LinkedIn
 profile URL and clearly asks who on their team knows, overlaps with, or is
-most connected or similar to that candidate. A URL being visible,
-shortlisted, or under discussion never authorizes a call by itself. Never
-derive a URL from an opaque handle or an internal field, and never guess
-one from a name.
+most connected or similar to that candidate. One other route is
+authorized: the `candidate-discovery` skill's bounded connection-annotation
+pass calls this tool once per presented search result's returned
+`profileUrl` as part of fulfilling a discovery request, and that pass
+follows the discovery skill's own bounds and stop rules. Outside those two
+routes, a URL being visible, shortlisted, or under discussion never
+authorizes a call by itself. Never derive a URL from an opaque handle or an
+internal field, and never guess one from a name.
 
 Each call takes exactly one URL. If the user explicitly supplies several
 profiles and asks for team connections for each, make one call per profile
