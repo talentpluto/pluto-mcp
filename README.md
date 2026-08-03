@@ -15,6 +15,9 @@ work with the retrieved leads directly in the conversation.
 - Find and verify available work and personal emails for selected candidates
   or directly supplied LinkedIn profiles.
 - Pull full public profile details for LinkedIn profile URLs you supply.
+- See which of your team members share concrete professional history —
+  shared employers, overlapping tenure, or shared schools — with a candidate
+  whose LinkedIn profile URL you supply, as warm-introduction context.
 - Review and create an email campaign for selected out-of-network candidates,
   using either TalentPluto-managed delivery or one connected Gmail inbox.
 - Express interest in an in-network candidate for an active role.
@@ -88,6 +91,9 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 @pluto Get the full public profiles for these LinkedIn profile URLs:
 [paste the URLs]
 
+@pluto Who on my team has the strongest connection to this candidate?
+[paste one LinkedIn profile URL]
+
 @pluto Give me a directional US market snapshot for engineering talent.
 
 @pluto How many Pluto credits does my organization have left?
@@ -123,6 +129,11 @@ and ask me to confirm the final review.
   profile URLs, reuses a stored profile fetched within the last 3 months, and
   uses no candidate credits. It returns public profile details, not contact
   information.
+- Team-connection lookups compare one supplied profile against stored team
+  roster evidence and use no candidate credits. At most three team members
+  are named, each with only the specific shared-history facts; similarity
+  alone never names a member, and no member contact data or profile URLs are
+  returned.
 - Connected-inbox campaigns create the first Gmail draft after copy generation
   and later drafts one at a time on cumulative days measured from campaign
   creation. Each draft is sent manually from Gmail.
