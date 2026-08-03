@@ -17,6 +17,8 @@ work with the retrieved leads directly in the conversation.
 - Pull full public profile details for LinkedIn profile URLs you supply.
 - Review and create an email campaign for selected out-of-network candidates,
   using either TalentPluto-managed delivery or one connected Gmail inbox.
+- Cancel an existing outbound campaign after confirming the exact one,
+  stopping its remaining scheduled emails.
 - Express interest in an in-network candidate for an active role.
 - Check your organization's shared Pluto credit balance.
 
@@ -104,6 +106,8 @@ have Pluto draft the emails for me, then show the complete editable sequence
 and ask me to confirm the final review.
 
 @pluto Express interest in this candidate for the Senior Engineer role.
+
+@pluto Cancel my outbound campaign for the payments role.
 ```
 
 ## Credits and privacy
@@ -126,6 +130,10 @@ and ask me to confirm the final review.
 - Connected-inbox campaigns create the first Gmail draft after copy generation
   and later drafts one at a time on cumulative days measured from campaign
   creation. Each draft is sent manually from Gmail.
+- Cancelling a campaign permanently stops its remaining scheduled emails and
+  future Gmail draft preparation. It does not recall emails already sent or
+  remove drafts already created in Gmail, and the campaign stays visible in
+  Pluto as Stopped.
 - Market snapshots use aggregated data and omit metrics that do not meet
   privacy thresholds.
 - Private candidate questions return a bounded answer, not the candidate's raw

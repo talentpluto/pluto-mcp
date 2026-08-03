@@ -1,6 +1,6 @@
 ---
 name: outbound-campaign
-description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected out-of-network candidates. Prefills the campaign basics, offers three simple writing paths, keeps the full sequence editable, shows a concise final review, and calls create_outbound_campaign only after explicit confirmation of that exact setup.
+description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected out-of-network candidates, or to cancel or stop an existing outbound campaign. Prefills the campaign basics, offers three simple writing paths, keeps the full sequence editable, shows a concise final review, and calls create_outbound_campaign only after explicit confirmation of that exact setup. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
 ---
 
 # Outbound campaigns
@@ -338,3 +338,61 @@ Handle the result narrowly:
 
 Do not automatically retry a timeout, transport failure, or ambiguous result.
 The first request may have been processed.
+
+## Cancel an existing campaign
+
+Use `cancel_outbound_campaign` only after the user explicitly asks to cancel
+or stop one existing outbound campaign. This is different from abandoning a
+campaign setup that was never created: stopping the four-stage workflow before
+creation needs no tool call, so a "cancel" during setup ends the setup
+conversation instead. Confirm that the live catalog exposes
+`cancel_outbound_campaign` before offering cancellation; when it is missing,
+follow the `connection-recovery` skill and treat the capability as currently
+unavailable rather than substituting another tool.
+
+Cancellation is a list-then-confirm flow, and the listing call cancels
+nothing:
+
+1. **List.** Call the tool without `campaignId` to get the cancellable
+   campaigns as `campaignOptions`. Only draft, active, or paused campaigns
+   qualify; a campaign that already finished cannot be cancelled and never
+   appears. When the user already named a campaign, pass that name as
+   `campaignQuery` to narrow the listing.
+2. **Confirm.** A `needs_campaign` result cancelled nothing. Present each
+   returned option's name, status, and recipient counts — total recipients and
+   recipients already emailed at least once — plus its creation date or next
+   scheduled send when that helps the user tell similar campaigns apart. Ask
+   the user to confirm the one exact campaign, even when only one option
+   matches. Keep every `campaignId` hidden.
+3. **Cancel.** Only after that explicit confirmation, call the tool again with
+   the chosen option's `campaignId`. A valid `campaignId` comes only from this
+   tool's own `campaignOptions`; never accept or invent one from anywhere
+   else.
+
+Before the user confirms, state plainly what cancelling does: it permanently
+stops that campaign. Remaining scheduled emails and future Gmail draft
+preparation are cancelled, and this tool cannot resume or restart the
+campaign. It does not recall emails already sent, does not remove Gmail drafts
+already created in a connected inbox, and does not delete the campaign, which
+stays visible in Pluto Campaigns as Stopped.
+
+Handle the result narrowly:
+
+- **`cancelled`:** Repeat the returned message, name the campaign, and report
+  the returned previous status and affected recipient count. When the result
+  includes `warning`, share that warning with the user verbatim.
+- **`already_cancelled`:** The campaign was already stopped before this
+  request — including when an earlier ambiguous cancel attempt actually
+  landed. Relay the returned message.
+- **Blocked or error:** Relay the safe reason and do not claim the campaign
+  was cancelled.
+
+Report only the returned confirmation without adding campaign or request
+identifiers. Cancel one campaign per confirmed request; repeat the full
+listing and confirmation flow for another. After an ambiguous failure, do not
+claim either outcome; a user-directed retry with the same confirmed campaign
+is safe because a campaign that already stopped returns `already_cancelled`.
+
+The tool requires the same `candidates:outbound` permission as campaign
+creation. The mechanical field mapping lives in
+`references/create-outbound-campaign-contract.md`.
