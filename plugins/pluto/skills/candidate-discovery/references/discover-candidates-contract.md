@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `0.45.0`. When the live server reports a newer
+Aligned to server contract `0.46.0`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict.
 
@@ -102,12 +102,21 @@ the estimate. Relay those numbers when the user weighs asking for more, and
 never inflate a target beyond the user's stated volume.
 
 `assessment.feasibility`, when present, reports a pre-flight count measured
-before retrieval: how many public profiles matched ALL stated criteria
+before retrieval: how many public profiles matched the stated criteria
 (`estimatedMatching`, with `basis` saying whether the count is exact or an
-estimate) and which stated requirement limits the search hardest
-(`limitingConstraint`). When the exact count is small, set expectations once
+estimate — an estimate may be an upper bound when some stated constraints
+could not be pre-counted) and which stated requirement limits the search
+hardest (`limitingConstraint`). When the exact count is small, set expectations once
 when presenting — a full roster near a small exact count means the world is
-small, not that the search failed. `assessment.searchStrategy`, when present,
+small, not that the search failed. `assessment.disambiguation`, when present, means two or more companies share
+the exact requested name and nothing in the request said which one was
+meant. External retrieval was skipped instead of guessing. Present the
+candidate companies (domain, headcount range, industries), ask the user
+which one they meant, then issue a NEW search whose request text includes
+the chosen company's website domain. Never pick silently, and never present
+this response as an empty result — it is a question, not a miss.
+
+`assessment.searchStrategy`, when present,
 lists the automatic self-correction rounds the server ran after observing its
 own first pass (revise_constraints, add_lane, kill_lane, or
 conclude_infeasible, with what fired each round). Mention at most once when

@@ -409,6 +409,13 @@ Disclose the honesty channel once each, when present:
   exact count means the requested world is small, not that the search
   failed; suggest which stated requirement to relax rather than promising
   more volume.
+- `assessment.disambiguation`: two or more companies share the requested
+  name and the request did not say which. Retrieval was skipped instead of
+  guessed. Show the user the candidate companies with their domain,
+  headcount range, and industries, ask which one they meant, then run a
+  NEW search whose request text names the chosen domain (for example:
+  "engineers at David AI (withdavid.ai)"). Never choose silently and never
+  summarize this response as "no results".
 - `assessment.searchStrategy`: the automatic self-correction rounds the
   search ran after observing its own first pass (revising its filter
   vocabulary, adding or removing a search direction, or concluding the
