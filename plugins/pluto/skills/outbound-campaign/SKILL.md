@@ -62,6 +62,14 @@ Start with:
 ### Campaign setup — 1 of 4: Basics
 ```
 
+Derive the campaign's context before asking for it: the client, role, and
+pitch framing usually already exist in the conversation — the search that
+produced these candidates, a selected project, or the user's earlier
+messages. Ask only for what genuinely cannot be inferred, propose an
+editable draft for everything else, and never challenge the request's
+vertical or business ("we usually place X, not Y") — the recruiter knows
+their business; run the campaign they asked for.
+
 Show one compact, editable proposal containing:
 
 - **Campaign name.** Infer a concise name from the role and audience when the
