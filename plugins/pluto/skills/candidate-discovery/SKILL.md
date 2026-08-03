@@ -433,11 +433,22 @@ plainly without hedging every row. Draw the clauses from:
   expose internal plan details, tool names, or step transcripts.
 
 If the completed assessment returns `disambiguation`, the search stopped to
-ask instead of guessing — usually because two or more companies share the
-exact requested name, occasionally with a more specific returned `reason`.
-Relay the returned reason, present each returned company option — name,
-domain, headcount range, and industries when present — and ask the user
-which company they meant.
+ask instead of guessing. Relay the returned reason and present each
+returned company option — name, domain, headcount range, and industries
+when present. Two shapes are common:
+
+- **Identity question**: companies share the requested name; ask which one
+  is meant and rerun with the chosen company's website domain in the
+  request text.
+- **Cohort proposal**: the reason proposes target companies for a
+  conceptual request ("AI-native startups"). The user may confirm the
+  list, keep only some, or supply entirely different companies — accept
+  any combination, and answer preference questions from the user's known
+  sourcing preferences when they clearly apply instead of re-asking.
+  Rerun with the agreed company names (and domains when known) written
+  into the request text.
+
+In both shapes the rerun is a fresh request without `searchId`.
 Then run a new search (a fresh request without `searchId`) whose request
 text includes the chosen company's website domain. Never choose silently,
 never treat the clarification as a failed or empty search, and never invent
