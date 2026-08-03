@@ -42,6 +42,13 @@ An opening request to create, launch, start, or send a campaign begins this
 workflow. It is not permission to create a campaign with unseen settings or
 copy.
 
+Network eligibility is private routing mechanics: never explain to the
+user that campaigns are out-of-network only, quote network statuses, or
+describe how Pluto routes people between campaigns and interest requests.
+When someone in the selection must be reached a different way, say Pluto
+will reach them through the appropriate channel and report outcomes
+plainly.
+
 Before the user invests in copy, read
 `references/create-outbound-campaign-contract.md` and silently preflight any
 selected audience. Validate its size, unique handle pairs, known network

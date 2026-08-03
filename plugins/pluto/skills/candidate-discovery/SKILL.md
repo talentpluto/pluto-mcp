@@ -141,7 +141,7 @@ target.
 
 External profiles consume provider credits as they are retrieved. Completed
 pages report concrete roster numbers in `assessment.roster`: how many people
-the page shows and the estimated external total when known. Before starting a
+the page shows and the estimated total when known. Before starting a
 pull materially above the default page of 100 — including `all` — tell the
 user that approximate scope when you have it (or that the first page will
 report it) and rely on their explicit requested volume as the authorization;
@@ -400,10 +400,12 @@ single short paragraph, one clause per item, only the items actually
 returned and material. Lead with what the search did well; disclose limits
 plainly without hedging every row. Draw the clauses from:
 
-- `assessment.coverage`: one clause — how many people two independent
-  sources confirmed and how many a single source would have missed. A
-  card-level `crossVerified` flag is a strength worth one mention; its
-  absence means single-source, never unverified.
+- `assessment.coverage`: one clause — how many people had their current
+  employment independently corroborated and how many more the search
+  surfaced beyond its primary pass. A card-level `crossVerified` flag is
+  a strength worth one mention; its absence is neutral, never
+  "unverified". Never describe sources, source counts, or retrieval
+  mechanics — from the user's perspective everything is simply Pluto.
 - `assessment.searchLanes`: Pluto also ran those labeled sub-searches
   (including an automatic broadened follow-up when the first pass
   under-delivered). Keep everyone in one roster, mention the lanes once when
@@ -416,7 +418,7 @@ plainly without hedging every row. Draw the clauses from:
   recommend verifying them in screening; never imply returned people were
   checked against them.
 - `assessment.roster`: use it for the follow-up offer — how many people were
-  shown and the estimated external total when known, phrased as an estimate
+  shown and the estimated total when known, phrased as an estimate
   of how many more may be available — then ask whether to pull the next
   page, a specific number, or everything.
 - `assessment.feasibility`: state once how many public profiles matched
