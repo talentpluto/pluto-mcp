@@ -37,8 +37,8 @@ profile URL, recommendation, match status, or lane.
   otherwise express interest in that candidate for a role.
 - One to 500 explicitly selected candidates of any returned network status form
   one email-enrichment batch. When the live tools expose it, use
-  `start_candidate_email_enrichment` followed by
-  `get_candidate_email_enrichment_job`. Use the synchronous
+  `start_candidate_email_enrichment` followed by the shared `get_job` poll
+  tool. Use the synchronous
   `enrich_candidate_email` compatibility path only when the async start tool
   is absent. Run either route only when the user explicitly asks for contact
   information or available emails.
@@ -74,8 +74,8 @@ current batch; do not split the request across calls automatically.
 
 Before promising or attempting an action, confirm that the current host context
 exposes `express_candidate_interest` for an in-network interest action. For an
-email batch, prefer `start_candidate_email_enrichment` and require the paired
-`get_candidate_email_enrichment_job` tool before starting. If the async start
+email batch, prefer `start_candidate_email_enrichment` and require the shared
+`get_job` poll tool before starting. If the async start
 tool is absent, require the legacy `enrich_candidate_email` tool instead.
 Never call the async start tool when its poll tool is missing.
 
@@ -101,8 +101,8 @@ If the required tool is absent or unusable, fail closed:
   100 and ask the user to choose a smaller batch. Do not split it across calls
   automatically.
 
-`start_candidate_email_enrichment`,
-`get_candidate_email_enrichment_job`, and the legacy
+`start_candidate_email_enrichment`, enrichment polling through `get_job`,
+and the legacy
 `enrich_candidate_email` tool use the existing `candidates:outbound` scope, so
 ordinary server updates do not require reconnection when the saved Pluto grant
 already includes it.
@@ -161,8 +161,9 @@ with that batch. Accept only:
   for a sandbox or compatibility runtime.
 
 Keep `jobId` private. For one user-authorized polling pass, make at most 20
-calls to `get_candidate_email_enrichment_job`, including transport retries,
-with only that exact unchanged `jobId`. Wait at least the returned
+calls to `get_job`, including transport retries,
+with only that exact unchanged `jobId`; each response carries
+`jobType: email_enrichment`. Wait at least the returned
 `retryAfterMs` before each poll. Handle each poll result exactly:
 
 - `queued` or `running`: require `requested` to match the input length and an

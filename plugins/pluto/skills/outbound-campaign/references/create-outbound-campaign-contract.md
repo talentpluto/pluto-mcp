@@ -136,7 +136,7 @@ does not change candidate source data or generated instructions.
   alone does not establish campaign eligibility.
 - A `queued` result returns an opaque `jobId` with `retryAfterMs`. Keep the
   job ID hidden, wait at least `retryAfterMs`, and poll
-  `get_outbound_campaign_job` with it unchanged while status is `queued` or
+  `get_job` with it unchanged while status is `queued` or
   `running`. Polling is read-only and never creates another campaign.
 - Completion means the campaign and its eligible enrollments exist and
   personalized copy generation was queued in the background. It does not
