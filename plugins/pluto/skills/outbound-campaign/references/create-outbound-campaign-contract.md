@@ -1,7 +1,9 @@
-# Create outbound campaign contract
+# Outbound campaign contract
 
 Use this reference only for internal validation and tool mapping. Keep schema
-names and opaque values out of normal user-facing conversation.
+names and opaque values out of normal user-facing conversation. The sections
+through request identity cover `create_outbound_campaign`; the final section
+covers `cancel_outbound_campaign`.
 
 ## Audience and campaign boundaries
 
@@ -144,3 +146,43 @@ does not change candidate source data or generated instructions.
   manually sent from Gmail.
 - Never call `create_outbound_campaign` again to check on a queued campaign,
   and never restart a `failed` creation job automatically.
+
+## Campaign cancellation
+
+`cancel_outbound_campaign` permanently stops one existing campaign. It shares
+the `candidates:outbound` permission with creation but is otherwise separate:
+it takes no request ID, candidate handles, or delivery fields.
+
+- The input has two optional fields. `campaignId` is the opaque UUID of the
+  exact campaign to cancel and is valid only when taken from this tool's own
+  `needs_campaign` options. `campaignQuery` (1–120 characters after trimming)
+  is a case-insensitive campaign-name filter applied only while listing and is
+  ignored when `campaignId` is present.
+- Always start without `campaignId`, even when the user named the campaign;
+  use `campaignQuery` to narrow the listing instead.
+- `needs_campaign` returns up to 20 of the most recently created cancellable
+  campaigns and cancels nothing. Each option carries the hidden `campaignId`,
+  `campaignStatus` (`draft`, `active`, or `paused` — the only cancellable
+  statuses), `name`, `recipientCount`, `contactedCount` (recipients already
+  sent at least one email), `createdAt`, and a nullable `nextScheduledAt`. The
+  user must confirm one exact option before the cancelling call.
+- When a user-named campaign is missing from an unfiltered listing, retry the
+  listing with `campaignQuery` before concluding it is not cancellable; the
+  listing is capped at the 20 most recently created.
+- `cancelled` returns `campaignName`, `previousStatus` (the status before this
+  cancellation), and `affectedRecipientCount` (recipients whose remaining
+  scheduled emails were stopped) with a fixed confirmation message. Repeat the
+  returned message exactly. An optional `warning` reports that some
+  already-scheduled sends could not be confirmed as cancelled; when present,
+  relay it verbatim.
+- `already_cancelled` returns `campaignName` with a fixed message: the
+  campaign was already stopped before this request.
+- Cancellation is one-way. Remaining scheduled emails and future Gmail draft
+  preparation stop, and this tool cannot resume or restart the campaign. It
+  does not recall emails already sent, does not remove Gmail drafts already
+  created in a connected inbox, and does not delete the campaign, which stays
+  visible in Pluto Campaigns as Stopped.
+- A repeat cancel of the same campaign is safe to direct after an ambiguous
+  failure: a campaign that already stopped reports `already_cancelled`.
+- On a blocked or failed result, relay the safe returned reason and do not
+  claim the campaign was cancelled.
