@@ -1,6 +1,6 @@
 ---
 name: candidate-discovery
-description: Use when a user asks Pluto to find, source, shortlist, compare, rank, or qualify candidates from a recruiter query, a pasted job description, or one reference LinkedIn profile ("find more people like this person"). Runs the bounded durable polling, paging, and server-directed continuation loops needed to fulfill an explicit result target, then uses explicit candidate facts and Team DNA for evidence-safe presentation.
+description: Use when a user asks Pluto to find, source, shortlist, compare, rank, or qualify candidates from a recruiter query, a pasted job description, or one reference LinkedIn profile ("find more people like this person"). Runs the bounded durable polling, paging, and server-directed continuation loops needed to fulfill an explicit result target, annotates each presented result with the client's best team connection when find_team_connection is available, then uses explicit candidate facts and Team DNA for evidence-safe presentation.
 ---
 
 # Candidate discovery
@@ -51,6 +51,13 @@ that no search ran.
 Team DNA is optional for successful retrieval. If `get_client_team_dna` is
 absent or returns unavailable context, continue the search and present the
 server result without inventing personalization.
+
+`find_team_connection` is likewise optional. When the live catalog exposes
+it, annotate the presented roster with each candidate's best team
+connection as described below. When it is absent — it ships with server
+contract `0.50.0`, and its affinity tiers with `0.51.0` — present the
+roster without that column and do not enter connection recovery for this
+optional annotation.
 
 ## Send the complete request
 
@@ -357,6 +364,80 @@ If either side is missing, do not invent the connection. Do not display a
 numeric goodness score. No separate model-scoring tool or hidden prompt is
 required; apply this bounded reasoning directly while composing the answer.
 
+## Annotate each result's best team connection
+
+When the live catalog exposes `find_team_connection`, the discovery request
+also authorizes a read-only connection-annotation pass: one
+`find_team_connection` call per presented candidate, so each search result
+can name the client team member best placed to open a warm introduction,
+with the concrete reason. The tool uses zero shared organization candidate
+credits, but each call can trigger one live public-profile lookup (a
+profile the server stored within the last 3 months is reused), so keep the
+pass bounded and its calls sequential.
+
+Run the pass only after every persisted page has been consumed and the
+presented roster is fixed by the explicit-count cap. Annotate presented
+candidates in presentation order, calling `find_team_connection` once per
+candidate with only that candidate's returned `profileUrl`. Never derive a
+URL from a hidden handle or guess one from a name; a candidate without a
+returned `profileUrl` stays unannotated.
+
+Bound the pass to the first 25 presented candidates per response. When the
+presented roster is larger, state once that connections were annotated for
+the first 25 and that the user can ask to annotate the rest; that explicit
+request authorizes continuing the same read-only pass over the remaining
+presented candidates.
+
+Stop or skip without failing the search:
+
+- `insufficient_data`: no stored team roster evidence exists for this
+  client, so every remaining call would return the same result. Stop the
+  pass, relay the returned notice once (generate Team DNA or company
+  intelligence first, then retry), and present the roster without the
+  column.
+- `candidate_profile_unavailable`: mark that one candidate's connection as
+  unavailable and continue with the next candidate.
+- a transport or tool failure: do not retry that call automatically; leave
+  the candidate unannotated, and stop the whole pass after two consecutive
+  failures, disclosing once that remaining connections were skipped.
+- a response without `schemaVersion: talentpluto.team-connection.v1`:
+  treat it as a failed call, not material to reconstruct.
+
+Map each `complete` response to one short annotation:
+
+- The best connect is the first returned `connections` member. Build the
+  reason from a concrete shared-history overlap when one is returned,
+  otherwise the first returned overlap, quoting its `detail` (and
+  `overlapMonths` when present) compressed but never embellished.
+- `strong` or `moderate` rests on concrete shared history — a shared
+  employer, overlapping tenure, a shared school, or time at the client
+  company. State it plainly.
+- `weak` rests on background affinities alone (shared discipline, school
+  group, metro area, title, or seniority band). Present it as light common
+  ground, never as an established relationship.
+- An overlap of kind `suggested_contact` is a best-available outreach
+  anchor with no shared facts, chosen from the roster alone and identical
+  for every candidate. Present it as a suggestion, not a connection; when
+  several rows would repeat the same suggested contact, keep the name in
+  each affected cell but explain the shared fallback once, never implying
+  individualized links.
+- `complete` with empty `connections`: write that no stored roster member
+  shares history with this candidate.
+
+The annotation is warm-introduction and outreach-personalization context
+only. It never reorders the roster, changes a `tier` or `matchStatus`,
+satisfies or fails a recruiter criterion, or becomes evidence about the
+candidate's qualifications. Never aggregate the annotations into a team
+roster listing, never present an overlap as culture fit or a
+protected-trait proxy, and never infer protected traits from schools,
+graduation windows, tenure dates, or locations. Relay a returned notice
+that materially affects interpretation — a stale roster, affinities-only
+matching, or the suggested-contact fallback — once for the whole roster
+rather than per row, and disclose `rosterCoverage.comparedMemberCount`
+once as the compared-roster bound when it is materially smaller than
+`estimatedHeadcount`. The `team-connection` skill remains the route for a
+standalone connection question about one explicitly supplied profile URL.
+
 ## Present the completed result
 
 Lead with a concise candidate table. Present `bestMatches` in returned order,
@@ -367,9 +448,17 @@ profile.
 For `bestMatches`, use:
 
 ```markdown
-| Candidate | Current role | Location | Why this person |
-| --- | --- | --- | --- |
+| Candidate | Current role | Location | Why this person | Best team connect |
+| --- | --- | --- | --- | --- |
 ```
+
+Omit the `Best team connect` column when the annotation pass did not run.
+Fill each annotated cell with the named member and the compressed reason at
+its labeled strength (for example: `Dana K. — overlapped 18 months at
+Stripe`, or `Sam R. — light common ground: same metro area`, or `Priya N. —
+suggested contact, no shared history`). Leave the cell as `not looked up`
+for candidates beyond the disclosed annotation bound or with failed
+lookups.
 
 Link each name only to the returned `profileUrl`. Build the rationale from the
 recruiter request, explicit returned candidate fields, `judgedEvidence` when
@@ -470,6 +559,10 @@ final `iteration.canContinue` is true, start a new durable discovery call with:
 
 Set a new `targetCount` from the user's additional requested volume. Do not
 reuse the original job cursor with the new discovery call.
+
+Newly presented candidates from a continuation or a later page get the same
+connection-annotation pass, bounded to 25 per response, under the same stop
+rules. Do not re-annotate candidates already presented with a connection.
 
 A refinement changes the search target, so omit `searchId` and use a new
 `requestId`. Never silently relax a required criterion.

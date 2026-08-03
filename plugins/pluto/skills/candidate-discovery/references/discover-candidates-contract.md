@@ -31,7 +31,9 @@ The connected assistant owns:
 - automatic job polling and persisted-page traversal;
 - bounded continuation across durable jobs for an unmet explicit target;
 - comparison of the request with explicit returned candidate facts;
-- bounded Team DNA personalization without factual qualification; and
+- bounded Team DNA personalization without factual qualification;
+- a bounded read-only team-connection annotation pass over presented
+  results when `find_team_connection` is available; and
 - user-facing presentation.
 
 `candidate_pool` deliberately skips network membership resolution,
@@ -270,6 +272,49 @@ cannot:
 - establish a candidate fact that the returned profile does not contain;
 - justify culture-fit, personality, demographic, or protected-trait claims; or
 - prove a workforce gap from missing coverage.
+
+## Team connection annotation contract
+
+`find_team_connection` (contract `0.50.0`; affinity tiers and the
+suggested-contact fallback from `0.51.0`) accepts exactly one
+`linkedinUrl`. It is read-only, uses zero shared organization candidate
+credits, needs only `candidates:read`, reuses a candidate profile the
+server stored within the last 3 months, and otherwise runs one live
+public-profile lookup that is stored for future reuse.
+
+The response uses `schemaVersion: talentpluto.team-connection.v1` with
+`status: complete | candidate_profile_unavailable | insufficient_data`, a
+`candidate` object or null, `companyName`, at most 3 `connections` (each
+with `displayName`, `department`, `roleCategory`,
+`connectionStrength: strong | moderate | weak`, and 1–8 overlaps carrying
+`kind`, `detail`, and optional `entity` and `overlapMonths`), plus
+`methodology`, `notices`, `provenance`, `rosterCoverage`, and
+`generatedAt`. Members are ranked by connection evidence:
+
+- `strong` and `moderate` rest on concrete shared history —
+  `shared_employer`, `shared_employer_overlapping_tenure`,
+  `shared_school`, `worked_together_at_client_company`;
+- `weak` rests on background affinities alone — `same_discipline`,
+  `same_school_group`, `same_metro_area`, `same_current_title`,
+  `same_location`, `same_seniority` — and names only the single best
+  member; and
+- a `suggested_contact` overlap marks a best-available outreach anchor
+  with no shared facts, chosen from the roster alone and identical for
+  every candidate, excluded from `rosterCoverage.matchedMemberCount`.
+
+During discovery, the annotation pass runs after all persisted pages are
+consumed: one call per presented candidate's returned `profileUrl`, in
+presentation order, bounded to 25 candidates per response with the bound
+disclosed. The first `insufficient_data` stops the pass (the roster gap is
+client-level); `candidate_profile_unavailable` skips one candidate; an
+ambiguous failure is never retried automatically, and two consecutive
+failures stop the pass. The annotation is outreach-personalization context
+presented at its labeled strength. It never reorders results, changes a
+tier or `matchStatus`, supports qualification claims, enumerates the
+roster, or proxies protected traits, and its notices and
+`rosterCoverage` bounds are disclosed once per response, not per row. A
+standalone user question about one explicitly supplied URL routes through
+the `team-connection` skill instead.
 
 ## Completed search experience
 
