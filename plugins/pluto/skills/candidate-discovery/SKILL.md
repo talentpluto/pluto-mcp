@@ -23,8 +23,8 @@ count as retrieval leads with useful client-specific reasoning.
 
 If the user asks one private question about one explicitly selected in-network
 candidate, use the `candidate-question` skill instead. A standalone request to
-score or assess explicitly identified candidates against the client's Team DNA
-uses the `team-dna-scoring` skill, and a request for who on the client's team
+score explicitly identified candidates against the client's Team DNA or a job
+description uses the `score-candidate` skill, and a request for who on the client's team
 is connected to one explicitly supplied candidate profile URL uses the
 `team-connection` skill; the bounded personalization below covers only
 presenting search results. Candidate discovery does not authorize interest,

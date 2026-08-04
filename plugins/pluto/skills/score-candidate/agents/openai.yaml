@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto candidate scoring"
+  short_description: "Score candidates 0-100 against Team DNA and a job description"
+  default_prompt: "Use $score-candidate to score the explicitly identified candidates. Enrich each candidate's public LinkedIn profile first when this session does not already hold their profile facts, read the client's stored Team DNA, and return a 0-100 Team DNA alignment score per candidate — plus a separate 0-100 job-description match score when a JD or explicit role requirements were supplied — crediting only cited explicit evidence, disclosing coverage and unknowns, keeping the two scores separate, and presenting them as descriptive screening context, never a culture-fit judgment, protected-trait proxy, or hiring decision."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated TalentPluto recruiting MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"
