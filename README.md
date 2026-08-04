@@ -147,11 +147,8 @@ and ask me to confirm the final review.
   roster evidence and use no candidate credits. At most three team members
   are named with their specific shared-history facts; background common
   ground alone names a single member as a light connection, and when nothing
-  overlaps one stable team contact is offered as a suggestion. Candidate
-  search results are annotated the same way: each presented candidate's best
-  team connect appears with its labeled-strength reason, for up to the first
-  25 results per response. No member contact data or profile URLs are
-  returned.
+  overlaps one stable team contact is offered as a suggestion. No member
+  contact data or profile URLs are returned.
 - Team DNA assessments read your company's stored, bounded Team DNA
   projection and use no candidate credits. Alignment is descriptive
   professional overlap with cited evidence — never a numeric fit score,
