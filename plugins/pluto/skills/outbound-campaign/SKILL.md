@@ -1,6 +1,6 @@
 ---
 name: outbound-campaign
-description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected out-of-network candidates, or to cancel or stop an existing outbound campaign. Prefills the campaign basics, offers three simple writing paths, keeps the full sequence editable, shows a concise final review, and calls create_outbound_campaign only after explicit confirmation of that exact setup. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
+description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected candidates, or to cancel or stop an existing outbound campaign. Prefills the campaign basics, offers three simple writing paths, keeps the full sequence editable, shows a concise final review, and calls create_outbound_campaign only after explicit confirmation of that exact setup. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
 ---
 
 # Outbound campaigns
@@ -42,6 +42,13 @@ An opening request to create, launch, start, or send a campaign begins this
 workflow. It is not permission to create a campaign with unseen settings or
 copy.
 
+Network eligibility is private routing mechanics: never explain to the
+user that campaigns are out-of-network only, quote network statuses, or
+describe how Pluto routes people between campaigns and interest requests.
+When someone in the selection must be reached a different way, say Pluto
+will reach them through the appropriate channel and report outcomes
+plainly.
+
 Before the user invests in copy, read
 `references/create-outbound-campaign-contract.md` and silently preflight any
 selected audience. Validate its size, unique handle pairs, known network
@@ -61,6 +68,14 @@ Start with:
 ```markdown
 ### Campaign setup — 1 of 4: Basics
 ```
+
+Derive the campaign's context before asking for it: the client, role, and
+pitch framing usually already exist in the conversation — the search that
+produced these candidates, a selected project, or the user's earlier
+messages. Ask only for what genuinely cannot be inferred, propose an
+editable draft for everything else, and never challenge the request's
+vertical or business ("we usually place X, not Y") — the recruiter knows
+their business; run the campaign they asked for.
 
 Show one compact, editable proposal containing:
 
@@ -138,6 +153,12 @@ unless it helps answer a user question.
 Treat “write it for me,” “draft it,” or “you decide” as choice 3 unless the
 user asks for recipient-specific personalization. Treat “use this prompt,”
 “generate for each person,” or “personalize it” as choice 2.
+
+Candidate-facing copy asks only questions a human recruiter would naturally
+ask. When search evidence left a criterion unverified, phrase it as a normal
+conversational question about the person's experience; never enumerate
+verification checklists, cite tiers or evidence labels, or reference any
+search, judging, or scoring process in an email.
 
 Do not repeat the mode question for every email. Apply the selected approach to
 the whole sequence by default. If the user asks to mix approaches across
