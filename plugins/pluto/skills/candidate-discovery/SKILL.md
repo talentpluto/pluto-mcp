@@ -42,7 +42,9 @@ Before searching, confirm that Pluto exposes `discover_candidates`.
 The durable experience also uses:
 
 - `get_job`, the single poll tool for every asynchronous Pluto `jobId`, to
-  retrieve the final result; and
+  retrieve the final result;
+- `answer_job_question`, to deliver the user's answer when a search pauses on
+  one clarifying question (`status: needs_input`); and
 - `get_client_team_dna` to read the authenticated client's bounded,
   precomputed professional context.
 
@@ -246,6 +248,39 @@ changed search or a continuation job uses a new UUID.
 
 While status is `working`, `progress` may report the durable candidate and page
 counts already checkpointed. Treat this as progress only, not as a result.
+
+While status is `working`, the response may also carry a bounded `preview` of
+people already retrieved. Present preview rows only as work in progress —
+"the search has already found people like these and is still verifying" — never
+as the final roster, never with per-person claims beyond the shown fields, and
+never as something to act on before completion.
+
+### Answer a paused search (`needs_input`)
+
+A search may pause on one clarifying question instead of finishing with one.
+When `get_job` returns `status: needs_input`, the response carries a
+`question` object: the question text, an optional bounded list of selectable
+`options` (each with `label` and `value`), a `questionId`, and `expiresAt`.
+
+Relay the question to the user verbatim and immediately — this is the one
+moment the search is waiting on them. Present any options as choices, and make
+clear the user can always answer in their own words instead; free-text answers
+(for example naming their own target companies, or "include the ML engineers
+too") are fully supported and often the best answer.
+
+As soon as the user answers, call `answer_job_question` with the same `jobId`,
+the unchanged `questionId`, and the answer text verbatim — an option `value`
+or the user's own words, without rephrasing. Then keep polling the same
+`jobId` with `get_job`: the search resumes with the answer folded in and
+reaches results without restarting. Never start a new search to deliver an
+answer, and never invent an answer the user did not give.
+
+If `answer_job_question` returns `accepted: false`, or the question expires
+before the user answers, the search proceeds with its strict reading and
+discloses that once; keep polling and present the eventual result normally.
+If the eventual completed page itself carries a clarifying question in
+`assessment.disambiguation`, relay it as before — that is the fallback path
+when no pause was possible.
 
 ### Read every persisted page
 
