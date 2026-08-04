@@ -41,7 +41,8 @@ Before searching, confirm that Pluto exposes `discover_candidates`.
 
 The durable experience also uses:
 
-- `get_job`, the single poll tool for every asynchronous Pluto `jobId`, to
+- `get_operation_status`, the single poll tool for every asynchronous Pluto
+  `jobId`, to
   retrieve the final result; and
 - `get_client_team_dna` to read the authenticated client's bounded,
   precomputed professional context.
@@ -49,7 +50,7 @@ The durable experience also uses:
 If `discover_candidates` is absent, follow the `connection-recovery` skill.
 Do not substitute another candidate source or call the MCP endpoint directly.
 
-If `get_job` is absent, do not start a search that could outlive
+If `get_operation_status` is absent, do not start a search that could outlive
 the host timeout. Recheck the live tool catalog once through connection
 recovery. If it remains absent, report a plugin/server contract mismatch and
 that no search ran.
@@ -228,9 +229,9 @@ a durable job acknowledgement containing:
 - `schemaVersion: talentpluto.candidate-search-job.v1`.
 
 Do not present this acknowledgement as the search result. Keep `jobId` hidden
-and call `get_job` with that exact value after `pollAfterMs`. A candidate
-search response carries `jobType: candidate_search`. While the status is
-`queued` or `working`, wait the newly returned
+and call `get_operation_status` with that exact value after `pollAfterMs`. A
+candidate search response carries `jobType: candidate_search`. While the
+status is `queued` or `working`, wait the newly returned
 `pollAfterMs` and poll again. This polling is read-only and automatic: do not
 ask the user to poll, repeat their query, or approve another metered search.
 
@@ -251,7 +252,7 @@ counts already checkpointed. Treat this as progress only, not as a result.
 
 When status is `completed`, use the nested `result` as the first completed
 `searchExperience` page and read `pageInfo`. If `pageInfo.hasMore` is true,
-call `get_job` again with the same `jobId` and the exact opaque
+call `get_operation_status` again with the same `jobId` and the exact opaque
 `pageInfo.nextCursor` as `cursor`. Continue until `hasMore` is false. Page reads are
 automatic, read-only, and do not rerun discovery or consume more credits. Do
 not ask the user to paginate.
