@@ -22,8 +22,13 @@ available, and present the accumulated profiles up to any explicit requested
 count as retrieval leads with useful client-specific reasoning.
 
 If the user asks one private question about one explicitly selected in-network
-candidate, use the `candidate-question` skill instead. Candidate discovery does
-not authorize interest, enrichment, or outbound actions.
+candidate, use the `candidate-question` skill instead. A standalone request to
+score or assess explicitly identified candidates against the client's Team DNA
+uses the `team-dna-scoring` skill, and a request for who on the client's team
+is connected to one explicitly supplied candidate profile URL uses the
+`team-connection` skill; the bounded personalization below covers only
+presenting search results. Candidate discovery does not authorize interest,
+enrichment, team-connection lookups, or outbound actions.
 
 ## Reference
 
@@ -36,14 +41,15 @@ Before searching, confirm that Pluto exposes `discover_candidates`.
 
 The durable experience also uses:
 
-- `get_candidate_search` to retrieve the final result; and
+- `get_job`, the single poll tool for every asynchronous Pluto `jobId`, to
+  retrieve the final result; and
 - `get_client_team_dna` to read the authenticated client's bounded,
   precomputed professional context.
 
 If `discover_candidates` is absent, follow the `connection-recovery` skill.
 Do not substitute another candidate source or call the MCP endpoint directly.
 
-If `get_candidate_search` is absent, do not start a search that could outlive
+If `get_job` is absent, do not start a search that could outlive
 the host timeout. Recheck the live tool catalog once through connection
 recovery. If it remains absent, report a plugin/server contract mismatch and
 that no search ran.
@@ -51,6 +57,13 @@ that no search ran.
 Team DNA is optional for successful retrieval. If `get_client_team_dna` is
 absent or returns unavailable context, continue the search and present the
 server result without inventing personalization.
+
+Do not call `find_team_connection` while fulfilling a search, even when the
+live catalog exposes it. Each call can trigger one live public-profile
+lookup, so discovery never fans it out across a result roster; present the
+roster without per-candidate team-connection annotations. A later explicit
+user request about one supplied candidate profile URL routes through the
+`team-connection` skill.
 
 ## Send the complete request
 
@@ -215,8 +228,9 @@ a durable job acknowledgement containing:
 - `schemaVersion: talentpluto.candidate-search-job.v1`.
 
 Do not present this acknowledgement as the search result. Keep `jobId` hidden
-and call `get_candidate_search` with that exact value after `pollAfterMs`.
-While the status is `queued` or `working`, wait the newly returned
+and call `get_job` with that exact value after `pollAfterMs`. A candidate
+search response carries `jobType: candidate_search`. While the status is
+`queued` or `working`, wait the newly returned
 `pollAfterMs` and poll again. This polling is read-only and automatic: do not
 ask the user to poll, repeat their query, or approve another metered search.
 
@@ -237,8 +251,8 @@ counts already checkpointed. Treat this as progress only, not as a result.
 
 When status is `completed`, use the nested `result` as the first completed
 `searchExperience` page and read `pageInfo`. If `pageInfo.hasMore` is true,
-call `get_candidate_search` again with the same `jobId` and the exact opaque
-`pageInfo.nextCursor`. Continue until `hasMore` is false. Page reads are
+call `get_job` again with the same `jobId` and the exact opaque
+`pageInfo.nextCursor` as `cursor`. Continue until `hasMore` is false. Page reads are
 automatic, read-only, and do not rerun discovery or consume more credits. Do
 not ask the user to paginate.
 

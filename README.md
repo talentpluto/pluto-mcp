@@ -15,8 +15,20 @@ work with the retrieved leads directly in the conversation.
 - Find and verify available work and personal emails for selected candidates
   or directly supplied LinkedIn profiles.
 - Pull full public profile details for LinkedIn profile URLs you supply.
+- See which of your team members are best connected to a candidate whose
+  LinkedIn profile URL you supply — concrete shared history such as shared
+  employers, overlapping tenure, or shared schools when it exists, lighter
+  background common ground or a suggested team contact when it does not —
+  as warm-introduction context.
+- Assess selected candidates against your company's stored Team DNA — shared
+  prior companies, titles, seniority, locations, schools, recent-joiner
+  patterns, founder backgrounds, and published hiring-preference signals —
+  as a labeled, evidence-cited alignment readout rather than a numeric fit
+  score.
 - Review and create an email campaign for selected out-of-network candidates,
   using either TalentPluto-managed delivery or one connected Gmail inbox.
+- Cancel an existing outbound campaign after confirming the exact one,
+  stopping its remaining scheduled emails.
 - Express interest in an in-network candidate for an active role.
 - Check your organization's shared Pluto credit balance.
 
@@ -88,6 +100,12 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 @pluto Get the full public profiles for these LinkedIn profile URLs:
 [paste the URLs]
 
+@pluto Who on my team has the strongest connection to this candidate?
+[paste one LinkedIn profile URL]
+
+@pluto How does this candidate line up against our engineering team's DNA?
+[paste one LinkedIn profile URL, or select a returned candidate]
+
 @pluto Give me a directional US market snapshot for engineering talent.
 
 @pluto How many Pluto credits does my organization have left?
@@ -104,6 +122,8 @@ have Pluto draft the emails for me, then show the complete editable sequence
 and ask me to confirm the final review.
 
 @pluto Express interest in this candidate for the Senior Engineer role.
+
+@pluto Cancel my outbound campaign for the payments role.
 ```
 
 ## Credits and privacy
@@ -123,9 +143,24 @@ and ask me to confirm the final review.
   profile URLs, reuses a stored profile fetched within the last 3 months, and
   uses no candidate credits. It returns public profile details, not contact
   information.
+- Team-connection lookups compare one supplied profile against stored team
+  roster evidence and use no candidate credits. At most three team members
+  are named with their specific shared-history facts; background common
+  ground alone names a single member as a light connection, and when nothing
+  overlaps one stable team contact is offered as a suggestion. No member
+  contact data or profile URLs are returned.
+- Team DNA assessments read your company's stored, bounded Team DNA
+  projection and use no candidate credits. Alignment is descriptive
+  professional overlap with cited evidence — never a numeric fit score,
+  culture-fit judgment, ranking, or qualification evidence — and non-founder
+  employees appear only as aggregate patterns.
 - Connected-inbox campaigns create the first Gmail draft after copy generation
   and later drafts one at a time on cumulative days measured from campaign
   creation. Each draft is sent manually from Gmail.
+- Cancelling a campaign permanently stops its remaining scheduled emails and
+  future Gmail draft preparation. It does not recall emails already sent or
+  remove drafts already created in Gmail, and the campaign stays visible in
+  Pluto as Stopped.
 - Market snapshots use aggregated data and omit metrics that do not meet
   privacy thresholds.
 - Private candidate questions return a bounded answer, not the candidate's raw

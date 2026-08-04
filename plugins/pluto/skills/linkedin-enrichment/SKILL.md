@@ -18,6 +18,13 @@ Keep neighboring requests on their own routes:
   never returns emails, and phone numbers are never requested.
 - One URL plus "find more people like this person" is a discovery request;
   use the `candidate-discovery` skill's reference-profile search.
+- One URL plus "who on my team knows or is most connected to this person"
+  is a team-connection request; use the `team-connection` skill. Profile
+  enrichment returns full profiles, not shared-history matches.
+- One URL plus "score or assess this person against our team DNA" is a
+  Team DNA assessment; use the `team-dna-scoring` skill, which may run
+  this skill's enrichment contract first for the candidate's public
+  profile facts.
 - Campaigns and outreach use the `outbound-campaign` skill. Profile
   enrichment returns no `candidateRef` or `selectionToken` and never creates
   campaign eligibility, pipeline state, or interest.
@@ -32,8 +39,8 @@ before calling a tool.
 ## Confirm the async pair is available
 
 Before promising or attempting enrichment, confirm that the current host
-context exposes both `start_candidate_linkedin_enrichment` and
-`get_candidate_linkedin_enrichment_job`. There is no synchronous fallback for
+context exposes both `start_candidate_linkedin_enrichment` and the shared
+`get_job` poll tool. There is no synchronous fallback for
 profile enrichment. Never call the start tool when its poll tool is missing.
 
 Inspect the live input schemas: the start tool must accept a `profiles` array
@@ -90,8 +97,9 @@ Accept only:
   allowed for a sandbox or compatibility runtime.
 
 Keep `jobId` private. For one user-authorized polling pass, make at most 20
-calls to `get_candidate_linkedin_enrichment_job`, including transport
-retries, with only that exact unchanged `jobId`. Wait at least the returned
+calls to `get_job`, including transport
+retries, with only that exact unchanged `jobId`; each response carries
+`jobType: linkedin_enrichment`. Wait at least the returned
 `retryAfterMs` before each poll. Handle each poll result exactly:
 
 - `queued` or `running`: require `requested` to match the input length and an

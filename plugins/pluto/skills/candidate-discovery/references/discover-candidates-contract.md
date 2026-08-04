@@ -129,15 +129,16 @@ targetCount: <normalized numeric target>
 schemaVersion: talentpluto.candidate-search-job.v1
 ```
 
-This is not a candidate result. Keep the job ID hidden and poll
-`get_candidate_search`.
+This is not a candidate result. Keep the job ID hidden and poll `get_job`,
+the single poll tool for every asynchronous Pluto job; a candidate-search
+response carries `jobType: candidate_search`.
 
 ## Poll contract
 
 Call:
 
 ```yaml
-get_candidate_search:
+get_job:
   jobId: <unchanged job ID>
   cursor: <omit for the first page; otherwise exact nextCursor>
 ```
@@ -173,8 +174,8 @@ Treat polling, paging, and continuation as separate loops:
 
 ```text
 discover_candidates
-  -> queued or working: get_candidate_search(jobId) until terminal
-  -> completed: get_candidate_search(jobId, nextCursor) until hasMore=false
+  -> queued or working: get_job(jobId) until terminal
+  -> completed: get_job(jobId, nextCursor) until hasMore=false
   -> explicit target still unmet and canContinue=true:
        discover_candidates(searchId, fresh requestId, remaining target)
        then repeat the poll and page loops
@@ -275,6 +276,13 @@ cannot:
 - establish a candidate fact that the returned profile does not contain;
 - justify culture-fit, personality, demographic, or protected-trait claims; or
 - prove a workforce gap from missing coverage.
+
+## Team connection lookups
+
+Discovery does not call `find_team_connection`. Each call can trigger one
+live public-profile lookup, so per-result team-connection annotation is
+excluded from the search flow; a later explicit user request about one
+supplied candidate profile URL routes through the `team-connection` skill.
 
 ## Completed search experience
 
@@ -387,11 +395,12 @@ originating lane, and project scope paired exactly for follow-up.
 can route to `express_candidate_interest` or one bounded private question,
 while an explicit work-email request for any selected candidate routes through
 the `candidate-interest` skill. That skill prefers
-`start_candidate_email_enrichment` plus
-`get_candidate_email_enrichment_job` and uses `enrich_candidate_email` only as
+`start_candidate_email_enrichment` plus the shared `get_job` poll tool and
+uses `enrich_candidate_email` only as
 a compatibility fallback. Directly supplied LinkedIn profiles use that same
 email-enrichment skill without invented discovery handles.
 
 Discovery alone never authorizes email enrichment, candidate interest, a
-private candidate question, or an outbound campaign. Those require a later,
-explicit user request and the appropriate Pluto skill.
+private candidate question, a team-connection lookup, or an outbound
+campaign. Those require a later, explicit user request and the appropriate
+Pluto skill.

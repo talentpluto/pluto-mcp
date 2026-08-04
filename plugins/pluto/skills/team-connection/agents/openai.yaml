@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto team connection"
+  short_description: "Find the team members best connected to one candidate"
+  default_prompt: "Use $team-connection to find which of the client's team members are best connected to the one candidate LinkedIn profile URL the user explicitly supplied. Present at most three returned members at their labeled connection strength — concrete shared-history facts, a single best background-affinity match, or a roster-stable suggested contact — as warm-introduction and outreach-personalization context, never as culture fit, a protected-trait proxy, qualification evidence, or a roster listing."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated TalentPluto recruiting MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"
