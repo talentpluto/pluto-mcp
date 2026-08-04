@@ -38,15 +38,22 @@ before calling a tool.
 
 ## Confirm the async pair is available
 
-Before promising or attempting enrichment, confirm that the current host
-context exposes both `start_candidate_linkedin_enrichment` and the shared
-`get_operation_status` poll tool. There is no synchronous fallback for
-profile enrichment. Never call the start tool when its poll tool is missing.
+Before promising or attempting enrichment, require the shared
+`get_operation_status` poll tool and select exactly one profile-enrichment
+start operation in this order:
 
-Inspect the live input schemas: the start tool must accept a `profiles` array
-of one to 100 items that each contain only `linkedinUrl`, and the poll tool
-must accept only the opaque `jobId`. Loading this skill does not prove that
-Pluto initialized or that the saved OAuth grant includes
+1. Preferred 0.57 name: `start_candidate_enrichment`.
+2. Legacy 0.56 compatibility fallback: `start_candidate_linkedin_enrichment`.
+
+Always select the preferred operation when it is exposed. Select the legacy
+operation only when the preferred one is absent. There is no synchronous
+fallback for profile enrichment. Never call either start operation when the
+poll tool is missing.
+
+Inspect the live input schemas: the selected start operation must accept a
+`profiles` array of one to 100 items that each contain only `linkedinUrl`, and
+the poll tool must accept only the opaque `jobId`. Loading this skill does not
+prove that Pluto initialized or that the saved OAuth grant includes
 `candidates:outbound`.
 
 If a required tool is absent or unusable, fail closed:
@@ -59,9 +66,9 @@ If a required tool is absent or unusable, fail closed:
 - If recovery does not expose the pair, report that profile enrichment is not
   currently available and state that no enrichment ran.
 
-Both tools use the existing `candidates:outbound` scope, so ordinary server
-updates do not require reconnection when the saved Pluto grant already
-includes it.
+Both start operations and the poll tool use the existing
+`candidates:outbound` scope, so ordinary server updates do not require
+reconnection when the saved Pluto grant already includes it.
 
 ## Build one batch
 
@@ -88,8 +95,7 @@ resubmit the batch unchanged.
 
 ## Start and poll the job
 
-Call `start_candidate_linkedin_enrichment` exactly once with the batch.
-Accept only:
+Call the selected start operation exactly once with the batch. Accept only:
 
 - `status: queued` with a non-empty opaque `jobId`, `requested` equal to the
   input length, and a bounded `retryAfterMs`; or
