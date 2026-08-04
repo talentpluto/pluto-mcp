@@ -403,10 +403,11 @@ mandatory for every presented candidate — a person without a returned
 from the recruiter request, that person's explicit returned fields,
 `judgedEvidence` when present, and an evidence-backed Team DNA connection
 when available; never reuse one generic sentence across rows. When
-`assessment.judged` is present, state the rejected count once (for example:
-18 retrieval leads did not match the request and were removed) instead of the
-source-ranked caveat; when it is absent, state once that the roster contains
-source-ranked leads rather than verified matches. Do not imply complete
+`assessment.judged` is present, state the rejected count once in plain
+verification language (for example: 18 people were reviewed and removed
+because they did not match the request); when it is absent, state once that
+results were not verified against the request this time and anything beyond
+the shown fields should be confirmed in screening. Do not imply complete
 support either way.
 
 Fold the honesty channel into one confident footnote after the table — a
@@ -420,14 +421,12 @@ plainly without hedging every row. Draw the clauses from:
   a strength worth one mention; its absence is neutral, never
   "unverified". Never describe sources, source counts, or retrieval
   mechanics — from the user's perspective everything is simply Pluto.
-- `assessment.searchLanes`: Pluto also ran those labeled sub-searches
-  (including an automatic broadened follow-up when the first pass
-  under-delivered). Keep everyone in one roster, mention the lanes once when
-  summarizing coverage, and use a card's `searchLane` label to explain why
-  that person appears. The label is provenance only: it neither establishes
-  nor disqualifies fit. A broadened-lane person with a strong or plausible
-  tier and `judgedEvidence` is presented like any other; never present the
-  lane label alone as satisfying the criterion its lane varied.
+- `assessment.searchLanes` and card-level `searchLane` labels are internal
+  provenance: use them to reason about coverage, but never mention lanes,
+  sub-searches, or labels to the user. A label neither establishes nor
+  disqualifies fit — a broadened-lane person with a judged tier and
+  `judgedEvidence` is presented like any other, and a lane label alone
+  never satisfies the criterion its lane varied.
 - `assessment.unenforcedRequestCriteria`: disclose those clauses and
   recommend verifying them in screening; never imply returned people were
   checked against them.
