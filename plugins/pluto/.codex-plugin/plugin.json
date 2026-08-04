@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.1.52",
-  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, candidate-to-Team-DNA alignment scoring, TalentPluto-managed or connected-inbox outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+  "version": "0.1.53",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, 0-100 candidate scoring against Team DNA and a supplied job description, TalentPluto-managed or connected-inbox outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -18,6 +18,8 @@
     "warm introduction",
     "team dna",
     "team alignment",
+    "score candidate",
+    "candidate scoring",
     "outbound campaign",
     "email campaign",
     "cancel campaign",
@@ -34,7 +36,7 @@
   "interface": {
     "displayName": "Pluto",
     "shortDescription": "Use TalentPluto recruiting, outbound, and market tools.",
-    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, candidate-to-Team-DNA alignment scoring, reviewable TalentPluto-managed or connected-inbox outbound campaigns, confirmed campaign cancellation, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
+    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, 0-100 candidate scoring against Team DNA and a supplied job description, reviewable TalentPluto-managed or connected-inbox outbound campaigns, confirmed campaign cancellation, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
     "developerName": "Pluto",
     "category": "Productivity",
     "capabilities": [
@@ -51,7 +53,7 @@
       "Get and verify the available emails for the candidates I selected.",
       "Get the full public profiles for the LinkedIn profile URLs I supplied.",
       "Who on my team has the strongest connection to the candidate LinkedIn profile URL I supplied?",
-      "Assess the candidates I selected against our engineering team's Team DNA.",
+      "Score the candidate I selected against our Team DNA and this job description.",
       "Create a campaign for the out-of-network candidates I selected. Prefill the basics, let me choose whether to write exact shared copy, provide generation instructions, or have Pluto draft the emails for me, then show the complete editable sequence and ask me to confirm the final review.",
       "Cancel my outbound campaign for the payments role.",
       "Continue with the candidate and role I selected in Pluto."
