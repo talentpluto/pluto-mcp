@@ -33,10 +33,10 @@ prefer the live tool description and schema field descriptions.
 - Aggregate team patterns without a specific candidate — "what does my
   team look like" — use `get_client_team_dna`, which never names
   individual members.
-- Scoring or assessing a candidate against those aggregate patterns —
-  "how does this person line up against our team" — is a Team DNA
-  assessment; use the `team-dna-scoring` skill. This tool names connected
-  members, not alignment dimensions.
+- Scoring a candidate against those aggregate patterns or a job
+  description — "how does this person line up against our team" — is a
+  scoring request; use the `score-candidate` skill. This tool names
+  connected members, not alignment scores.
 - Contact information uses the `candidate-interest` email-enrichment
   route; campaigns use the `outbound-campaign` skill. This tool never
   returns contact data and never creates campaign eligibility or interest.
