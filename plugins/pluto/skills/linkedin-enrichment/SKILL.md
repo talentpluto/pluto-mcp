@@ -40,7 +40,7 @@ before calling a tool.
 
 Before promising or attempting enrichment, confirm that the current host
 context exposes both `start_candidate_linkedin_enrichment` and the shared
-`get_job` poll tool. There is no synchronous fallback for
+`get_operation_status` poll tool. There is no synchronous fallback for
 profile enrichment. Never call the start tool when its poll tool is missing.
 
 Inspect the live input schemas: the start tool must accept a `profiles` array
@@ -97,7 +97,7 @@ Accept only:
   allowed for a sandbox or compatibility runtime.
 
 Keep `jobId` private. For one user-authorized polling pass, make at most 20
-calls to `get_job`, including transport
+calls to `get_operation_status`, including transport
 retries, with only that exact unchanged `jobId`; each response carries
 `jobType: linkedin_enrichment`. Wait at least the returned
 `retryAfterMs` before each poll. Handle each poll result exactly:

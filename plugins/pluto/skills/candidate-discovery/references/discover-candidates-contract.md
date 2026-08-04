@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `0.55.0`. When the live server reports a newer
+Aligned to server contract `0.56.0`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict. Optional assessment fields
 added after `0.43.0` may be absent on an older deployed server; treat every
@@ -129,7 +129,8 @@ targetCount: <normalized numeric target>
 schemaVersion: talentpluto.candidate-search-job.v1
 ```
 
-This is not a candidate result. Keep the job ID hidden and poll `get_job`,
+This is not a candidate result. Keep the job ID hidden and poll
+`get_operation_status`,
 the single poll tool for every asynchronous Pluto job; a candidate-search
 response carries `jobType: candidate_search`.
 
@@ -138,7 +139,7 @@ response carries `jobType: candidate_search`.
 Call:
 
 ```yaml
-get_job:
+get_operation_status:
   jobId: <unchanged job ID>
   cursor: <omit for the first page; otherwise exact nextCursor>
 ```
@@ -174,8 +175,8 @@ Treat polling, paging, and continuation as separate loops:
 
 ```text
 discover_candidates
-  -> queued or working: get_job(jobId) until terminal
-  -> completed: get_job(jobId, nextCursor) until hasMore=false
+  -> queued or working: get_operation_status(jobId) until terminal
+  -> completed: get_operation_status(jobId, nextCursor) until hasMore=false
   -> explicit target still unmet and canContinue=true:
        discover_candidates(searchId, fresh requestId, remaining target)
        then repeat the poll and page loops
@@ -395,7 +396,8 @@ originating lane, and project scope paired exactly for follow-up.
 can route to `express_candidate_interest` or one bounded private question,
 while an explicit work-email request for any selected candidate routes through
 the `candidate-interest` skill. That skill prefers
-`start_candidate_email_enrichment` plus the shared `get_job` poll tool and
+`start_candidate_email_enrichment` plus the shared `get_operation_status`
+poll tool and
 uses `enrich_candidate_email` only as
 a compatibility fallback. Directly supplied LinkedIn profiles use that same
 email-enrichment skill without invented discovery handles.

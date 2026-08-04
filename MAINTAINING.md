@@ -30,10 +30,12 @@ against at the top of
 
 Any webapp change that bumps the contract version must open a paired PR in
 this repo reviewing every skill against the new contract — numbers (page
-size, target ceiling), response fields, and presentation rules. Deploy order
-is server first: new server fields are additive and old skills degrade
-gracefully, but a new skill referencing fields an old server never returns
-does not.
+size, target ceiling), response fields, and presentation rules. Deploy the
+server first for additive changes: old skills degrade gracefully, but a new
+skill referencing fields an old server never returns does not. For an
+explicit breaking tool rename or removal, merge the paired connector update
+first when webapp CI validates against `pluto-mcp@main`, then merge and deploy
+the server change immediately afterward to keep the mismatch window bounded.
 
 ## OAuth callbacks
 
