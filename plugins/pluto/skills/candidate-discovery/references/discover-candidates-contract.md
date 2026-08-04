@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `0.53.0`. When the live server reports a newer
+Aligned to server contract `0.55.0`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict. Optional assessment fields
 added after `0.43.0` may be absent on an older deployed server; treat every
