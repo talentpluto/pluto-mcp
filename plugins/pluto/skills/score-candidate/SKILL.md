@@ -16,14 +16,14 @@ measures observed professional alignment — background familiarity with the
 team, or evidence-verified match to the stated requirements — never
 candidate quality, culture fit, or a hiring decision.
 
-This skill was written against server contract `0.58.1`. On any conflict,
+This skill was written against server contract `2.0.0`. On any conflict,
 prefer the live tool description and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
 
-- "Who on my team knows or is most connected to this candidate" is a
-  member-level request; use the `team-connection` skill. Scoring compares
-  against aggregates and never names non-founder members.
+- "How does this candidate's background overlap with our team" is a
+  narrative comparison request; use the `team-connection` skill. Neither
+  workflow identifies non-founder members or verifies personal relationships.
 - One profile URL plus "find more people like this person" is a discovery
   request; use the `candidate-discovery` skill's reference-profile search.
 - Full public profile details for supplied URLs, with no scoring ask, use
@@ -47,10 +47,10 @@ prefer the live tool description and schema field descriptions.
 Before promising scores, confirm that the current host context exposes
 `get_client_team_dna` and inspect its live input schema, which must accept
 exactly one `department` enum. When the enrichment step below must run,
-also require one start operation selected under the `linkedin-enrichment`
-skill's 0.57-to-0.56 compatibility rules and the shared
-`get_operation_status` poll tool. Loading this skill does not prove that Pluto
-initialized or that the connected server matches the pinned contract.
+also require `enrich_candidate` under the `linkedin-enrichment` skill's
+contract and the shared `get_operation_status` poll tool. Loading this skill
+does not prove that Pluto initialized or that the connected server matches the
+pinned contract.
 
 If a required tool is absent or its schema differs, follow the
 `connection-recovery` skill. If recovery does not expose what the request
@@ -97,7 +97,7 @@ supplied, or the visible public URL of a returned candidate the user
 explicitly identified for scoring — run the `linkedin-enrichment` skill's
 async contract before scoring: one `profiles` batch covering every
 candidate in the request that needs enrichment, one
-call to the selected start operation, then bounded `get_operation_status`
+call to `enrich_candidate`, then bounded `get_operation_status`
 polling and result validation exactly as that skill specifies. Never derive a
 URL from an opaque handle or guess one from a name. Server-side freshness is
 automatic (a profile fetched within the last 3 months is reused internally),

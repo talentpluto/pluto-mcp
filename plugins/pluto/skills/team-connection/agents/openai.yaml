@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto team connection"
-  short_description: "Find the team members best connected to one candidate"
-  default_prompt: "Use $team-connection to find which of the client's team members are best connected to the one candidate LinkedIn profile URL the user explicitly supplied. Present at most three returned members at their labeled connection strength — concrete shared-history facts, a single best background-affinity match, or a roster-stable suggested contact — as warm-introduction and outreach-personalization context, never as culture fit, a protected-trait proxy, qualification evidence, or a roster listing."
+  short_description: "Compare candidates with aggregate Team DNA"
+  default_prompt: "Use $team-connection for the explicitly identified candidate LinkedIn profiles. Enrich them with enrich_candidate, poll the operation to completion, read get_client_team_dna, and compare only explicit candidate facts with returned aggregate professional signals. Present evidence-backed common ground, complementarity, and unknowns without a numeric score. Never name a non-founder teammate, claim that people know or worked with each other, imply culture fit, or offer a warm-introduction path."
 
 dependencies:
   tools:

@@ -18,9 +18,10 @@ Keep neighboring requests on their own routes:
   never returns emails, and phone numbers are never requested.
 - One URL plus "find more people like this person" is a discovery request;
   use the `candidate-discovery` skill's reference-profile search.
-- One URL plus "who on my team knows or is most connected to this person"
-  is a team-connection request; use the `team-connection` skill. Profile
-  enrichment returns full profiles, not shared-history matches.
+- One or more URLs plus "how does this background overlap with our team" is a
+  team-connection request; use the `team-connection` skill. That workflow adds
+  aggregate Team DNA comparison without identifying a non-founder teammate or
+  verifying a personal relationship.
 - One URL plus "score this person" — against the client's Team DNA, a
   job description, or both — is a scoring request; use the
   `score-candidate` skill, which runs this skill's enrichment contract
@@ -38,19 +39,11 @@ before calling a tool.
 
 ## Confirm the async pair is available
 
-Before promising or attempting enrichment, require the shared
-`get_operation_status` poll tool and select exactly one profile-enrichment
-start operation in this order:
-
-1. Preferred 0.57 name: `start_candidate_enrichment`.
-2. Legacy 0.56 compatibility fallback: `start_candidate_linkedin_enrichment`.
-
-Always select the preferred operation when it is exposed. Select the legacy
-operation only when the preferred one is absent. There is no synchronous
-fallback for profile enrichment. Never call either start operation when the
+Before promising or attempting enrichment, require `enrich_candidate` and the
+shared `get_operation_status` poll tool. Never call `enrich_candidate` when the
 poll tool is missing.
 
-Inspect the live input schemas: the selected start operation must accept a
+Inspect the live input schemas: `enrich_candidate` must accept a
 `profiles` array of one to 100 items that each contain only `linkedinUrl`, and
 the poll tool must accept only the opaque `operationId`. Loading this skill does
 not prove that Pluto initialized or that the saved OAuth grant includes
@@ -66,9 +59,9 @@ If a required tool is absent or unusable, fail closed:
 - If recovery does not expose the pair, report that profile enrichment is not
   currently available and state that no enrichment ran.
 
-Both start operations and the poll tool use the existing
-`candidates:outbound` scope, so ordinary server updates do not require
-reconnection when the saved Pluto grant already includes it.
+`enrich_candidate` and the poll tool use the existing `candidates:outbound`
+scope, so ordinary server updates do not require reconnection when the saved
+Pluto grant already includes it.
 
 ## Build one batch
 
@@ -95,7 +88,7 @@ directs; do not resubmit the batch unchanged.
 
 ## Start and poll the operation
 
-Call the selected start operation exactly once with the batch. Accept only:
+Call `enrich_candidate` exactly once with the batch. Accept only:
 
 - `status: queued` with a non-empty opaque `operationId`, `requested` equal to
   the input length, and a bounded `retryAfterMs`; or

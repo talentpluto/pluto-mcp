@@ -24,11 +24,11 @@ count as retrieval leads with useful client-specific reasoning.
 If the user asks one private question about one explicitly selected in-network
 candidate, use the `candidate-question` skill instead. A standalone request to
 score explicitly identified candidates against the client's Team DNA or a job
-description uses the `score-candidate` skill, and a request for who on the client's team
-is connected to one explicitly supplied candidate profile URL uses the
-`team-connection` skill; the bounded personalization below covers only
-presenting search results. Candidate discovery does not authorize interest,
-enrichment, team-connection lookups, or outbound actions.
+description uses the `score-candidate` skill, and a request to compare explicit
+candidate profiles with aggregate Team DNA uses the `team-connection` skill;
+the bounded personalization below covers only presenting search results.
+Candidate discovery does not authorize interest, enrichment, a standalone
+team-connection workflow, or outbound actions.
 
 ## Reference
 
@@ -60,12 +60,11 @@ Team DNA is optional for successful retrieval. If `get_client_team_dna` is
 absent or returns unavailable context, continue the search and present the
 server result without inventing personalization.
 
-Do not call `find_team_connection` while fulfilling a search, even when the
-live catalog exposes it. Each call can trigger one live public-profile
-lookup, so discovery never fans it out across a result roster; present the
-roster without per-candidate team-connection annotations. A later explicit
-user request about one supplied candidate profile URL routes through the
-`team-connection` skill.
+Do not run the `team-connection` enrichment workflow while fulfilling a search.
+Discovery never fans profile enrichment out across a result roster; present
+the roster without per-candidate connection annotations. A later explicit
+request to compare one or more supplied candidate profiles with aggregate Team
+DNA routes through the `team-connection` skill.
 
 ## Send the complete request
 
