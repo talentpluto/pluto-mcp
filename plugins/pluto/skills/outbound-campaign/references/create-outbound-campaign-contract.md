@@ -38,29 +38,38 @@ covers `cancel_outbound_campaign`.
 
 Pass exactly one delivery object:
 
-- TalentPluto-managed: `delivery: { method: 'talentpluto' }`
-- Connected inbox:
+- Pluto-managed inboxes: `delivery: { method: 'talentpluto' }`
+- Personal inbox drafts:
   `delivery: { method: 'connected_inbox', connectionId }`
+- Client campaign inbox:
+  `delivery: { method: 'client_campaign_inbox' }`
 
-For a connected inbox, pair the private `connectionId` only with its safe email
-from trusted context or a `needs_sender` response. Never place two delivery
-routes or two senders in one campaign.
+For personal inbox drafts, pair the private `connectionId` only with its safe
+email from trusted context or a `needs_sender` response. Never place two
+delivery routes or two senders in one campaign. For a client campaign inbox,
+never pass an inbox identifier: the server verifies readiness, selects one
+tenant-owned dedicated inbox, and pins it to the campaign.
 
-Connected-inbox copy must represent the real person and organization behind
+Personal-inbox copy must represent the real person and organization behind
 that inbox. Never write as TalentPluto unless it is the sender's actual
 organization, and never impersonate an employee of a separate hiring company.
 Describe the sender as recruiting for or working with that company when
 appropriate. Do not add TalentPluto's managed-delivery mailing-address or
 unsubscribe footer.
 
-When the user chose connected-inbox delivery but no authorized sender is
+When the user chose personal-inbox delivery but no authorized sender is
 known, the first confirmed call may omit `connectionId`. The tool can then
 return `needs_sender` without creating a campaign. After a returned sender is
 selected, never omit its connection ID.
 
-Connected-inbox follow-up delays are measured from campaign creation. For
+Personal-inbox follow-up delays are measured from campaign creation. For
 example, `[3, 7]` produces drafts on campaign days 3 and 10 whether or not the
 preceding draft was sent.
+
+Client campaign inbox copy uses the client's real organization perspective.
+Use `{senderName}` rather than inventing a dedicated inbox identity. Both
+`talentpluto` and `client_campaign_inbox` remain managed routes that require
+TalentPluto confirmation before delivery.
 
 ## Sequence mapping
 
@@ -88,8 +97,9 @@ template field. A fully templated campaign still needs a `generationPrompt`
 that records the opportunity, audience, tone, factual boundaries, purpose of
 each step, and call to action.
 
-Every non-empty connected-inbox body template must include `{senderName}`.
-Never hard-code a person's name in a connected-inbox signoff.
+Every non-empty body template for `connected_inbox` or
+`client_campaign_inbox` must include `{senderName}`. Never hard-code a
+person's name in either route's signoff.
 
 For a hybrid campaign:
 
@@ -142,7 +152,7 @@ does not change candidate source data or generated instructions.
   another campaign.
 - Completion means the campaign and its eligible enrollments exist and
   personalized copy generation was queued in the background. It does not
-  mean copy generation, Gmail draft creation, or delivery completed.
+  mean copy generation, personal-inbox draft creation, or delivery completed.
 - On `completed` or `success`, repeat the tool's message exactly. The result
   does not confirm that an email was sent, delivered, internally approved, or
   manually sent from Gmail.
@@ -179,10 +189,10 @@ it takes no request ID, candidate handles, or delivery fields.
   relay it verbatim.
 - `already_cancelled` returns `campaignName` with a fixed message: the
   campaign was already stopped before this request.
-- Cancellation is one-way. Remaining scheduled emails and future Gmail draft
-  preparation stop, and this tool cannot resume or restart the campaign. It
-  does not recall emails already sent, does not remove Gmail drafts already
-  created in a connected inbox, and does not delete the campaign, which stays
+- Cancellation is one-way. Remaining managed sends and future personal-inbox
+  draft preparation stop, and this tool cannot resume or restart the campaign.
+  It does not recall emails already sent, does not remove Gmail drafts already
+  created in a personal inbox, and does not delete the campaign, which stays
   visible in Pluto Campaigns as Stopped.
 - A repeat cancel of the same campaign is safe to direct after an ambiguous
   failure: a campaign that already stopped reports `already_cancelled`.
