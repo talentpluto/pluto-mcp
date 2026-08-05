@@ -134,10 +134,12 @@ does not change candidate source data or generated instructions.
   contact without a new lookup credit.
 - Only a fresh campaign-safe verified address is eligible. An enrichment result
   alone does not establish campaign eligibility.
-- A `queued` result returns an opaque `jobId` with `retryAfterMs`. Keep the
-  job ID hidden, wait at least `retryAfterMs`, and poll
+- A `queued` result returns an opaque `operationId` with `retryAfterMs`. Keep the
+  operation ID hidden, wait at least `retryAfterMs`, and poll
   `get_operation_status` with it unchanged while status is `queued` or
-  `running`. Polling is read-only and never creates another campaign.
+  `running`. Every response must echo that unchanged `operationId` and carry
+  `operationType: outbound_campaign`. Polling is read-only and never creates
+  another campaign.
 - Completion means the campaign and its eligible enrollments exist and
   personalized copy generation was queued in the background. It does not
   mean copy generation, Gmail draft creation, or delivery completed.
@@ -145,7 +147,7 @@ does not change candidate source data or generated instructions.
   does not confirm that an email was sent, delivered, internally approved, or
   manually sent from Gmail.
 - Never call `create_outbound_campaign` again to check on a queued campaign,
-  and never restart a `failed` creation job automatically.
+  and never restart a `failed` creation operation automatically.
 
 ## Campaign cancellation
 

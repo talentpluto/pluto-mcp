@@ -16,7 +16,7 @@ measures observed professional alignment — background familiarity with the
 team, or evidence-verified match to the stated requirements — never
 candidate quality, culture fit, or a hiring decision.
 
-This skill was written against server contract `0.57.0`. On any conflict,
+This skill was written against server contract `0.58.1`. On any conflict,
 prefer the live tool description and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
@@ -90,7 +90,7 @@ Scoring uses the fullest explicit candidate facts already in this
 conversation. Treat a candidate as already enriched when the session
 holds their full public profile — from a completed `linkedin-enrichment`
 result for the same normalized URL, an earlier scoring pass, or pasted
-resume or profile text — and reuse those facts without a new job.
+resume or profile text — and reuse those facts without a new operation.
 
 Otherwise, when the candidate has a usable LinkedIn URL — one the user
 supplied, or the visible public URL of a returned candidate the user
