@@ -55,11 +55,11 @@ selected audience. Validate its size, unique handle pairs, known network
 eligibility, and one-role boundary. Resolve a real problem before Stage 1, but
 do not narrate passing checks, expose handles, or run a metered lookup. When
 the user intends to create the campaign, also confirm that the live catalog
-exposes `create_outbound_campaign`. When the live catalog also exposes
-the shared `get_job` poll tool, creation is asynchronous: require that poll
-tool before the creation call and expect a `queued` result. If a required tool is
-missing or unusable, follow the `connection-recovery` skill before Stage 1
-and resume only when recovery succeeds.
+exposes `create_outbound_campaign`. When the live catalog also exposes the
+shared `get_operation_status` poll tool, creation is asynchronous: require
+that poll tool before the creation call and expect a `queued` result. If a
+required tool is missing or unusable, follow the `connection-recovery` skill
+before Stage 1 and resume only when recovery succeeds.
 
 ### Stage 1 of 4: Confirm the basics
 
@@ -339,7 +339,7 @@ Handle the result narrowly:
   routes requires a fresh request ID and a new complete review.
 - **`queued`:** The reviewed campaign was accepted for asynchronous creation.
   Keep the returned `jobId` private, wait at least the returned
-  `retryAfterMs`, and poll `get_job` with that exact
+  `retryAfterMs`, and poll `get_operation_status` with that exact
   unchanged `jobId` — each response carries `jobType: outbound_campaign` —
   at most 20 calls for one user-authorized pass,
   including transport retries — repeating while status is `queued` or

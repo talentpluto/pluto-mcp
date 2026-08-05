@@ -41,8 +41,8 @@ Before searching, confirm that Pluto exposes `discover_candidates`.
 
 The durable experience also uses:
 
-- `get_job`, the single poll tool for every asynchronous Pluto `jobId`, to
-  retrieve the final result;
+- `get_operation_status`, the single poll tool for every asynchronous Pluto
+  `jobId`, to retrieve the final result;
 - `answer_job_question`, to deliver the user's answer when a search pauses on
   one clarifying question (`status: needs_input`); and
 - `get_client_team_dna` to read the authenticated client's bounded,
@@ -51,7 +51,7 @@ The durable experience also uses:
 If `discover_candidates` is absent, follow the `connection-recovery` skill.
 Do not substitute another candidate source or call the MCP endpoint directly.
 
-If `get_job` is absent, do not start a search that could outlive
+If `get_operation_status` is absent, do not start a search that could outlive
 the host timeout. Recheck the live tool catalog once through connection
 recovery. If it remains absent, report a plugin/server contract mismatch and
 that no search ran.
@@ -230,9 +230,9 @@ a durable job acknowledgement containing:
 - `schemaVersion: talentpluto.candidate-search-job.v1`.
 
 Do not present this acknowledgement as the search result. Keep `jobId` hidden
-and call `get_job` with that exact value after `pollAfterMs`. A candidate
-search response carries `jobType: candidate_search`. While the status is
-`queued` or `working`, wait the newly returned
+and call `get_operation_status` with that exact value after `pollAfterMs`. A
+candidate search response carries `jobType: candidate_search`. While the
+status is `queued` or `working`, wait the newly returned
 `pollAfterMs` and poll again. This polling is read-only and automatic: do not
 ask the user to poll, repeat their query, or approve another metered search.
 
@@ -258,7 +258,7 @@ never as something to act on before completion.
 ### Answer a paused search (`needs_input`)
 
 A search may pause on one clarifying question instead of finishing with one.
-When `get_job` returns `status: needs_input`, the response carries a
+When `get_operation_status` returns `status: needs_input`, the response carries a
 `question` object: the question text, an optional bounded list of selectable
 `options` (each with `label` and `value`), a `questionId`, and `expiresAt`.
 
@@ -271,7 +271,7 @@ too") are fully supported and often the best answer.
 As soon as the user answers, call `answer_job_question` with the same `jobId`,
 the unchanged `questionId`, and the answer text verbatim — an option `value`
 or the user's own words, without rephrasing. Then keep polling the same
-`jobId` with `get_job`: the search resumes with the answer folded in and
+`jobId` with `get_operation_status`: the search resumes with the answer folded in and
 reaches results without restarting. Never start a new search to deliver an
 answer, and never invent an answer the user did not give.
 
@@ -286,7 +286,7 @@ when no pause was possible.
 
 When status is `completed`, use the nested `result` as the first completed
 `searchExperience` page and read `pageInfo`. If `pageInfo.hasMore` is true,
-call `get_job` again with the same `jobId` and the exact opaque
+call `get_operation_status` again with the same `jobId` and the exact opaque
 `pageInfo.nextCursor` as `cursor`. Continue until `hasMore` is false. Page reads are
 automatic, read-only, and do not rerun discovery or consume more credits. Do
 not ask the user to paginate.

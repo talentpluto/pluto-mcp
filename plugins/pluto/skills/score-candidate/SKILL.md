@@ -16,7 +16,7 @@ measures observed professional alignment — background familiarity with the
 team, or evidence-verified match to the stated requirements — never
 candidate quality, culture fit, or a hiring decision.
 
-This skill was written against server contract `0.55.0`. On any conflict,
+This skill was written against server contract `0.57.0`. On any conflict,
 prefer the live tool description and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
@@ -47,10 +47,10 @@ prefer the live tool description and schema field descriptions.
 Before promising scores, confirm that the current host context exposes
 `get_client_team_dna` and inspect its live input schema, which must accept
 exactly one `department` enum. When the enrichment step below must run,
-also require `start_candidate_linkedin_enrichment` and the shared
-`get_job` poll tool, per the `linkedin-enrichment` skill's availability
-rules. Loading this skill does not prove that Pluto initialized or that
-the connected server matches the pinned contract.
+also require one start operation selected under the `linkedin-enrichment`
+skill's 0.57-to-0.56 compatibility rules and the shared
+`get_operation_status` poll tool. Loading this skill does not prove that Pluto
+initialized or that the connected server matches the pinned contract.
 
 If a required tool is absent or its schema differs, follow the
 `connection-recovery` skill. If recovery does not expose what the request
@@ -97,12 +97,11 @@ supplied, or the visible public URL of a returned candidate the user
 explicitly identified for scoring — run the `linkedin-enrichment` skill's
 async contract before scoring: one `profiles` batch covering every
 candidate in the request that needs enrichment, one
-`start_candidate_linkedin_enrichment` call, then bounded `get_job` polling
-and result validation exactly as that skill specifies. Never derive a URL
-from an opaque handle or guess one from a name. Server-side freshness is
-automatic (a profile fetched within the last 3 months is reused
-internally), and profile enrichment uses zero shared organization
-candidate credits.
+call to the selected start operation, then bounded `get_operation_status`
+polling and result validation exactly as that skill specifies. Never derive a
+URL from an opaque handle or guess one from a name. Server-side freshness is
+automatic (a profile fetched within the last 3 months is reused internally),
+and profile enrichment uses zero shared organization candidate credits.
 
 Handle enrichment outcomes per candidate:
 
