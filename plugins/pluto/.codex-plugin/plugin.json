@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.1.58",
-  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, 0-100 candidate scoring against Team DNA and a supplied job description, TalentPluto-managed or connected-inbox outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+  "version": "0.1.59",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, 0-100 candidate scoring against Team DNA and a supplied job description, outbound campaigns through personal inbox drafts, Pluto-managed inboxes, or client campaign inboxes, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -36,7 +36,7 @@
   "interface": {
     "displayName": "Pluto",
     "shortDescription": "Use TalentPluto recruiting, outbound, and market tools.",
-    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, 0-100 candidate scoring against Team DNA and a supplied job description, reviewable TalentPluto-managed or connected-inbox outbound campaigns, confirmed campaign cancellation, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
+    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, 0-100 candidate scoring against Team DNA and a supplied job description, reviewable outbound campaigns through personal inbox drafts, Pluto-managed inboxes, or client campaign inboxes, confirmed campaign cancellation, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
     "developerName": "Pluto",
     "category": "Productivity",
     "capabilities": [

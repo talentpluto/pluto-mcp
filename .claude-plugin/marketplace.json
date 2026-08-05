@@ -10,7 +10,7 @@
     {
       "name": "pluto",
       "source": "./plugins/pluto",
-      "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, candidate work-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, 0-100 candidate scoring against Team DNA and a supplied job description, TalentPluto-managed or connected-inbox outbound campaigns, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+      "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, candidate work-email enrichment, LinkedIn profile enrichment, candidate-to-team connection matching, 0-100 candidate scoring against Team DNA and a supplied job description, outbound campaigns through personal inbox drafts, Pluto-managed inboxes, or client campaign inboxes, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
       "category": "productivity",
       "keywords": [
         "candidates",
