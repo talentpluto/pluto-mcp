@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `0.57.1`. When the live server reports a newer
+Aligned to server contract `0.58.1`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict. Optional assessment fields
 added after `0.43.0` may be absent on an older deployed server; treat every
@@ -10,10 +10,10 @@ rule about them as conditional on the field being returned.
 
 Candidate discovery is a durable orchestration boundary. One user-authorized
 recruiter request may require several short MCP calls. Each
-`discover_candidates` call creates one server-owned durable job. The connected
-assistant polls and pages that job, may read bounded Team DNA while retrieval
-continues, and may start a bounded continuation job when an explicit numeric
-target remains unmet and the server permits continuation.
+`discover_candidates` call creates one server-owned durable operation. The
+connected assistant polls and pages that operation, may read bounded Team DNA
+while retrieval continues, and may start a bounded continuation operation when
+an explicit numeric target remains unmet and the server permits continuation.
 
 The server owns:
 
@@ -28,8 +28,8 @@ The connected assistant owns:
 
 - forwarding the complete recruiter request;
 - creating a faithful alternate query when possible;
-- automatic job polling and persisted-page traversal;
-- bounded continuation across durable jobs for an unmet explicit target;
+- automatic operation polling and persisted-page traversal;
+- bounded continuation across durable operations for an unmet explicit target;
 - comparison of the request with explicit returned candidate facts;
 - bounded Team DNA personalization without factual qualification; and
 - user-facing presentation.
@@ -122,17 +122,17 @@ remove, weaken, strengthen, or regroup meaning.
 The normal `discover_candidates` result is:
 
 ```yaml
-jobId: <opaque UUID>
+operationId: <opaque UUID>
 status: queued | working
 pollAfterMs: <bounded delay>
 targetCount: <normalized numeric target>
-schemaVersion: talentpluto.candidate-search-job.v1
+schemaVersion: talentpluto.candidate-search-operation.v1
 ```
 
-This is not a candidate result. Keep the job ID hidden and poll
-`get_operation_status`,
-the single poll tool for every asynchronous Pluto job; a candidate-search
-response carries `jobType: candidate_search`.
+This is not a candidate result. Keep the operation ID hidden and poll
+`get_operation_status`, the single poll tool for every asynchronous Pluto
+operation. Every candidate-search poll response echoes the unchanged
+`operationId` and carries `operationType: candidate_search`.
 
 ## Poll contract
 
@@ -140,7 +140,7 @@ Call:
 
 ```yaml
 get_operation_status:
-  jobId: <unchanged job ID>
+  operationId: <unchanged operation ID>
   cursor: <omit for the first page; otherwise exact nextCursor>
 ```
 
@@ -153,31 +153,32 @@ The poll returns one of:
 - `needs_input`: the search is paused on one clarifying question. Relay the
   `question` object's text verbatim, offer its `options` while making clear a
   free-text answer is equally valid, submit the user's answer with
-  `answer_job_question` (same `jobId`, unchanged `questionId`, answer
-  verbatim), then keep polling the same `jobId`. The search resumes with the
-  answer folded in and never restarts. An expired or superseded question
-  returns `accepted: false` from `answer_job_question`; the search proceeds
-  with its strict reading and discloses that once;
+  `answer_operation_question` (same `operationId`, unchanged `questionId`,
+  answer verbatim), then keep polling the same `operationId`. The search
+  resumes with the answer folded in and never restarts. An expired or
+  superseded question returns `accepted: false` from
+  `answer_operation_question`; the search proceeds with its strict reading and
+  discloses that once;
 - `completed`: consume the nested `result` page and its `pageInfo`;
 - `failed`: report the safe message and stop.
 
 Polling is automatic and read-only. A transient poll failure may retry the same
-job read. It must never cause a second metered discovery call.
+operation read. It must never cause a second metered discovery call.
 
-For a completed job, `pageInfo.hasMore` means another persisted page exists.
-Pass `pageInfo.nextCursor` unchanged with the same `jobId` until `hasMore` is
-false. These reads do not rerun retrieval or consume more credits. Accumulate
-distinct candidates without changing their returned section, order,
-`matchStatus`, or opaque selection handles.
+For a completed operation, `pageInfo.hasMore` means another persisted page
+exists. Pass `pageInfo.nextCursor` unchanged with the same `operationId` until
+`hasMore` is false. These reads do not rerun retrieval or consume more credits.
+Accumulate distinct candidates without changing their returned section,
+order, `matchStatus`, or opaque selection handles.
 
 `pageInfo.completionReason` is `target_reached`, `source_exhausted`,
 `safety_limit`, or `partial_failure`. A partial failure is terminal but retains
 every page checkpointed before the later failure.
 
-The job is bound to the authenticated user, OAuth client, organization, and
-original request. Another principal receives no result. The server retains the
-job long enough for ordinary host polling and uses the original `requestId` to
-make the initial operation retry-safe.
+The operation is bound to the authenticated user, OAuth client, organization,
+and original request. Another principal receives no result. The server retains
+the operation long enough for ordinary host polling and uses the original
+`requestId` to make the initial operation retry-safe.
 
 ## Client call state machine
 
@@ -185,10 +186,11 @@ Treat polling, paging, and continuation as separate loops:
 
 ```text
 discover_candidates
-  -> queued or working: get_operation_status(jobId) until terminal
-  -> needs_input: relay question -> answer_job_question(jobId, questionId,
-       answer) -> keep polling the same jobId
-  -> completed: get_operation_status(jobId, nextCursor) until hasMore=false
+  -> queued or working: get_operation_status(operationId) until terminal
+  -> needs_input: relay question
+       -> answer_operation_question(operationId, questionId, answer)
+       -> keep polling the same operationId
+  -> completed: get_operation_status(operationId, nextCursor) until hasMore=false
   -> explicit target still unmet and canContinue=true:
        discover_candidates(searchId, fresh requestId, remaining target)
        then repeat the poll and page loops
@@ -197,24 +199,25 @@ discover_candidates
 
 Polling and paging are read-only and automatic. A clear candidate-search
 request authorizes those calls without another user message. A continuation
-job may consume credits, so it is authorized automatically only to fulfill the
-user's original explicit numeric target.
+operation may consume credits, so it is authorized automatically only to
+fulfill the user's original explicit numeric target.
 
-Track the numeric target across jobs. For a continuation, preserve the exact
-original request, alternate query, project, and result mode; pass the prior
-hidden `searchId`; generate a fresh `requestId`; and set `targetCount` to the
-remaining count when it is at most 1000 or `all` when more than 1000 remain.
+Track the numeric target across operations. For a continuation, preserve the
+exact original request, alternate query, project, and result mode; pass the
+prior hidden `searchId`; generate a fresh `requestId`; and set `targetCount` to
+the remaining count when it is at most 1000 or `all` when more than 1000
+remain.
 
 Accumulate only distinct candidates, preferring hidden `candidateRef` for
 identity and normalized `profileUrl` as fallback. Preserve the returned
 section, order, `matchStatus`, and selection handles. Sum `credits.used` across
-jobs and use the last completed job's `credits.remaining`.
+operations and use the last completed operation's `credits.remaining`.
 
 Stop when the target is reached, continuation is unavailable, the source is
-exhausted, a continuation adds no distinct candidate, a job fails or partially
-fails, or the live contract rejects continuation. A safety limit is terminal
-unless the original request was an explicit numeric target above 1000 and
-`iteration.canContinue` remains true. Never automatically continue a
+exhausted, a continuation adds no distinct candidate, an operation fails or
+partially fails, or the live contract rejects continuation. A safety limit is
+terminal unless the original request was an explicit numeric target above
+1000 and `iteration.canContinue` remains true. Never automatically continue a
 default-volume search or push an explicit `all` request past the server's
 reported safety ceiling.
 
@@ -344,10 +347,10 @@ score.
 Never infer credit use from candidate counts or source membership; use the
 completed result's accounting fields.
 
-Do not start a replacement `discover_candidates` job after a timeout,
-transport ambiguity, or poll failure. Retry the same read-only job poll when
-appropriate. The job exists specifically to separate long provider work from
-short MCP calls.
+Do not start a replacement `discover_candidates` operation after a timeout,
+transport ambiguity, or poll failure. Retry the same read-only operation poll
+when appropriate. The operation exists specifically to separate long provider
+work from short MCP calls.
 
 A user-directed retry of the exact same operation reuses its original
 `requestId`. A continuation, deliberate repeat, or changed search uses a new
@@ -394,7 +397,7 @@ without `searchId`) whose request text includes the chosen company's website
 domain. Never pick silently and never present that response as an empty or
 failed result.
 
-Keep job IDs, search IDs, candidate references, selection tokens, internal
+Keep operation IDs, search IDs, candidate references, selection tokens, internal
 scores, provider names, private context, `networkStatus`, and source membership
 hidden. Never describe candidates as in-network or out-of-network, refer to a
 Pluto network, or split the response by source membership.

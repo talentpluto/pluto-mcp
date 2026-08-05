@@ -338,20 +338,20 @@ Handle the result narrowly:
   user connect Gmail or switch to TalentPluto-managed delivery. Switching
   routes requires a fresh request ID and a new complete review.
 - **`queued`:** The reviewed campaign was accepted for asynchronous creation.
-  Keep the returned `jobId` private, wait at least the returned
+  Keep the returned `operationId` private, wait at least the returned
   `retryAfterMs`, and poll `get_operation_status` with that exact
-  unchanged `jobId` — each response carries `jobType: outbound_campaign` —
-  at most 20 calls for one user-authorized pass,
-  including transport retries — repeating while status is `queued` or
-  `running`. On `completed`, repeat the returned message exactly; completion
-  means the campaign and its eligible enrollments exist and personalized
-  copy generation was queued in the background, not that copy generation,
-  Gmail draft creation, or delivery finished. On `failed`, relay only the
-  safe returned message and do not restart creation. At the poll cap, say
-  creation is still processing without exposing the job ID; only an explicit
-  user request to continue may start a new bounded polling pass with the
-  same unchanged `jobId`. Never call `create_outbound_campaign` again to
-  check on a queued campaign.
+  unchanged `operationId` — each response must echo that `operationId` and carry
+  `operationType: outbound_campaign` — at most 20 calls for one
+  user-authorized pass, including transport retries, repeating while status is
+  `queued` or `running`. On `completed`, repeat the returned message exactly;
+  completion means the campaign and its eligible enrollments exist and
+  personalized copy generation was queued in the background, not that copy
+  generation, Gmail draft creation, or delivery finished. On `failed`, relay
+  only the safe returned message and do not restart creation. At the poll cap,
+  say creation is still processing without exposing the operation ID; only an
+  explicit user request to continue may start a new bounded polling pass with
+  the same unchanged `operationId`. Never call `create_outbound_campaign`
+  again to check on a queued campaign.
 - **`success`:** A compatibility runtime may return this terminal result
   directly. Repeat the returned `message` exactly. Do not add a
   reconstructed recap or claim that any email was sent, scheduled, delivered,
