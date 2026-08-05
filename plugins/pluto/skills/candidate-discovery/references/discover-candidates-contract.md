@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `1.0.0`. When the live server reports a newer
+Aligned to server contract `2.0.0`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict. Optional assessment fields
 added after `0.43.0` may be absent on an older deployed server; treat every
@@ -293,12 +293,12 @@ cannot:
 - justify culture-fit, personality, demographic, or protected-trait claims; or
 - prove a workforce gap from missing coverage.
 
-## Team connection lookups
+## Team connection workflow
 
-Discovery does not call `find_team_connection`. Each call can trigger one
-live public-profile lookup, so per-result team-connection annotation is
-excluded from the search flow; a later explicit user request about one
-supplied candidate profile URL routes through the `team-connection` skill.
+Discovery does not run the `team-connection` enrichment workflow. Per-result
+candidate enrichment and aggregate Team DNA comparison are excluded from the
+search flow; a later explicit request about one or more supplied candidate
+profile URLs routes through the `team-connection` skill.
 
 ## Completed search experience
 
@@ -410,12 +410,9 @@ originating lane, and project scope paired exactly for follow-up.
 `networkStatus` is action-specific: exactly one selected in-network candidate
 can route to `express_candidate_interest` or one bounded private question,
 while an explicit work-email request for any selected candidate routes through
-the `candidate-interest` skill. That skill prefers
-`start_candidate_email_enrichment` plus the shared `get_operation_status`
-poll tool and
-uses `enrich_candidate_email` only as
-a compatibility fallback. Directly supplied LinkedIn profiles use that same
-email-enrichment skill without invented discovery handles.
+the `candidate-interest` skill. That skill calls `enrich_email` plus the shared
+`get_operation_status` poll tool. Directly supplied LinkedIn profiles use that
+same email-enrichment skill without invented discovery handles.
 
 Discovery alone never authorizes email enrichment, candidate interest, a
 private candidate question, a team-connection lookup, or an outbound

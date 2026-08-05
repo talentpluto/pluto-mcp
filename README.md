@@ -15,11 +15,10 @@ work with the retrieved leads directly in the conversation.
 - Find and verify available work and personal emails for selected candidates
   or directly supplied LinkedIn profiles.
 - Pull full public profile details for LinkedIn profile URLs you supply.
-- See which of your team members are best connected to a candidate whose
-  LinkedIn profile URL you supply — concrete shared history such as shared
-  employers, overlapping tenure, or shared schools when it exists, lighter
-  background common ground or a suggested team contact when it does not —
-  as warm-introduction context.
+- Compare supplied candidates' public professional backgrounds with your
+  aggregate Team DNA to surface evidence-backed common ground,
+  complementarity, and unknowns. This workflow does not identify a
+  non-founder teammate or claim a personal relationship.
 - Score selected candidates or supplied LinkedIn profiles from 0-100 against
   your company's stored Team DNA — shared prior companies, titles, seniority,
   locations, schools, recent-joiner patterns, founder backgrounds, and
@@ -135,9 +134,8 @@ and ask me to confirm the final review.
   credit. Out-of-network search results are free.
 - Email enrichment starts one asynchronous job for 1–500 explicitly selected
   candidates or directly supplied LinkedIn profiles and polls it to completion.
-  The legacy synchronous fallback accepts at most 100. Returned addresses are
-  work or personal emails, each labeled with its type, source status, and
-  independent verification result.
+  Returned addresses are work or personal emails, each labeled with its type,
+  source status, and independent verification result.
 - A successful email lookup can use one credit for that candidate. It uses
   none when the candidate already has an accepted TalentPluto profile, when
   reusing an earlier successful lookup, or when no email is found.
@@ -145,12 +143,11 @@ and ask me to confirm the final review.
   profile URLs, reuses a stored profile fetched within the last 3 months, and
   uses no candidate credits. It returns public profile details, not contact
   information.
-- Team-connection lookups compare one supplied profile against stored team
-  roster evidence and use no candidate credits. At most three team members
-  are named with their specific shared-history facts; background common
-  ground alone names a single member as a light connection, and when nothing
-  overlaps one stable team contact is offered as a suggestion. No member
-  contact data or profile URLs are returned.
+- The team-connection skill enriches 1–100 supplied profiles, reads the stored
+  aggregate Team DNA projection, and compares explicit professional facts.
+  Both reads use no candidate credits. It can cite a returned public founder
+  background, but it never identifies non-founder members, verifies a personal
+  relationship, or offers a warm-introduction path.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and uses no candidate credits; profile enrichment it triggers is also
   credit-free. Scores are separate 0-100 measures of cited professional

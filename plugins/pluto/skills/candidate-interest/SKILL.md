@@ -1,6 +1,6 @@
 ---
 name: candidate-interest
-description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get available work and personal emails for one to 500 candidates, including directly supplied LinkedIn profile URLs. Routes enrichment through the async start-and-poll contract when available, preserves opaque handles, and does not create outbound campaigns.
+description: Use when a user explicitly selects candidates returned by Pluto and asks to express interest, add one in-network candidate to a role, or get available work and personal emails for one to 500 candidates, including directly supplied LinkedIn profile URLs. Routes enrichment through enrich_email and bounded polling, preserves opaque handles, and does not create outbound campaigns.
 ---
 
 # Candidate interest and email enrichment
@@ -36,12 +36,9 @@ profile URL, recommendation, match status, or lane.
   `express_candidate_interest` when the user asks to add, select, prospect, or
   otherwise express interest in that candidate for a role.
 - One to 500 explicitly selected candidates of any returned network status form
-  one email-enrichment batch. When the live tools expose it, use
-  `start_candidate_email_enrichment` followed by the shared
-  `get_operation_status` poll tool. Use the synchronous
-  `enrich_candidate_email` compatibility path only when the async start tool
-  is absent. Run either route only when the user explicitly asks for contact
-  information or available emails.
+  one email-enrichment batch. Use `enrich_email` followed by the shared
+  `get_operation_status` poll tool. Run this route only when the user
+  explicitly asks for contact information or available emails.
 
 If a discovery result's `networkStatus` is missing, report a server/plugin
 contract mismatch. Do not guess an action-specific route or try both tools.
@@ -74,16 +71,13 @@ current batch; do not split the request across calls automatically.
 
 Before promising or attempting an action, confirm that the current host context
 exposes `express_candidate_interest` for an in-network interest action. For an
-email batch, prefer `start_candidate_email_enrichment` and require the shared
-`get_operation_status` poll tool before starting. If the async start
-tool is absent, require the legacy `enrich_candidate_email` tool instead.
-Never call the async start tool when its poll tool is missing.
+email batch, require `enrich_email` and the shared `get_operation_status` poll
+tool before starting. Never call `enrich_email` when its poll tool is missing.
 
-Inspect the live input schemas. The async start tool must accept a `candidates`
-array of one to 500 items, the compatibility tool must accept one to 100
-items, the poll tool must accept only the opaque `operationId`, and interest
-must be limited to one in-network selection. Loading this skill does not prove
-that Pluto initialized or that the saved OAuth grant includes
+Inspect the live input schemas. `enrich_email` must accept a `candidates` array
+of one to 500 items, the poll tool must accept only the opaque `operationId`,
+and interest must be limited to one in-network selection. Loading this skill
+does not prove that Pluto initialized or that the saved OAuth grant includes
 `candidates:outbound`.
 
 If the required tool is absent or unusable, fail closed:
@@ -96,17 +90,10 @@ If the required tool is absent or unusable, fail closed:
   cannot add a scope absent from the saved grant.
 - If recovery does not expose the tool, report the exact unavailable action and
   state that no enrichment or interest action ran.
-- If only the synchronous compatibility tool is available and the batch
-  contains more than 100 items, explain that this older route accepts at most
-  100 and ask the user to choose a smaller batch. Do not split it across calls
-  automatically.
 
-`start_candidate_email_enrichment`, enrichment polling through
-`get_operation_status`,
-and the legacy
-`enrich_candidate_email` tool use the existing `candidates:outbound` scope, so
-ordinary server updates do not require reconnection when the saved Pluto grant
-already includes it.
+`enrich_email` and enrichment polling through `get_operation_status` use the
+existing `candidates:outbound` scope, so ordinary server updates do not require
+reconnection when the saved Pluto grant already includes it.
 
 ## Preserve every selected candidate
 
@@ -153,8 +140,7 @@ candidates:
     requestId: <a fresh UUID for this profile operation>
 ```
 
-When `start_candidate_email_enrichment` is available, call it exactly once
-with that batch. Accept only:
+Call `enrich_email` exactly once with that batch. Accept only:
 
 - `status: queued` with a non-empty opaque `operationId`, `requested` equal to
   the input length, and a bounded `retryAfterMs`; or
@@ -187,9 +173,7 @@ and carry `operationType: email_enrichment`. Wait at least the returned
 
 A poll transport failure is safe to retry with the same `operationId` while
 attempts remain, but it counts toward the cap and is not authorization to call
-the start tool again. If the async start tool is absent, call the legacy
-`enrich_candidate_email` tool exactly once with the same batch and treat its
-response as the terminal result.
+`enrich_email` again.
 
 Never pass a `projectId`, email address, provider identifier, or other
 candidate field. A discovery-selected item must not contain a LinkedIn URL;
@@ -216,17 +200,17 @@ only to validate the result contract; never infer it from the outcome or
 include it in the normal user-facing response unless the user asks about
 credits.
 
-Do not automatically retry an async start call, a legacy enrichment call, or
-an ambiguous terminal result. The first call may have queued provider work or
-committed disclosures. Poll retries with the same `operationId` are safe and do
-not repeat the paid operation. If the user explicitly directs a new enrichment
-after a terminal failure, reuse each original `requestId` only for the same
-candidate operation. A user may retry only a failed subset with those
-candidates' original request IDs. Never reuse one candidate's request ID for
-another candidate or silently restart unfinished items.
+Do not automatically retry an `enrich_email` call or an ambiguous terminal
+result. The first call may have queued provider work or committed disclosures.
+Poll retries with the same `operationId` are safe and do not repeat the paid
+operation. If the user explicitly directs a new enrichment after a terminal
+failure, reuse each original `requestId` only for the same candidate operation.
+A user may retry only a failed subset with those candidates' original request
+IDs. Never reuse one candidate's request ID for another candidate or silently
+restart unfinished items.
 
-After an async `completed` result or a legacy terminal response, require a
-top-level `results` array and `summary`. The results must contain
+After a `completed` result, require a top-level `results` array and `summary`.
+The results must contain
 exactly one item for every requested candidate, preserve input order, and
 return the matching `candidateRef` for discovery-selected items. A direct item
 must return its normalized `linkedinUrl` and a newly derived `candidateRef`;
