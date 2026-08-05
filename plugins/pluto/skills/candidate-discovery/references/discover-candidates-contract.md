@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `0.57.0`. When the live server reports a newer
+Aligned to server contract `0.57.1`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict. Optional assessment fields
 added after `0.43.0` may be absent on an older deployed server; treat every
@@ -146,8 +146,18 @@ get_operation_status:
 
 The poll returns one of:
 
-- `queued` or `working`: read optional checkpoint `progress`, wait
-  `pollAfterMs`, then poll again;
+- `queued` or `working`: read optional checkpoint `progress` and optional
+  `preview` (a bounded early look at retrieved people — present only as work
+  in progress, never as the final roster), wait `pollAfterMs`, then poll
+  again;
+- `needs_input`: the search is paused on one clarifying question. Relay the
+  `question` object's text verbatim, offer its `options` while making clear a
+  free-text answer is equally valid, submit the user's answer with
+  `answer_job_question` (same `jobId`, unchanged `questionId`, answer
+  verbatim), then keep polling the same `jobId`. The search resumes with the
+  answer folded in and never restarts. An expired or superseded question
+  returns `accepted: false` from `answer_job_question`; the search proceeds
+  with its strict reading and discloses that once;
 - `completed`: consume the nested `result` page and its `pageInfo`;
 - `failed`: report the safe message and stop.
 
@@ -176,6 +186,8 @@ Treat polling, paging, and continuation as separate loops:
 ```text
 discover_candidates
   -> queued or working: get_operation_status(jobId) until terminal
+  -> needs_input: relay question -> answer_job_question(jobId, questionId,
+       answer) -> keep polling the same jobId
   -> completed: get_operation_status(jobId, nextCursor) until hasMore=false
   -> explicit target still unmet and canContinue=true:
        discover_candidates(searchId, fresh requestId, remaining target)
