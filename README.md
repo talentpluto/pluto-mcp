@@ -140,21 +140,25 @@ and ask me to confirm the final review.
   none when the candidate already has an accepted TalentPluto profile, when
   reusing an earlier successful lookup, or when no email is found.
 - LinkedIn profile enrichment runs one asynchronous job for 1–100 supplied
-  profile URLs, reuses a stored profile fetched within the last 3 months, and
-  uses no candidate credits. It returns public profile details, not contact
+  profile URLs and reuses a stored profile fetched within the last 3 months.
+  Every newly admitted URL uses two shared organization candidate credits,
+  including cached, internal, and `not_found` outcomes. An exact retry adds no
+  charge and retains its originally admitted price, which may be one credit per
+  URL for a legacy operation. It returns public profile details, not contact
   information.
 - The team-connection skill enriches 1–100 supplied profiles, reads the stored
   aggregate Team DNA projection, and compares explicit professional facts.
-  Both reads use no candidate credits. It can cite a returned public founder
+  Profile enrichment uses the admitted per-profile price above; the Team DNA
+  read uses no candidate credits. It can cite a returned public founder
   background, but it never identifies non-founder members, verifies a personal
   relationship, or offers a warm-introduction path.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
-  and uses no candidate credits; profile enrichment it triggers is also
-  credit-free. Scores are separate 0-100 measures of cited professional
-  overlap — background familiarity with your team, and evidence-verified
-  match to your job description when you supply one — never a culture-fit
-  judgment, protected-trait proxy, or hiring decision, and non-founder
-  employees appear only as aggregate patterns.
+  and uses no candidate credits; profile enrichment it triggers uses the
+  admitted per-profile price above. Scores are separate 0-100 measures of cited
+  professional overlap — background familiarity with your team, and
+  evidence-verified match to your job description when you supply one — never
+  a culture-fit judgment, protected-trait proxy, or hiring decision, and
+  non-founder employees appear only as aggregate patterns.
 - Connected-inbox campaigns create the first Gmail draft after copy generation
   and later drafts one at a time on cumulative days measured from campaign
   creation. Each draft is sent manually from Gmail.

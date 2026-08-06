@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto LinkedIn profile enrichment"
   short_description: "Get full profiles for supplied LinkedIn URLs"
-  default_prompt: "Use $linkedin-enrichment when I explicitly supply up to 100 LinkedIn profile URLs, or select returned candidates with visible LinkedIn URLs, and ask for full professional profile details. Generate one private UUID requestId for the exact ordered URL batch, start one async enrichment operation, require one credit per submitted URL, keep operationId private, poll no faster than retryAfterMs until completed or failed, present each enriched or not-found profile in input order, label candidateReportedHighlights as candidate-reported and not independently verified, never name or infer the underlying source, and never return contact information or raw call data."
+  default_prompt: "Use $linkedin-enrichment when I explicitly supply up to 100 LinkedIn profile URLs, or select returned candidates with visible LinkedIn URLs, and ask for full professional profile details. Generate one private UUID requestId for the exact ordered URL batch, start one async enrichment operation, pin its returned credit total of two credits per URL for a newly admitted operation or one per URL for a legacy exact retry, require that total to remain unchanged through every poll and terminal result, keep operationId private, poll no faster than retryAfterMs until completed or failed, present each enriched or not-found profile in input order, label candidateReportedHighlights as candidate-reported and not independently verified, never name or infer the underlying source, and never return contact information or raw call data."
 
 dependencies:
   tools:
