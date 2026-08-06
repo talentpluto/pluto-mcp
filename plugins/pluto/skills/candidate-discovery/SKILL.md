@@ -45,7 +45,7 @@ The durable experience also uses:
   operation, to retrieve the final result;
 - `answer_operation_question`, to deliver the user's answer when a search
   pauses on one clarifying question (`status: needs_input`); and
-- `get_client_team_dna` to read the authenticated client's bounded,
+- `get_team_dna` to read the authenticated client's bounded,
   precomputed professional context.
 
 If `discover_candidates` is absent, follow the `connection-recovery` skill.
@@ -56,7 +56,7 @@ the host timeout. Recheck the live tool catalog once through connection
 recovery. If it remains absent, report a plugin/server contract mismatch and
 that no search ran.
 
-Team DNA is optional for successful retrieval. If `get_client_team_dna` is
+Team DNA is optional for successful retrieval. If `get_team_dna` is
 absent or returns unavailable context, continue the search and present the
 server result without inventing personalization.
 
@@ -351,7 +351,7 @@ either case, a later user request for more authorizes a new continuation when
 
 ## Read Team DNA alongside the operation
 
-Call `get_client_team_dna` in parallel with the first operation poll when the live
+Call `get_team_dna` in parallel with the first operation poll when the live
 tool is available. Choose the department from the role:
 
 - engineering and technical roles: `engineering`;

@@ -1,20 +1,23 @@
 ---
 name: linkedin-enrichment
-description: Use when a user explicitly supplies one to 100 LinkedIn profile URLs, or explicitly selects returned candidates with visible LinkedIn URLs, and asks Pluto for full public profile details. Runs the asynchronous start-and-poll profile-enrichment contract, keeps the opaque operation handle private, presents enriched or not-found profiles in input order, and never returns contact information.
+description: Use when a user explicitly supplies one to 100 LinkedIn profile URLs, or explicitly selects returned candidates with visible LinkedIn URLs, and asks Pluto for full professional profile details. Runs the asynchronous start-and-poll profile-enrichment contract, keeps the opaque operation handle and request ID private, presents enriched or not-found profiles in input order, and never returns contact information or raw call data.
 ---
 
 # LinkedIn profile enrichment
 
-Use this skill only when the user clearly asks Pluto for full public profile
+Use this skill only when the user clearly asks Pluto for full professional
 details — current role, work history, education, and similar professional
 facts — for LinkedIn profiles they explicitly supplied or explicitly
 selected. URL submission alone is not authorization. A profile being visible,
 shortlisted, or under discussion never authorizes a tool call.
 
+This skill was written against server contract `3.0.0`. On any conflict,
+prefer the live tool descriptions and schema field descriptions.
+
 Keep neighboring requests on their own routes:
 
 - Contact information uses the `candidate-interest` email-enrichment route.
-  Profile enrichment is a public-profile lookup, not a contact lookup; it
+  Profile enrichment is a professional-profile lookup, not a contact lookup; it
   never returns emails, and phone numbers are never requested.
 - One URL plus "find more people like this person" is a discovery request;
   use the `candidate-discovery` skill's reference-profile search.
@@ -43,10 +46,11 @@ Before promising or attempting enrichment, require `enrich_candidate` and the
 shared `get_operation_status` poll tool. Never call `enrich_candidate` when the
 poll tool is missing.
 
-Inspect the live input schemas: `enrich_candidate` must accept a
-`profiles` array of one to 100 items that each contain only `linkedinUrl`, and
-the poll tool must accept only the opaque `operationId`. Loading this skill does
-not prove that Pluto initialized or that the saved OAuth grant includes
+Inspect the live input schemas: `enrich_candidate` must accept a `profiles`
+array of one to 100 items that each contain only `linkedinUrl`, plus one
+top-level UUID `requestId`; the poll tool must accept only the opaque
+`operationId`. Loading this skill does not prove that Pluto initialized or that
+the saved OAuth grant includes
 `candidates:outbound`.
 
 If a required tool is absent or unusable, fail closed:
@@ -65,13 +69,15 @@ Pluto grant already includes it.
 
 ## Build one batch
 
-Build one `profiles` batch, including a one-item batch, that preserves the
-user's order. Each item contains only that profile's `linkedinUrl`:
+Build one batch, including a one-item batch, that preserves the user's order.
+Generate one fresh private UUID for the deliberate ordered batch. Each profile
+item contains only that profile's `linkedinUrl`:
 
 ```yaml
 profiles:
   - linkedinUrl: <the first supplied LinkedIn profile URL>
   - linkedinUrl: <the next supplied LinkedIn profile URL>
+requestId: <a fresh UUID for this exact ordered batch>
 ```
 
 Profile enrichment items never contain a `requestId`, `candidateRef`,
@@ -79,6 +85,9 @@ Profile enrichment items never contain a `requestId`, `candidateRef`,
 once; the server rejects a batch that repeats the same normalized profile. If
 the same profile appears twice in different forms, keep its first position
 and tell the user rather than submitting the duplicate.
+Keep the top-level `requestId` private. Reuse it only for an exact retry of the
+same ordered normalized URL list; any changed or deliberate new batch uses a
+new UUID.
 
 If the user supplies more than 100 profiles, ask them to choose at most 100
 for the current batch; do not split the request across operations
@@ -88,10 +97,11 @@ directs; do not resubmit the batch unchanged.
 
 ## Start and poll the operation
 
-Call `enrich_candidate` exactly once with the batch. Accept only:
+Call `enrich_candidate` once per logical operation with the batch. Accept only:
 
 - `status: queued` with a non-empty opaque `operationId`, `requested` equal to
-  the input length, and a bounded `retryAfterMs`; or
+  the input length, `creditsUsed` equal to the input length, and a bounded
+  `retryAfterMs`; or
 - `status: completed` with the terminal result contract below, which is
   allowed for a sandbox or compatibility runtime.
 
@@ -101,9 +111,10 @@ that exact unchanged `operationId`; each response must echo that `operationId`
 and carry `operationType: linkedin_enrichment`. Wait at least the returned
 `retryAfterMs` before each poll. Handle each poll result exactly:
 
-- `queued` or `running`: require `requested` to match the input length and an
-  integer `retryAfterMs` within the inspected live schema's bounds. The
-  response may include bounded `progress` counters — a `phase` of
+- `queued` or `running`: require both `requested` and `creditsUsed` to match
+  the input length and an integer `retryAfterMs` within the inspected live
+  schema's bounds. The response may include bounded `progress` counters — a
+  `phase` of
   `preparing`, `internal_lookup`, `profile_lookup`, or `finalizing` with
   `completed` and `total` — which may be relayed plainly as progress. If
   attempts remain, wait at least `retryAfterMs` and poll the same operation
@@ -111,7 +122,9 @@ and carry `operationType: linkedin_enrichment`. Wait at least the returned
   exposing its ID; only an explicit user request to continue may start a new
   bounded polling pass with that unchanged `operationId`.
 - `completed`: continue to the terminal result validation below.
-- `failed`: relay only the safe returned message and stop. Do not restart
+- `failed`: require `requested` and `creditsUsed` to match the input length,
+  relay only the safe returned message, and stop. The admitted batch remains
+  charged. Do not restart
   enrichment.
 - Any unknown status, non-object response, missing required field, malformed
   field, or mismatched `requested` count is a server/plugin contract
@@ -119,11 +132,13 @@ and carry `operationType: linkedin_enrichment`. Wait at least the returned
 
 A poll transport failure is safe to retry with the same `operationId` while
 attempts remain. If the start call's queue acknowledgement was lost, polling
-recovers that same submission idempotently and never creates another logical
-operation, so do not automatically call the start tool again after an
-ambiguous start result. Once queued, cancelling or disconnecting the original
-request does not cancel the background operation. The operation is bound to
-the authenticated organization, user, and OAuth client and is reauthorized on
+recovers that same submission when the handle is available. If no handle was
+received, one bounded start retry is safe only with the exact same batch and
+`requestId`; never generate a replacement UUID. Exact retry reuses the original
+charge and logical operation. Once queued, cancelling or disconnecting the
+original request does not cancel the background operation. The operation is
+bound to the authenticated organization, user, and OAuth client and is
+reauthorized on
 every poll.
 
 ## Validate the completed result
@@ -140,17 +155,24 @@ Handle each item exactly:
 
 Require the summary to reconcile: `summary.requested` equals the input
 length, `enriched` and `notFound` equal their respective item counts, and the
-two counts sum to `requested`. If results are missing, duplicated, reordered,
-or correlated to the wrong profile, if an `enriched` item lacks a profile
-object, or if the summary does not reconcile, report a server/plugin contract
-mismatch rather than filling in missing data.
+two counts sum to `requested`. Also require `summary.creditsUsed` to equal
+`summary.requested`. If results are missing, duplicated, reordered, or
+correlated to the wrong profile, if an `enriched` item lacks a profile object,
+or if the summary does not reconcile, report a server/plugin contract mismatch
+rather than filling in missing data.
 
 Server-side freshness is automatic: a profile fetched within the last 3
 months is reused from internal storage, an older stored result is re-enriched
-instead of served, and every fresh lookup is stored for future reuse. A
-profile enrichment operation uses zero shared organization candidate credits;
-state that only when the user asks about cost, and do not apply discovery or
-email-enrichment credit rules to this route.
+instead of served, and every fresh lookup is stored for future reuse. An
+accepted candidate uses the same provider-equivalent profile path as every
+other URL; bounded structured career facts are only a fallback when stored
+and live profile sources have no match. Every admitted profile uses one shared
+organization candidate credit, including an accepted internal candidate, a
+fresh stored result, an external lookup, or a
+completed `not_found` result. A later operation failure remains charged. An
+exact retry with the same `requestId` uses no additional credits. State cost
+only when the user asks, and do not apply discovery or email-enrichment credit
+rules to this route.
 
 ## Present the profiles
 
@@ -161,6 +183,13 @@ education the user's request makes relevant. Missing fields stay unknown;
 never fill a gap from memory, search results, or another profile. Share the
 complete returned profile for an item when the user explicitly asks for the
 full data.
+
+An accepted TalentPluto candidate's provider-shaped profile may include up to
+three `candidateReportedHighlights`. Present them only as candidate-reported,
+not independently verified professional context. Their presence never permits
+you to reveal or infer that the candidate is internal, accepted, or in any
+particular lifecycle stage. Never infer missing highlights mean the candidate
+had no call or supplied no information.
 
 Include every `not_found` profile in the same presentation with its supplied
 URL and a plain no-matching-profile outcome. Never invent a placeholder
@@ -177,6 +206,9 @@ Never expose the enrichment `operationId`, raw transport details, internal
 storage details, or provider identity. Profile enrichment returns no emails
 and never requests phone numbers; route contact requests to the
 `candidate-interest` skill instead of implying this result contains them. Do
-not present profile enrichment output as TalentPluto-verified data,
-server-verified matching, or evidence of anything beyond the returned public
-professional fields.
+not present profile enrichment output as TalentPluto-verified data or
+server-verified matching. Never expose a transcript, recording, call ID, call
+analysis, private preference, lifecycle stage, or contact field. If any such
+field appears, report a contract mismatch and withhold it. Treat
+`candidateReportedHighlights` as bounded professional context only, never as
+a private-candidate fact, qualification verdict, or culture-fit signal.

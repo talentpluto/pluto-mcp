@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto team connection"
   short_description: "Compare candidates with aggregate Team DNA"
-  default_prompt: "Use $team-connection for the explicitly identified candidate LinkedIn profiles. Enrich them with enrich_candidate, poll the operation to completion, read get_client_team_dna, and compare only explicit candidate facts with returned aggregate professional signals. Present evidence-backed common ground, complementarity, and unknowns without a numeric score. Never name a non-founder teammate, claim that people know or worked with each other, imply culture fit, or offer a warm-introduction path."
+  default_prompt: "Use $team-connection for the explicitly identified candidate LinkedIn profiles. Enrich them with enrich_candidate, poll the operation to completion, read get_team_dna, and compare only explicit candidate facts with returned aggregate professional signals. Present evidence-backed common ground, complementarity, and unknowns without a numeric score. Never name a non-founder teammate, claim that people know or worked with each other, imply culture fit, or offer a warm-introduction path."
 
 dependencies:
   tools:
