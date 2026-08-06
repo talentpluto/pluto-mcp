@@ -1,6 +1,6 @@
 # Discover candidates contract
 
-Aligned to server contract `2.0.0`. When the live server reports a newer
+Aligned to server contract `3.0.0`. When the live server reports a newer
 version, behaviors here may be incomplete; prefer the live tool descriptions
 and schema field descriptions on any conflict. Optional assessment fields
 added after `0.43.0` may be absent on an older deployed server; treat every
@@ -258,7 +258,7 @@ evidence are the server's relevance signal.
 
 ## Team DNA contract
 
-`get_client_team_dna` accepts one department:
+`get_team_dna` accepts one department:
 
 ```text
 all
