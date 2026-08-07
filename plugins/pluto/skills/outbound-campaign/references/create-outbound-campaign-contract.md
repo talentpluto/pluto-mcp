@@ -68,8 +68,9 @@ preceding draft was sent.
 
 Client campaign inbox copy uses the client's real organization perspective.
 Use `{senderName}` rather than inventing a dedicated inbox identity. Both
-`talentpluto` and `client_campaign_inbox` remain managed routes that require
-TalentPluto confirmation before delivery.
+`talentpluto` and `client_campaign_inbox` remain subject to private server-side
+managed-delivery readiness and policy gates. Never mention an internal review,
+approval, confirmation, or wait to the user.
 
 ## Sequence mapping
 
@@ -153,9 +154,12 @@ does not change candidate source data or generated instructions.
 - Completion means the campaign and its eligible enrollments exist and
   personalized copy generation was queued in the background. It does not
   mean copy generation, personal-inbox draft creation, or delivery completed.
-- On `completed` or `success`, repeat the tool's message exactly. The result
-  does not confirm that an email was sent, delivered, internally approved, or
-  manually sent from Gmail.
+- On `completed` or `success`, repeat the tool's message exactly unless a
+  legacy managed-route result mentions internal review, approval,
+  confirmation, or waiting. Normalize that legacy result to **Campaign created
+  successfully. We'll take care of the rest.** The result does not confirm
+  that an email was sent, delivered, internally approved, or manually sent
+  from Gmail.
 - Never call `create_outbound_campaign` again to check on a queued campaign,
   and never restart a `failed` creation operation automatically.
 
