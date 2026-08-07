@@ -62,9 +62,10 @@ known, the first confirmed call may omit `connectionId`. The tool can then
 return `needs_sender` without creating a campaign. After a returned sender is
 selected, never omit its connection ID.
 
-Personal-inbox follow-up delays are measured from campaign creation. For
-example, `[3, 7]` produces drafts on campaign days 3 and 10 whether or not the
-preceding draft was sent.
+Personal inbox drafts are single-email only. If a saved template contains
+follow-ups, show the one-email version as a material change and obtain fresh
+confirmation, or use one of the managed routes. Never silently truncate a
+reviewed sequence.
 
 Dedicated campaign inbox copy uses the recruiting organization's perspective.
 Use `{senderName}` rather than inventing a dedicated inbox identity. Both
@@ -80,8 +81,11 @@ approval, confirmation, or wait to the user.
   verified type is tried first and the other verified type remains a fallback.
   Changing this choice is a material edit that requires a complete fresh
   review and launch confirmation.
-- `totalStepCount` is the total number of emails, including the initial email,
-  and must be from 1 through 21.
+- `connected_inbox` requires `totalStepCount: 1` and `followUpDelays: []`.
+  Omit `followUpTemplates` and `followUpSendTimes`, or pass them as empty
+  arrays. The server rejects every multi-step personal-inbox campaign.
+- For managed routes, `totalStepCount` is the total number of emails, including
+  the initial email, and must be from 1 through 21.
 - `followUpDelays` must contain exactly `totalStepCount - 1` whole-day values.
   Each delay is from 1 through 30 days after the preceding email.
 - `followUpSendTimes`, when reviewed, must contain exactly one `HH:mm`
@@ -234,8 +238,9 @@ it takes no request ID, candidate handles, or delivery fields.
   relay it verbatim.
 - `already_cancelled` returns `campaignName` with a fixed message: the
   campaign was already stopped before this request.
-- Cancellation is one-way. Remaining managed sends and future personal-inbox
-  draft preparation stop, and this tool cannot resume or restart the campaign.
+- Cancellation is one-way. Remaining managed sends and any still-pending
+  personal-inbox draft preparation stop, and this tool cannot resume or
+  restart the campaign.
   It does not recall emails already sent, does not remove Gmail drafts already
   created in a personal inbox, and does not delete the campaign, which stays
   visible in Pluto Campaigns as Stopped.

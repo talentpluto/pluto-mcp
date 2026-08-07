@@ -1,6 +1,6 @@
 ---
 name: outbound-campaign
-description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected candidates; browse, reuse, save, update, or delete an outbound campaign template; or cancel or stop an existing campaign. Prefills the campaign basics, distinguishes personal inbox drafts, Pluto-managed inboxes, and dedicated campaign inboxes, offers three simple writing paths, keeps the full sequence editable, shows a concise final review, and calls create_outbound_campaign only after explicit confirmation of that exact setup. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
+description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected candidates; browse, reuse, save, update, or delete an outbound campaign template; or cancel or stop an existing campaign. Prefills the campaign basics, distinguishes single-email personal inbox drafts, Pluto-managed inboxes, and dedicated campaign inboxes, offers three simple writing paths, keeps the applicable sequence editable, shows a concise final review, and calls create_outbound_campaign only after explicit confirmation of that exact setup. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
 ---
 
 # Outbound campaigns
@@ -21,8 +21,8 @@ wait for that internal step.
 
 - **Pluto-managed inboxes** use Pluto's managed sender pool and delivery
   lifecycle.
-- **Personal inbox drafts** use one selected Gmail inbox. The user manually
-  sends each draft from Gmail.
+- **Personal inbox drafts** use one selected Gmail inbox and always create one
+  draft per recipient. The user manually sends each draft from Gmail.
 - **Dedicated campaign inboxes** use one ready dedicated inbox owned by the
   organization. The server selects and pins it for managed delivery.
 
@@ -128,9 +128,11 @@ Show one compact, editable proposal containing:
   only when it is genuinely missing or ambiguous.
 - **Audience.** Show the selected candidate count. Do not ask for the audience
   again when the user already selected it.
-- **Sequence.** Preserve any requested email count and cadence. Otherwise
-  propose three emails: the initial email on day 0, a follow-up three days
-  later, and a final follow-up seven days after that, on campaign day 10.
+- **Sequence.** Personal inbox drafts always contain exactly one email and no
+  follow-ups. For either managed route, preserve any requested email count and
+  cadence. Otherwise propose three emails: the initial email on day 0, a
+  follow-up three days later, and a final follow-up seven days after that, on
+  campaign day 10.
 - **Recipient email priority.** Preserve a loaded template's inheritance or
   override. Otherwise propose the organization's Campaigns default and offer
   explicit **work first** or **personal first** as editable alternatives. The
@@ -179,14 +181,12 @@ Ask one compact question: whether to keep the proposed basics or change
 anything. The user may answer naturally, including with a simple approval.
 Reflect the resulting setup once, then continue.
 
-For more than one email, store each whole-day delay from the preceding email.
-Explain cumulative days only when it prevents confusion. For example, day 0,
-day 3, and day 10 maps to delays `[3, 7]`. Ask for exact send times only when
-the user requests them; those times use America/New_York.
-
-For a personal inbox, explain once that follow-up drafts appear on cumulative
-campaign days whether or not an earlier draft was sent. Sending a draft does
-not start or gate the next timer.
+For a managed campaign with more than one email, store each whole-day delay
+from the preceding email. Explain cumulative days only when it prevents
+confusion. For example, day 0, day 3, and day 10 maps to delays `[3, 7]`. Ask
+for exact send times only when the user requests them; those times use
+America/New_York. Never offer cadence or follow-up controls for a personal
+inbox campaign.
 
 ### Stage 2 of 4: Choose how to write
 
@@ -321,7 +321,7 @@ Keep the final review concise but complete:
 
 - Delivery: <Pluto-managed inboxes, personal inbox drafts plus selected email, dedicated campaign inboxes, or pending personal-inbox check>
 - Recipient email priority: <organization Campaigns default (inherited), verified work first (explicit override), or verified personal first (explicit override)>; the other verified type remains a fallback
-- Sequence: <initial email and the cumulative day of each follow-up>
+- Sequence: <one email for personal inbox drafts, or the initial email and the cumulative day of each managed follow-up>
 - Follow-up times: <exact reviewed America/New_York times when set; otherwise omit this line>
 - Writing: <exact shared copy, recipient-specific generation, or hybrid>
 - Template values: <exact campaign-wide values when used; otherwise omit this line>
@@ -354,9 +354,8 @@ For Pluto-managed inboxes, the route-specific behavior is:
 
 For personal inbox drafts, it is:
 
-> Creating the campaign starts its Gmail draft schedule. The first draft is
-> prepared after copy generation, later drafts appear on the reviewed
-> campaign days, and you manually send each draft.
+> Creating the campaign prepares one Gmail draft per recipient after copy
+> generation, and you manually send each draft.
 
 For dedicated campaign inboxes, it is:
 
@@ -418,6 +417,12 @@ Map recipient email priority without erasing its meaning: pass `work` or
 `personal` only for an explicit reviewed override, and omit `emailPriority`
 when the reviewed choice is the organization Campaigns default or a loaded
 template that inherits it. Never replace omission with a guessed default.
+
+For `connected_inbox`, always pass `totalStepCount: 1` and
+`followUpDelays: []`, and omit or empty `followUpTemplates` and
+`followUpSendTimes`. If the user chose a multi-step saved template, show and
+review the one-email personal-inbox version as a material edit; never silently
+truncate it or send the original multi-step settings.
 
 Handle the result narrowly:
 
@@ -487,11 +492,11 @@ nothing:
    else.
 
 Before the user confirms, state plainly what cancelling does: it permanently
-stops that campaign. Remaining managed sends and future personal-inbox draft
-preparation are cancelled, and this tool cannot resume or restart the
-campaign. It does not recall emails already sent, does not remove Gmail drafts
-already created in a personal inbox, and does not delete the campaign, which
-stays visible in Pluto Campaigns as Stopped.
+stops that campaign. Remaining managed sends and any still-pending
+personal-inbox draft preparation are cancelled, and this tool cannot resume or
+restart the campaign. It does not recall emails already sent, does not remove
+Gmail drafts already created in a personal inbox, and does not delete the
+campaign, which stays visible in Pluto Campaigns as Stopped.
 
 Handle the result narrowly:
 
