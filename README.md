@@ -155,13 +155,13 @@ and ask me to confirm the final review.
   match to your job description when you supply one — never a culture-fit
   judgment, protected-trait proxy, or hiring decision, and non-founder
   employees appear only as aggregate patterns.
-- Connected-inbox campaigns create the first Gmail draft after copy generation
-  and later drafts one at a time on cumulative days measured from campaign
-  creation. Each draft is sent manually from Gmail.
+- Connected-inbox campaigns are always one email per recipient. Pluto creates
+  one Gmail draft per recipient after copy generation, and each draft is sent
+  manually from Gmail.
 - Cancelling a campaign permanently stops its remaining scheduled emails and
-  future Gmail draft preparation. It does not recall emails already sent or
-  remove drafts already created in Gmail, and the campaign stays visible in
-  Pluto as Stopped.
+  any still-pending Gmail draft preparation. It does not recall emails already
+  sent or remove drafts already created in Gmail, and the campaign stays
+  visible in Pluto as Stopped.
 - Market snapshots use aggregated data and omit metrics that do not meet
   privacy thresholds.
 - Private candidate questions return a bounded answer, not the candidate's raw
