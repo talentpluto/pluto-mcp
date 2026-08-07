@@ -2,8 +2,8 @@
 
 Use this reference only for internal validation and tool mapping. Keep schema
 names and opaque values out of normal user-facing conversation. The sections
-through request identity cover `create_outbound_campaign`; the final section
-covers `cancel_outbound_campaign`.
+through request identity cover `create_outbound_campaign`; the saved-template
+and cancellation sections cover their respective tools.
 
 ## Audience and campaign boundaries
 
@@ -41,14 +41,14 @@ Pass exactly one delivery object:
 - Pluto-managed inboxes: `delivery: { method: 'talentpluto' }`
 - Personal inbox drafts:
   `delivery: { method: 'connected_inbox', connectionId }`
-- Client campaign inbox:
+- Dedicated campaign inbox:
   `delivery: { method: 'client_campaign_inbox' }`
 
 For personal inbox drafts, pair the private `connectionId` only with its safe
 email from trusted context or a `needs_sender` response. Never place two
-delivery routes or two senders in one campaign. For a client campaign inbox,
-never pass an inbox identifier: the server verifies readiness, selects one
-tenant-owned dedicated inbox, and pins it to the campaign.
+delivery routes or two senders in one campaign. For a dedicated campaign
+inbox, never pass an inbox identifier: the server verifies readiness, selects
+one organization-owned dedicated inbox, and pins it to the campaign.
 
 Personal-inbox copy must represent the real person and organization behind
 that inbox. Never write as TalentPluto unless it is the sender's actual
@@ -66,7 +66,7 @@ Personal-inbox follow-up delays are measured from campaign creation. For
 example, `[3, 7]` produces drafts on campaign days 3 and 10 whether or not the
 preceding draft was sent.
 
-Client campaign inbox copy uses the client's real organization perspective.
+Dedicated campaign inbox copy uses the recruiting organization's perspective.
 Use `{senderName}` rather than inventing a dedicated inbox identity. Both
 `talentpluto` and `client_campaign_inbox` remain subject to private server-side
 managed-delivery readiness and policy gates. Never mention an internal review,
@@ -74,6 +74,12 @@ approval, confirmation, or wait to the user.
 
 ## Sequence mapping
 
+- `emailPriority` is optional. Use `work` or `personal` only for an explicit
+  reviewed override. Omit it to inherit the organization's Campaigns
+  configuration, including when a loaded template omitted it. The selected
+  verified type is tried first and the other verified type remains a fallback.
+  Changing this choice is a material edit that requires a complete fresh
+  review and launch confirmation.
 - `totalStepCount` is the total number of emails, including the initial email,
   and must be from 1 through 21.
 - `followUpDelays` must contain exactly `totalStepCount - 1` whole-day values.
@@ -87,8 +93,10 @@ approval, confirmation, or wait to the user.
 - `initialSubjectTemplate` is at most 240 characters.
 - `initialBodyTemplate` and every
   `followUpTemplates[].bodyTemplate` are at most 12,000 characters.
-- `clientName`, `companyName`, `projectName`, and `roleTitle` values in
-  `templateVariableOverrides` are each at most 240 characters.
+- `templateVariableOverrides` accepts up to 24 campaign-wide values. Each key
+  is at most 64 characters, begins with a letter, and contains only letters,
+  numbers, or underscores. Each trimmed value is non-empty and at most 240
+  characters.
 
 For recipient-specific generation, omit the corresponding template field and
 put that step's numbered purpose in `generationPrompt`.
@@ -115,17 +123,23 @@ field.
 
 ## Template variables
 
-Allow only:
+Built-in variables are:
 
-`{firstName}`, `{lastName}`, `{fullName}`, `{currentCompany}`, `{senderName}`,
-`{companyName}`, `{clientName}`, `{roleTitle}`, `{projectName}`
+`{firstName}`, `{lastName}`, `{fullName}`, `{candidateCompany}`,
+`{senderName}`, `{companyName}`, `{roleTitle}`
 
-`{firstName}`, `{lastName}`, `{fullName}`, `{currentCompany}`, and
-`{senderName}` resolve from recipient or sender context.
+`{companyName}` means the recruiting organization or company.
+`{candidateCompany}` means the recipient's company. Candidate built-ins
+resolve per recipient unless an explicit campaign-wide override replaces them.
+`{senderName}` always resolves from the selected sender, is reserved, and
+cannot appear in `templateVariableOverrides`.
 
-Use `templateVariableOverrides` only for reviewed campaign-wide
-`clientName`, `companyName`, `projectName`, and `roleTitle` values. An override
-does not change candidate source data or generated instructions.
+Users may define arbitrary additional variables that satisfy the key and value
+limits above. Every custom placeholder in fixed copy must have an exact
+matching key in `templateVariableOverrides`. Do not use `{projectName}`.
+Single braces are required; double braces and malformed placeholders are
+invalid. An override does not change candidate source data or generated
+instructions.
 
 ## Request identity and response handling
 
@@ -136,7 +150,8 @@ does not change candidate source data or generated instructions.
   - a user-directed retry of the exact unchanged campaign, including when the
     tool says to retry shortly with the same request ID.
 - Use a fresh UUID for another campaign or any material setup change outside
-  the explicit sender continuation.
+  the explicit sender continuation, including a recipient email-priority
+  change.
 - Never automatically retry an ambiguous timeout or transport failure.
 - Call the tool once for each explicitly confirmed campaign. Do not merge
   separate reviewed campaigns.
@@ -162,6 +177,32 @@ does not change candidate source data or generated instructions.
   from Gmail.
 - Never call `create_outbound_campaign` again to check on a queued campaign,
   and never restart a `failed` creation operation automatically.
+
+## Saved campaign templates
+
+- Call `get_outbound_campaign_templates` without `templateId` to list bounded
+  summaries, then with the selected private `templateId` to load the complete
+  `sequenceSettings`. Keep `templateId` and `updatedAt` hidden.
+- A loaded template is editable prefill, not campaign launch approval. Preserve
+  all loaded settings and preserve whether `emailPriority` is absent
+  (organization-default inheritance) or present (template override) until the
+  user reviews a change. Campaign creation receives the reviewed
+  `sequenceSettings`, never a `templateId`.
+- A template stores reusable generation guidance, fixed copy, variable
+  overrides, step count, cadence, optional send times, and optional email
+  priority. It excludes recipients, handles, campaign name, delivery route,
+  and sender inbox.
+- Call `save_outbound_campaign_template` only for an explicit request to save
+  or update the exact reviewed reusable settings. Omit `templateId` and
+  `expectedUpdatedAt` for a new save. For an update, load the exact template
+  first and pass both its private `templateId` and unchanged `updatedAt`. A
+  `stale` or `name_conflict` result means no write occurred; load and review
+  the relevant current template before asking again.
+- Call `delete_outbound_campaign_template` only after loading the exact
+  template and obtaining explicit deletion confirmation. Pass its private
+  `templateId` and unchanged `updatedAt`. A `stale` result deletes nothing and
+  requires a fresh load and confirmation. Deletion is irreversible but does
+  not modify campaigns already created from the template.
 
 ## Campaign cancellation
 
