@@ -26,8 +26,9 @@ work with the retrieved leads directly in the conversation.
   against your job description when you provide one. Every credited match
   cites explicit evidence, and candidates are enriched first when their
   profile facts are not already in the session.
-- Review and create an email campaign for selected out-of-network candidates,
-  using either TalentPluto-managed delivery or one connected Gmail inbox.
+- Review and create an email campaign for selected out-of-network candidates
+  from one complete editable review, using Pluto-managed delivery, one
+  connected Gmail inbox, or one ready dedicated campaign inbox.
 - Cancel an existing outbound campaign after confirming the exact one,
   stopping its remaining scheduled emails.
 - Express interest in an in-network candidate for an active role.
@@ -117,10 +118,9 @@ After a search, select the relevant candidates before asking Pluto to continue:
 ```text
 @pluto Get and verify the available emails for these candidates.
 
-@pluto Create a campaign for these candidates. Prefill the basics, let me
-choose whether to write exact shared copy, provide generation instructions, or
-have Pluto draft the emails for me, then show the complete editable sequence
-and ask me to confirm the final review.
+@pluto Create a campaign for these candidates. Load my defaults and relevant
+saved templates, draft one complete editable review, and ask me to confirm that
+exact campaign.
 
 @pluto Express interest in this candidate for the Senior Engineer role.
 
