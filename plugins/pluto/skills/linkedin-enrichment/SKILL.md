@@ -101,13 +101,21 @@ directs; do not resubmit the batch unchanged.
 
 ## Start and poll the operation
 
-Call `enrich_candidate` once per logical operation with the batch. Accept only:
+Call `enrich_candidate` once per logical operation with the batch. Establish
+one private admitted credit total from the first successful response: use the
+top-level `creditsUsed` value for `queued`, or `summary.creditsUsed` for the
+compatibility `completed` response. Require that total to equal either the
+input length for an exact retry first admitted under the legacy one-credit
+contract, or twice the input length for a current operation. Pin that exact
+total for the rest of the operation; never select or change it from cache
+status, profile outcome, a later response, or inference. Accept only:
 
 - `status: queued` with a non-empty opaque `operationId`, `requested` equal to
-  the input length, `creditsUsed` equal to twice the input length, and a
+  the input length, `creditsUsed` equal to the admitted credit total, and a
   bounded `retryAfterMs`; or
 - `status: completed` with the terminal result contract below, which is
-  allowed for a sandbox or compatibility runtime.
+  allowed for a sandbox or compatibility runtime and establishes its admitted
+  credit total from `summary.creditsUsed`.
 
 Keep `operationId` private. Call `get_operation_status` with only that exact
 unchanged `operationId`; each response must echo it and carry
@@ -115,7 +123,7 @@ unchanged `operationId`; each response must echo it and carry
 `retryAfterMs` before each poll. Handle each poll result exactly:
 
 - `queued` or `running`: require `requested` to match the input length,
-  `creditsUsed` to equal twice that length, and an integer `retryAfterMs`
+  `creditsUsed` to equal the pinned admitted total, and an integer `retryAfterMs`
   within the inspected live schema's bounds. The response may include bounded
   `progress` counters — a
   `phase` of
@@ -126,11 +134,12 @@ unchanged `operationId`; each response must echo it and carry
   continue.
 - `completed`: continue to the terminal result validation below.
 - `failed`: require `requested` to match the input length and `creditsUsed` to
-  equal twice that length, relay only the safe returned message, and stop. The
-  admitted batch remains charged. Do not restart enrichment.
+  equal the pinned admitted total, relay only the safe returned message, and
+  stop. The admitted batch remains charged. Do not restart enrichment.
 - Any unknown status, non-object response, missing required field, malformed
-  field, or mismatched `requested` count is a server/plugin contract
-  mismatch. Report it and stop without another poll or a new start call.
+  field, mismatched `requested` count, or changed `creditsUsed` total is a
+  server/plugin contract mismatch. Report it and stop without another poll or
+  a new start call.
 
 A transient poll transport failure is safe to retry with the same
 `operationId` and returned timing. If the start call's queue acknowledgement
@@ -156,11 +165,11 @@ Handle each item exactly:
 
 Require the summary to reconcile: `summary.requested` equals the input
 length, `enriched` and `notFound` equal their respective item counts, and the
-two counts sum to `requested`. Also require `summary.creditsUsed` to equal
-twice `summary.requested`. If results are missing, duplicated, reordered, or
+two counts sum to `requested`. Also require `summary.creditsUsed` to equal the
+pinned admitted total. If results are missing, duplicated, reordered, or
 correlated to the wrong profile, if an `enriched` item lacks a profile object,
-or if the summary does not reconcile, report a server/plugin contract mismatch
-rather than filling in missing data.
+if the credit total changes, or if the summary does not reconcile, report a
+server/plugin contract mismatch rather than filling in missing data.
 
 Server-side freshness is automatic: a profile fetched within the last 3
 months is reused from internal storage, an older stored result is re-enriched
@@ -171,9 +180,10 @@ and live profile sources have no match. Every newly admitted profile uses
 exactly two shared organization candidate credits, including an accepted
 internal candidate, a fresh stored result, an external lookup, or a completed
 `not_found` result. A later operation failure remains charged. An exact retry
-with the same `requestId` uses no additional credits. State cost only when the
-user asks, and do not apply discovery or email-enrichment credit rules to this
-route.
+with the same `requestId` uses no additional credits and retains its originally
+admitted total; a retry first admitted under the legacy contract may therefore
+report one credit per profile. State cost only when the user asks, and do not
+apply discovery or email-enrichment credit rules to this route.
 
 ## Present the profiles
 
