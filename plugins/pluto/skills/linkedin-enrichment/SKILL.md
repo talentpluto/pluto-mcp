@@ -1,6 +1,6 @@
 ---
 name: linkedin-enrichment
-description: Use when a user explicitly supplies one to 100 LinkedIn profile URLs, or explicitly selects returned candidates with visible LinkedIn URLs, and asks Pluto for full professional profile details. Runs the asynchronous start-and-poll profile-enrichment contract, keeps the opaque operation handle and request ID private, presents enriched or not-found profiles in input order, and never returns contact information or raw call data.
+description: Use when a user explicitly supplies one to 100 LinkedIn profile URLs, or explicitly selects returned candidates with visible LinkedIn URLs, and asks Pluto for full professional profile details without the deeper email-and-company package. Runs enrich_candidate and polls the unchanged operation to completion or failure, keeps the operation ID and request ID private, presents enriched or not-found profiles in input order, and never returns contact information or raw call data.
 ---
 
 # LinkedIn profile enrichment
@@ -11,7 +11,7 @@ facts — for LinkedIn profiles they explicitly supplied or explicitly
 selected. URL submission alone is not authorization. A profile being visible,
 shortlisted, or under discussion never authorizes a tool call.
 
-This skill was written against server contract `3.0.0`. On any conflict,
+This skill was written against server contract `3.7.0`. On any conflict,
 prefer the live tool descriptions and schema field descriptions.
 
 Keep neighboring requests on their own routes:
@@ -19,6 +19,10 @@ Keep neighboring requests on their own routes:
 - Contact information uses the `candidate-interest` email-enrichment route.
   Profile enrichment is a professional-profile lookup, not a contact lookup; it
   never returns emails, and phone numbers are never requested.
+- A combined request for the professional profile, validated emails, and
+  derived employment-company intelligence uses `deep-enrichment`. Never
+  silently upgrade a profile-only request to that five-credit-per-profile
+  route.
 - One URL plus "find more people like this person" is a discovery request;
   use the `candidate-discovery` skill's reference-profile search.
 - One or more URLs plus "how does this background overlap with our team" is a
@@ -48,10 +52,10 @@ poll tool is missing.
 
 Inspect the live input schemas: `enrich_candidate` must accept a `profiles`
 array of one to 100 items that each contain only `linkedinUrl`, plus one
-top-level UUID `requestId`; the poll tool must accept only the opaque
-`operationId`. Loading this skill does not prove that Pluto initialized or that
-the saved OAuth grant includes
-`candidates:outbound`.
+top-level UUID `requestId`; for profile enrichment, call the poll tool with
+only the opaque `operationId` and never its search-only cursor. Loading this
+skill does not prove that Pluto initialized or that the saved OAuth grant
+includes `candidates:outbound`.
 
 If a required tool is absent or unusable, fail closed:
 
@@ -100,46 +104,43 @@ directs; do not resubmit the batch unchanged.
 Call `enrich_candidate` once per logical operation with the batch. Accept only:
 
 - `status: queued` with a non-empty opaque `operationId`, `requested` equal to
-  the input length, `creditsUsed` equal to the input length, and a bounded
-  `retryAfterMs`; or
+  the input length, `creditsUsed` equal to twice the input length, and a
+  bounded `retryAfterMs`; or
 - `status: completed` with the terminal result contract below, which is
   allowed for a sandbox or compatibility runtime.
 
-Keep `operationId` private. For one user-authorized polling pass, make at most
-20 calls to `get_operation_status`, including transport retries, with only
-that exact unchanged `operationId`; each response must echo that `operationId`
-and carry `operationType: linkedin_enrichment`. Wait at least the returned
+Keep `operationId` private. Call `get_operation_status` with only that exact
+unchanged `operationId`; each response must echo it and carry
+`operationType: linkedin_enrichment`. Wait at least the returned
 `retryAfterMs` before each poll. Handle each poll result exactly:
 
-- `queued` or `running`: require both `requested` and `creditsUsed` to match
-  the input length and an integer `retryAfterMs` within the inspected live
-  schema's bounds. The response may include bounded `progress` counters — a
+- `queued` or `running`: require `requested` to match the input length,
+  `creditsUsed` to equal twice that length, and an integer `retryAfterMs`
+  within the inspected live schema's bounds. The response may include bounded
+  `progress` counters — a
   `phase` of
   `preparing`, `internal_lookup`, `profile_lookup`, or `finalizing` with
-  `completed` and `total` — which may be relayed plainly as progress. If
-  attempts remain, wait at least `retryAfterMs` and poll the same operation
-  again. At the cap, stop and say the operation is still processing without
-  exposing its ID; only an explicit user request to continue may start a new
-  bounded polling pass with that unchanged `operationId`.
+  `completed` and `total` — which may be relayed plainly as progress. Wait at
+  least `retryAfterMs` and poll the same operation again until it completes or
+  fails. Do not impose a caller-side poll cap or ask the user to wait or
+  continue.
 - `completed`: continue to the terminal result validation below.
-- `failed`: require `requested` and `creditsUsed` to match the input length,
-  relay only the safe returned message, and stop. The admitted batch remains
-  charged. Do not restart
-  enrichment.
+- `failed`: require `requested` to match the input length and `creditsUsed` to
+  equal twice that length, relay only the safe returned message, and stop. The
+  admitted batch remains charged. Do not restart enrichment.
 - Any unknown status, non-object response, missing required field, malformed
   field, or mismatched `requested` count is a server/plugin contract
   mismatch. Report it and stop without another poll or a new start call.
 
-A poll transport failure is safe to retry with the same `operationId` while
-attempts remain. If the start call's queue acknowledgement was lost, polling
-recovers that same submission when the handle is available. If no handle was
-received, one bounded start retry is safe only with the exact same batch and
-`requestId`; never generate a replacement UUID. Exact retry reuses the original
-charge and logical operation. Once queued, cancelling or disconnecting the
-original request does not cancel the background operation. The operation is
-bound to the authenticated organization, user, and OAuth client and is
-reauthorized on
-every poll.
+A transient poll transport failure is safe to retry with the same
+`operationId` and returned timing. If the start call's queue acknowledgement
+was lost, polling recovers that same submission when the handle is available.
+If no handle was received, one bounded start retry is safe only with the exact
+same batch and `requestId`; never generate a replacement UUID. Exact retry
+reuses the original charge and logical operation. Once queued, cancelling or
+disconnecting the original request does not cancel the operation. The
+operation is bound to the authenticated organization, user, and OAuth client
+and is reauthorized on every poll.
 
 ## Validate the completed result
 
@@ -156,7 +157,7 @@ Handle each item exactly:
 Require the summary to reconcile: `summary.requested` equals the input
 length, `enriched` and `notFound` equal their respective item counts, and the
 two counts sum to `requested`. Also require `summary.creditsUsed` to equal
-`summary.requested`. If results are missing, duplicated, reordered, or
+twice `summary.requested`. If results are missing, duplicated, reordered, or
 correlated to the wrong profile, if an `enriched` item lacks a profile object,
 or if the summary does not reconcile, report a server/plugin contract mismatch
 rather than filling in missing data.
@@ -166,13 +167,13 @@ months is reused from internal storage, an older stored result is re-enriched
 instead of served, and every fresh lookup is stored for future reuse. An
 accepted candidate uses the same provider-equivalent profile path as every
 other URL; bounded structured career facts are only a fallback when stored
-and live profile sources have no match. Every admitted profile uses one shared
-organization candidate credit, including an accepted internal candidate, a
-fresh stored result, an external lookup, or a
-completed `not_found` result. A later operation failure remains charged. An
-exact retry with the same `requestId` uses no additional credits. State cost
-only when the user asks, and do not apply discovery or email-enrichment credit
-rules to this route.
+and live profile sources have no match. Every newly admitted profile uses
+exactly two shared organization candidate credits, including an accepted
+internal candidate, a fresh stored result, an external lookup, or a completed
+`not_found` result. A later operation failure remains charged. An exact retry
+with the same `requestId` uses no additional credits. State cost only when the
+user asks, and do not apply discovery or email-enrichment credit rules to this
+route.
 
 ## Present the profiles
 

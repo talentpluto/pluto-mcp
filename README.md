@@ -15,6 +15,9 @@ work with the retrieved leads directly in the conversation.
 - Find and verify available work and personal emails for selected candidates
   or directly supplied LinkedIn profiles.
 - Pull full public profile details for LinkedIn profile URLs you supply.
+- Deep-enrich one to 50 explicitly selected LinkedIn profiles with the
+  identity-safe professional profile, validated work and personal emails, and
+  derived recruiter intelligence for profile-identified employment companies.
 - Compare supplied candidates' public professional backgrounds with your
   aggregate Team DNA to surface evidence-backed common ground,
   complementarity, and unknowns. This workflow does not identify a
@@ -40,7 +43,7 @@ work with the retrieved leads directly in the conversation.
    scope, or paste the job description.
 2. **Run the search.** Pluto retrieves and deduplicates candidates from its
    configured sources while the conversation automatically follows the durable
-   job to completion.
+   operation to completion.
 3. **Review the leads.** The connected assistant presents every returned
    source-ranked lead using explicit professional profile facts and bounded
    Team DNA context. Missing evidence stays unknown.
@@ -102,6 +105,10 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 @pluto Get the full public profiles for these LinkedIn profile URLs:
 [paste the URLs]
 
+@pluto Deep-enrich these selected LinkedIn profiles with professional details,
+validated emails, and employment-company intelligence:
+[paste up to 50 LinkedIn profile URLs]
+
 @pluto Who on my team has the strongest connection to this candidate?
 [paste one LinkedIn profile URL]
 
@@ -132,29 +139,40 @@ exact campaign.
 - Search planning and revision do not use credits.
 - Each in-network candidate presented in search uses one shared organization
   credit. Out-of-network search results are free.
-- Email enrichment starts one asynchronous job for 1–500 explicitly selected
-  candidates or directly supplied LinkedIn profiles and polls it to completion.
-  Returned addresses are work or personal emails, each labeled with its type,
-  source status, and independent verification result.
+- Email enrichment starts one asynchronous operation for 1–500 explicitly
+  selected candidates or directly supplied LinkedIn profiles and polls it to
+  completion. Returned addresses are work or personal emails, each labeled
+  with its type, source status, and independent verification result.
 - A successful email lookup can use one credit for that candidate. It uses
   none when the candidate already has an accepted TalentPluto profile, when
   reusing an earlier successful lookup, or when no email is found.
-- LinkedIn profile enrichment runs one asynchronous job for 1–100 supplied
-  profile URLs, reuses a stored profile fetched within the last 3 months, and
-  uses no candidate credits. It returns public profile details, not contact
-  information.
+- LinkedIn profile enrichment runs one asynchronous operation for 1–100
+  supplied profile URLs, reuses a stored profile fetched within the last 3
+  months, and uses exactly two shared organization credits per submitted
+  profile. It returns public profile details, not contact information.
+- Deep candidate enrichment runs one asynchronous operation for 1–50
+  explicitly selected LinkedIn profiles and costs exactly five shared
+  organization credits per profile, up to 250 credits for a maximum batch. It
+  combines identity-safe professional profile enrichment, independently
+  validated available emails, and derived company bands and signals for up to
+  50 profile-identified employment companies per candidate. Companies without
+  a stable profile-supplied identifier remain `identifier_unavailable` rather
+  than being guessed by name. Company output is derived recruiter intelligence,
+  not raw source records or precise headcount, funding, location, or financing
+  details.
 - The team-connection skill enriches 1–100 supplied profiles, reads the stored
   aggregate Team DNA projection, and compares explicit professional facts.
-  Both reads use no candidate credits. It can cite a returned public founder
-  background, but it never identifies non-founder members, verifies a personal
-  relationship, or offers a warm-introduction path.
+  Profile enrichment uses two credits per submitted URL; the Team DNA read
+  uses none. It can cite a returned public founder background, but it never
+  identifies non-founder members, verifies a personal relationship, or offers
+  a warm-introduction path.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
-  and uses no candidate credits; profile enrichment it triggers is also
-  credit-free. Scores are separate 0-100 measures of cited professional
-  overlap — background familiarity with your team, and evidence-verified
-  match to your job description when you supply one — never a culture-fit
-  judgment, protected-trait proxy, or hiring decision, and non-founder
-  employees appear only as aggregate patterns.
+  and uses no candidate credits; profile enrichment it triggers uses two
+  credits per submitted URL. Scores are separate 0-100 measures of cited
+  professional overlap — background familiarity with your team, and
+  evidence-verified match to your job description when you supply one — never
+  a culture-fit judgment, protected-trait proxy, or hiring decision, and
+  non-founder employees appear only as aggregate patterns.
 - Connected-inbox campaigns are always one email per recipient. Pluto creates
   one Gmail draft per recipient after copy generation, and each draft is sent
   manually from Gmail.

@@ -21,6 +21,11 @@ profile URLs or selected candidates, rather than contact information, use the
 `linkedin-enrichment` skill instead. Email enrichment returns contact emails,
 not profiles.
 
+If the user explicitly asks for the combined professional profile, validated
+email, and derived employment-company intelligence package, use
+`deep-enrichment` instead. Do not assemble that package through separate
+profile and email operations.
+
 If the candidate choice or requested action is ambiguous, ask one focused
 question before calling a tool.
 

@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto deep candidate enrichment"
+  short_description: "Enrich selected profiles with person, email, and company intelligence"
+  default_prompt: "Use $deep-enrichment only when I explicitly select one to 50 LinkedIn profiles and ask for the combined deep person, employment-company, and email package. Charge exactly five shared organization credits per selected profile, generate one private UUID requestId for the ordered batch, keep requestId, operationId, candidateRef, and selectionToken private, poll get_operation_status with the unchanged operationId and returned retry timing until completed or failed, preserve input order, present only identity-safe professional facts, validated work and personal emails, profile-identified employment companies, and allowed derived recruiter intelligence, never guess a company identifier by name, never imply campaign eligibility, and never name or expose an external data source or raw source fields."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated TalentPluto recruiting MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"
