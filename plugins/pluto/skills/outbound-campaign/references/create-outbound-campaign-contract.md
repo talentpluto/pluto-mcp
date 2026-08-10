@@ -26,13 +26,34 @@ and cancellation sections cover their respective tools.
   fails closed.
 - An account or login email may be visible in enrichment results but is never
   eligible for campaign delivery, even when independently validated.
-- Do not silently omit an invalid selection. Ask before repeating a metered
-  discovery or enrichment operation for an expired or missing handle.
+- Campaign creation is all-or-nothing for the reviewed audience. Do not
+  silently omit an invalid or newly ineligible selection. The server stops
+  creation rather than creating a partial campaign and returns only
+  privacy-safe prepared and requested counts.
+- Ask before repeating a metered discovery or enrichment operation for an
+  expired or missing handle.
 - Ask the user to reduce an audience over 100. Do not split it automatically.
 - One exact outreach role applies to the campaign. It is copy context only.
   Never look up or pass `projectId`.
 - Do not ask for or pass `campaignType`. The server records MCP campaigns as
   cold outreach.
+
+## Campaign setup lookup
+
+Call `get_outbound_campaign_setup` once before drafting when the live catalog
+exposes it. The input is empty and the result is read-only:
+
+- `emailPriority` is the organization's current Campaigns default.
+- `senderOptions` contains up to 100 authorized active Gmail choices. Each
+  safe option has an email, optional display name, and private `connectionId`.
+- `templates` contains organization-shared summaries with private `templateId`
+  and `updatedAt`; it deliberately excludes reusable copy and generation
+  instructions.
+
+Use these values as editable prefill in the first complete review. Load a
+named or clearly matching template through `get_outbound_campaign_templates`
+with its private ID before using its exact `sequenceSettings`. The setup lookup
+never creates a campaign and does not require separate user approval.
 
 ## Delivery mapping
 
@@ -57,9 +78,10 @@ Describe the sender as recruiting for or working with that company when
 appropriate. Do not add TalentPluto's managed-delivery mailing-address or
 unsubscribe footer.
 
-When the user chose personal-inbox delivery but no authorized sender is
-known, the first confirmed call may omit `connectionId`. The tool can then
-return `needs_sender` without creating a campaign. After a returned sender is
+For normal personal-inbox creation, use a `connectionId` returned by
+`get_outbound_campaign_setup`. Omitting it is only a recovery fallback when
+setup context was unavailable or changed; the tool can then return
+`needs_sender` without creating a campaign. After a returned sender is
 selected, never omit its connection ID.
 
 Personal inbox drafts are single-email only. If a saved template contains
@@ -168,9 +190,11 @@ instructions.
   operation ID hidden, wait at least `retryAfterMs`, and poll
   `get_operation_status` with it unchanged while status is `queued` or
   `running`. Every response must echo that unchanged `operationId` and carry
-  `operationType: outbound_campaign`. Polling is read-only and never creates
-  another campaign.
-- Completion means the campaign and its eligible enrollments exist and
+  `operationType: outbound_campaign`. Continue automatically until
+  `completed` or `failed`; do not impose a caller-side poll cap or ask the user
+  to continue. Polling is idempotent and never creates another campaign, but it
+  may recover a lost enqueue and is therefore not purely read-only.
+- Completion means the campaign and all reviewed recipients exist and
   personalized copy generation was queued in the background. It does not
   mean copy generation, personal-inbox draft creation, or delivery completed.
 - On `completed` or `success`, repeat the tool's message exactly unless a
