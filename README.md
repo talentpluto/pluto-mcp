@@ -148,8 +148,9 @@ exact campaign.
   reusing an earlier successful lookup, or when no email is found.
 - LinkedIn profile enrichment runs one asynchronous operation for 1–100
   supplied profile URLs, reuses a stored profile fetched within the last 3
-  months, and uses exactly two shared organization credits per submitted
-  profile. It returns public profile details, not contact information.
+  months, and uses two shared organization credits per newly admitted profile.
+  An exact retry uses no additional credits and may retain a legacy one-credit
+  admitted total. It returns public profile details, not contact information.
 - Deep candidate enrichment runs one asynchronous operation for 1–50
   explicitly selected LinkedIn profiles and costs exactly five shared
   organization credits per profile, up to 250 credits for a maximum batch. It
@@ -162,16 +163,18 @@ exact campaign.
   details.
 - The team-connection skill enriches 1–100 supplied profiles, reads the stored
   aggregate Team DNA projection, and compares explicit professional facts.
-  Profile enrichment uses two credits per submitted URL; the Team DNA read
-  uses none. It can cite a returned public founder background, but it never
-  identifies non-founder members, verifies a personal relationship, or offers
-  a warm-introduction path.
+  Newly admitted profile enrichment uses two credits per submitted URL; an
+  exact retry uses no additional credits and may retain its legacy admitted
+  total. The Team DNA read uses none. It can cite a returned public founder
+  background, but it never identifies non-founder members, verifies a personal
+  relationship, or offers a warm-introduction path.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and uses no candidate credits; profile enrichment it triggers uses two
-  credits per submitted URL. Scores are separate 0-100 measures of cited
-  professional overlap — background familiarity with your team, and
-  evidence-verified match to your job description when you supply one — never
-  a culture-fit judgment, protected-trait proxy, or hiring decision, and
+  credits per newly admitted URL. An exact retry uses no additional credits and
+  may retain its legacy admitted total. Scores are separate 0-100 measures of
+  cited professional overlap — background familiarity with your team, and
+  evidence-verified match to your job description when you supply one — never a
+  culture-fit judgment, protected-trait proxy, or hiring decision, and
   non-founder employees appear only as aggregate patterns.
 - Connected-inbox campaigns are always one email per recipient. Pluto creates
   one Gmail draft per recipient after copy generation, and each draft is sent
