@@ -31,11 +31,16 @@ exposes Pluto's `preview_search`, `search_people`, and
 complete the set). Loading this skill alone does not prove that Pluto
 initialized successfully.
 
-If the tools are absent, do not search through another candidate source, call
-the MCP endpoint directly, or imply that a search ran. Follow the
-`connection-recovery` skill. If recovery exposes the tools, continue this
-skill with the original request. Otherwise report that no search ran and no
-credits were used.
+If the live catalog instead exposes only the legacy single-call discovery
+tool (the retired bundled search operation), the server predates this
+contract: follow that live tool's own description with the user's original
+request preserved, and do not simulate the granular tools on top of it.
+
+If neither toolset is exposed, do not search through another candidate
+source, call the MCP endpoint directly, or imply that a search ran. Follow
+the `connection-recovery` skill. If recovery exposes a search toolset,
+continue with the original request on whichever contract it exposes.
+Otherwise report that no search ran and no credits were used.
 
 ## Classify only the safety boundary
 
@@ -157,9 +162,12 @@ long investigation legible instead of re-deriving state.
 
 Cards carry decided verdicts only: `verified` (evidence-backed, with the
 evidence), `violated` (decidably contradicted), or evidence-bearing
-counter-findings. A criterion absent from a card is undecided — the page-level
-coverage report discloses it once. Treat native enforcement as source-trusted,
-not evidence; treat `verified` as evidence-backed.
+counter-findings. `enforced` is also a decided verdict — the source's native
+filter admitted the person, so it satisfies the criterion for membership —
+but it is source-trusted, never evidence-backed: do not cite an enforced
+criterion as proof, and prefer enrichment when the user needs certainty. A
+criterion absent from a card is undecided — the page-level coverage report
+discloses it once.
 
 When enrichment returns counter-evidence (stated education or history that
 does not include a requested school, degree, or past title), the verdict

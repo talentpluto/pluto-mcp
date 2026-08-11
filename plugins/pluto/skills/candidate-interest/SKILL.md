@@ -332,8 +332,13 @@ server/plugin contract mismatch rather than filling in missing data.
 
 ## Express interest in one selected in-network candidate
 
-For an authorized selection with `networkStatus: in_network`, call
-`express_candidate_interest` once with the unchanged candidate handles.
+For an authorized selection carrying an issued `candidateRef` and
+`selectionToken` pair, call `express_candidate_interest` once with those
+unchanged handles. If either handle is missing, the selection is not
+eligible — report that boundary instead of substituting or fabricating a
+handle. The server performs the final in-network authorization; if it
+rejects the handles as invalid for this action, relay its safe message and
+stop.
 Supply `projectId` only when the user selected an exact returned active role and
 its project UUID is available. Omit it when the server can resolve the sole
 active role. Never guess a role or project UUID, and do not pass an enrichment
