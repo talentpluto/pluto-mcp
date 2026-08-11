@@ -11,7 +11,7 @@ facts — for LinkedIn profiles they explicitly supplied or explicitly
 selected. URL submission alone is not authorization. A profile being visible,
 shortlisted, or under discussion never authorizes a tool call.
 
-This skill was written against server contract `3.7.0`. On any conflict,
+This skill was written against server contract `4.0.0`. On any conflict,
 prefer the live tool descriptions and schema field descriptions.
 
 Keep neighboring requests on their own routes:
