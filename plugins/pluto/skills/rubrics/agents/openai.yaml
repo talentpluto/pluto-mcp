@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto candidate rubrics"
+  short_description: "Create or load consistent candidate scorecards"
+  default_prompt: "Use $rubrics to draft, review, save, browse, or load a client-shared candidate rubric. Keep private identifiers hidden, use only professional-profile evidence, leave missing facts unknown, show the complete editable rubric before saving, and call create_rubric only after I explicitly confirm that exact latest draft."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated TalentPluto recruiting MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"
