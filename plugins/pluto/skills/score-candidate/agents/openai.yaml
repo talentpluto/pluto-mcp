@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate scoring"
-  short_description: "Score candidates against Team DNA, a JD, or a saved rubric"
-  default_prompt: "Use $score-candidate to score the explicitly identified candidates against the requested Team DNA, job-description, or saved-rubric axes. Enrich each candidate's public LinkedIn profile when this session does not already hold their profile facts, reuse a complete saved rubric already loaded unless I request the latest version and otherwise load it through $rubrics, return a separate evidence-cited 0-100 score for each active axis with sufficient scoreable evidence or report no score and explain the missing coverage, exclude unknown rubric evidence from weighting, disclose coverage and unknowns, and present every score as descriptive screening context rather than a culture-fit judgment, protected-trait proxy, or hiring decision."
+  short_description: "Score candidates 0-100 against Team DNA and a job description"
+  default_prompt: "Use $score-candidate to score the explicitly identified candidates. Enrich each candidate's public LinkedIn profile first when this session does not already hold their profile facts, read the client's stored Team DNA, and return a 0-100 Team DNA alignment score per candidate — plus a separate 0-100 job-description match score when a JD or explicit role requirements were supplied — crediting only cited explicit evidence, disclosing coverage and unknowns, keeping the two scores separate, and presenting them as descriptive screening context, never a culture-fit judgment, protected-trait proxy, or hiring decision."
 
 dependencies:
   tools:

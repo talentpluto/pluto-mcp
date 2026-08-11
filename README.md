@@ -22,15 +22,13 @@ work with the retrieved leads directly in the conversation.
   aggregate Team DNA to surface evidence-backed common ground,
   complementarity, and unknowns. This workflow does not identify a
   non-founder teammate or claim a personal relationship.
-- Draft, review, save, browse, and load client-shared candidate rubrics built
-  from profile-verifiable criteria. A rubric generated from a job description
-  stays editable and is saved only after you confirm the complete draft.
 - Score selected candidates or supplied LinkedIn profiles from 0-100 against
-  your company's stored Team DNA, a job description you provide, or a loaded
-  saved rubric. Every active scoring axis stays separate, every credited match
-  cites explicit evidence, missing rubric evidence stays unknown, and
-  candidates are enriched first when their profile facts are not already in
-  the session.
+  your company's stored Team DNA — shared prior companies, titles, seniority,
+  locations, schools, recent-joiner patterns, founder backgrounds, and
+  published hiring-preference signals — with a separate 0-100 match score
+  against your job description when you provide one. Every credited match
+  cites explicit evidence, and candidates are enriched first when their
+  profile facts are not already in the session.
 - Review and create an email campaign for selected out-of-network candidates
   from one complete editable review, using Pluto-managed delivery, one
   connected Gmail inbox, or one ready dedicated campaign inbox.
@@ -114,16 +112,8 @@ validated emails, and employment-company intelligence:
 @pluto Who on my team has the strongest connection to this candidate?
 [paste one LinkedIn profile URL]
 
-@pluto Create a candidate rubric from this job description. Show me the full
-draft before saving it:
-[paste the job description]
-
-@pluto Show me my saved candidate rubrics.
-
 @pluto Score this candidate against our Team DNA and this job description:
 [paste one LinkedIn profile URL or select a returned candidate, plus the JD]
-
-@pluto Score this candidate with my saved Forward Deployed Engineer rubric.
 
 @pluto Give me a directional US market snapshot for engineering talent.
 
@@ -178,13 +168,12 @@ exact campaign.
   total. The Team DNA read uses none. It can cite a returned public founder
   background, but it never identifies non-founder members, verifies a personal
   relationship, or offers a warm-introduction path.
-- Candidate scoring can read your company's stored, bounded Team DNA
-  projection, a supplied job description, or one loaded saved rubric. Those
-  reads use no candidate credits; profile enrichment they trigger uses two
+- Candidate scoring reads your company's stored, bounded Team DNA projection
+  and uses no candidate credits; profile enrichment it triggers uses two
   credits per newly admitted URL. An exact retry uses no additional credits and
-  may retain its legacy admitted total. Every active score remains a separate
-  0-100 measure of cited professional evidence. Missing rubric evidence is
-  excluded from weighting rather than treated as a zero. No score is a
+  may retain its legacy admitted total. Scores are separate 0-100 measures of
+  cited professional overlap — background familiarity with your team, and
+  evidence-verified match to your job description when you supply one — never a
   culture-fit judgment, protected-trait proxy, or hiring decision, and
   non-founder employees appear only as aggregate patterns.
 - Connected-inbox campaigns are always one email per recipient. Pluto creates
