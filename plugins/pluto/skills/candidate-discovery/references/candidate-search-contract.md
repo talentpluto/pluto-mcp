@@ -1,12 +1,12 @@
 # Candidate search contract
 
 Aligned to server contract `4.0.0`, which replaced the bundled
-`discover_candidates` operation with the granular search toolbox. When the
+single-call discovery operation with the granular search toolbox. When the
 live server reports a newer version, behaviors here may be incomplete; prefer
 the live tool descriptions and schema field descriptions on any conflict. If
-the live catalog exposes `discover_candidates` instead of these tools, the
-server predates this contract: follow the live tool's own description and do
-not simulate the toolbox on top of it.
+the live catalog exposes the retired bundled search operation instead of
+these tools, the server predates this contract: follow that live tool's own
+description and do not simulate the toolbox on top of it.
 
 ## Purpose
 
@@ -61,7 +61,7 @@ later call must send it unchanged. Sessions hold full person records
 server-side (cards are projections), pinned company resolutions, search specs
 by `planHash`, provider cursors, the presented ledger, and running budgets
 (total tool calls, total fetched rows, per-tool class caps). Budget refusals
-name the exhausted meter. A `session_conflict` result means a parallel call
+name the exhausted meter. A session-conflict result means a parallel call
 won the write race and nothing from this call was kept — that exact retry is
 safe. Sessions expire server-side; a missing session requires starting over.
 
