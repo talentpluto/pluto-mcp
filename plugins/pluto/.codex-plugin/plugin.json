@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.1.67",
-  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with validated emails and derived employment-company intelligence, candidate-to-Team DNA comparison, 0-100 candidate scoring against Team DNA and a supplied job description, outbound campaigns through single-email personal inbox drafts, Pluto-managed inboxes, or dedicated campaign inboxes, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+  "version": "0.1.68",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with validated emails and derived employment-company intelligence, client-shared candidate rubrics, candidate-to-Team DNA comparison, evidence-backed candidate scoring against Team DNA, a job description, or a saved rubric, outbound campaigns through single-email personal inbox drafts, Pluto-managed inboxes, or dedicated campaign inboxes, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -22,6 +22,8 @@
     "team alignment",
     "score candidate",
     "candidate scoring",
+    "candidate rubric",
+    "scorecard",
     "outbound campaign",
     "email campaign",
     "cancel campaign",
@@ -37,8 +39,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Pluto",
-    "shortDescription": "Use TalentPluto recruiting, outbound, and market tools.",
-    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with validated emails and derived employment-company intelligence, candidate-to-Team DNA comparison, 0-100 candidate scoring against Team DNA and a supplied job description, reviewable outbound campaigns through single-email personal inbox drafts, Pluto-managed inboxes, or dedicated campaign inboxes, confirmed campaign cancellation, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
+    "shortDescription": "Use TalentPluto recruiting, rubrics, outbound, and market tools.",
+    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with validated emails and derived employment-company intelligence, client-shared candidate rubrics, candidate-to-Team DNA comparison, evidence-backed candidate scoring against Team DNA, a job description, or a saved rubric, reviewable outbound campaigns through single-email personal inbox drafts, Pluto-managed inboxes, or dedicated campaign inboxes, confirmed campaign cancellation, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
     "developerName": "Pluto",
     "category": "Productivity",
     "capabilities": [
@@ -56,7 +58,9 @@
       "Get the full public profiles for the LinkedIn profile URLs I supplied.",
       "Deep-enrich the LinkedIn profiles I selected with professional profiles, validated emails, and derived employment-company intelligence.",
       "How does the background of the candidate I supplied overlap with our Team DNA?",
-      "Score the candidate I selected against our Team DNA and this job description.",
+      "Show me my saved candidate rubrics.",
+      "Create a candidate rubric from this job description and let me review it before saving.",
+      "Score the candidate I selected against our Team DNA, this job description, or one of my saved rubrics.",
       "Create a campaign for the out-of-network candidates I selected. Load my defaults and saved templates, draft one complete editable review, and ask me to confirm that exact campaign.",
       "Cancel my outbound campaign for the payments role.",
       "Continue with the candidate and role I selected in Pluto."
