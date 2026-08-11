@@ -1,6 +1,6 @@
 # Candidate search contract
 
-Aligned to server contract `4.0.0`, which replaced the bundled
+Aligned to server contract `4.1.0`, which replaced the bundled
 single-call discovery operation with the granular search toolbox. When the
 live server reports a newer version, behaviors here may be incomplete; prefer
 the live tool descriptions and schema field descriptions on any conflict. If
@@ -32,18 +32,18 @@ enrichment, choosing what to materialize, and honest presentation.
   discloses exact-name ties; pinned identities auto-inject into later specs.
 - `preview_search` (free) — compiles a spec; returns counts (with basis),
   `planHash`, compile `notes`, and the per-predicate coverage report.
-- `search_people` — executes a compiled plan. Bills 1 organization credit per
-  call that returns at least one person; empty searches are free. Returns
-  compact cards (name, title, company, location, startedAt, opaque `ref`,
-  decided `verdicts`) plus `laneOutcomes`, filtered/withheld counts, an
-  optional `nextCursor`, and a session `recap`. Pass `planHash` from the
-  reviewed preview; pass `cursor` to page deeper without refetching held
-  people.
+- `search_people` — executes a compiled plan. Bills 1 organization credit
+  per PERSON surfaced (a 50-person page uses 50 credits); empty searches are
+  free, pages clamp at 100 people, and the remaining balance clamps the
+  page. Returns compact cards (name, title, company, location, startedAt,
+  opaque `ref`, decided `verdicts`) plus `laneOutcomes`, filtered/withheld
+  counts, an optional `nextCursor`, and a session `recap`. Pass `planHash`
+  from the reviewed preview; pass `cursor` to page deeper without
+  refetching held people.
 - `enrich_person` — verifies one ref's work and education history and
   re-verifies the originating spec, returning `updatedVerdicts` and
   cross-verified fields. Bills 2 organization credits per person; an exact
   re-enrichment of the same ref in the same session is not re-billed.
-  Session-capped; the refusal message carries guidance.
 - `materialize_candidates` (free) — the only door from refs to presentable
   candidates. Re-screens employer safety (fail closed), dedupes against
   everyone already presented in the session, withholds anyone whose REQUIRED
@@ -59,11 +59,13 @@ enrichment, choosing what to materialize, and honest presentation.
 The first toolbox call creates a session and returns its `sessionId`; every
 later call must send it unchanged. Sessions hold full person records
 server-side (cards are projections), pinned company resolutions, search specs
-by `planHash`, provider cursors, the presented ledger, and running budgets
-(total tool calls, total fetched rows, per-tool class caps). Budget refusals
-name the exhausted meter. A session-conflict result means a parallel call
-won the write race and nothing from this call was kept — that exact retry is
-safe. Sessions expire server-side; a missing session requires starting over.
+by `planHash`, provider cursors, the presented ledger, and usage counters
+(surfaced in `recap`). There are no session caps: the shared credit balance
+is the spend leash, the 100-person page clamp is the single hard limit, and
+only an extreme structural store ceiling can refuse (start a new session if
+it ever does). A session-conflict result means a parallel call won the write
+race and nothing from this call was kept — that exact retry is safe.
+Sessions expire server-side; a missing session requires starting over.
 
 ## The spec
 
@@ -114,10 +116,12 @@ to violation.
 ## Pricing
 
 Previews, company resolution, and materialization are free. Each
-`search_people` call that returns at least one person settles exactly 1
-shared organization credit (a conflicted or failed call settles zero, so
-retries never double-bill). Each newly enriched person settles 2 credits —
-the standard profile-enrichment price — once per person per session.
+`search_people` call settles exactly 1 shared organization credit per person
+it surfaces — a 50-person page settles 50, an empty search settles zero, and
+a conflicted or failed call settles zero, so retries never double-bill. Size
+`limit` to the people the user actually wants. Each newly enriched person
+settles 2 credits — the standard profile-enrichment price — once per person
+per session.
 Enrichment through this toolbox returns no contact data; email enrichment is
 a separate tool family with its own pricing. Never calculate balances or
 usage; report only returned accounting fields, and use `get_credit_balance`

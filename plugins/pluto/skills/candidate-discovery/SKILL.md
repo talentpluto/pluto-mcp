@@ -78,14 +78,15 @@ people all live in that session and never survive outside it.
 2. **`preview_search`** (free) — compile the typed spec. Read the returned
    counts, `planHash`, `notes`, and the per-predicate coverage report before
    spending anything. Iterate the spec here — previews are free.
-3. **`search_people`** (1 organization credit per call that returns at least
-   one person; empty searches are free) — execute with the reviewed
-   `planHash`. The server fans out across its sources, merges people by
-   identity, drops rows that decidably violate a required criterion, screens
-   out the caller's own employees, and returns compact cards with opaque
-   refs and decided verdicts. When more pages exist the response carries
-   `nextCursor`; pass it back with the same spec to page deeper without
-   re-fetching people the session already holds.
+3. **`search_people`** (1 organization credit per PERSON surfaced — a
+   50-person page uses 50 credits, an empty search is free, and pages clamp
+   at 100 people, so size `limit` to the people the user actually wants) —
+   execute with the reviewed `planHash`. The server fans out across its
+   sources, merges people by identity, drops rows that decidably violate a
+   required criterion, screens out the caller's own employees, and returns
+   compact cards with opaque refs and decided verdicts. When more pages
+   exist the response carries `nextCursor`; pass it back with the same spec
+   to page deeper without re-fetching people the session already holds.
 4. **`enrich_person`** (2 organization credits per person, never re-billed
    for the same ref in a session) — fetch one person's verified work and
    education history and re-verify them against the originating spec. This is
@@ -148,15 +149,19 @@ authoritative statement of enforcement:
 Relay every returned `note` that materially affects how results should be
 read. Never claim a criterion was enforced when coverage says otherwise.
 
-## Respect the session budget
+## Spend deliberately — credits are the only leash
 
-The session enforces leashes: total tool calls, total fetched rows, and
-per-tool caps (enrichment is bounded per session). A refused call returns
-guidance, not an error to retry. If a session-conflict result says nothing
-from a call was kept, that exact retry is safe; do not otherwise retry paid
-calls automatically — the first call may have completed. Each response
-carries a `recap` (people held, presented, searches run); use it to keep a
-long investigation legible instead of re-deriving state.
+There are no session caps: no tool-call budget, no per-tool limits, no row
+leash. The organization's shared credit balance is the spend control (every
+surfaced person and every enrichment bills against it), and the single hard
+limit anywhere is the 100-person page clamp. That freedom is the
+responsibility: size each `limit` to the people the user actually wants,
+never fetch a maximum page speculatively, and check `get_credit_balance`
+before large pulls. If a session-conflict result says nothing from a call
+was kept, that exact retry is safe; do not otherwise retry paid calls
+automatically — the first call may have completed. Each response carries a
+`recap` (people held, presented, searches run); use it to keep a long
+investigation legible instead of re-deriving state.
 
 ## Verify before you claim
 
