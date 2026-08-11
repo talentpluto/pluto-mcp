@@ -1,18 +1,19 @@
 ---
 name: score-candidate
-description: Use when a user explicitly asks Pluto to score, grade, rate, or assess one or more explicitly identified candidates against their own company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches each candidate's public LinkedIn profile when the session does not already hold their profile facts, loads only the requested scoring context, and returns a separate evidence-cited 0-100 score for every active axis with unknowns excluded from rubric weighting and no score presented as a culture-fit judgment, protected-trait proxy, or hiring decision.
+description: Use when a user explicitly asks Pluto to score, grade, rate, or assess one or more explicitly identified candidates against their own company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches each candidate's public LinkedIn profile when the session does not already hold their profile facts, loads only the requested scoring context, and returns a separate evidence-cited 0-100 score for each active axis with sufficient scoreable evidence or reports that no score is available, with unknowns excluded from rubric weighting and no score presented as a culture-fit judgment, protected-trait proxy, or hiring decision.
 ---
 
 # Score candidate
 
 Use this skill when the user explicitly asks Pluto to score one or more
-specific candidates. The deliverable is numeric: one separate 0-100 score for
-each axis the user requested — Team DNA alignment, job-description match, or a
-loaded saved rubric. Each score is computed from the transparent method below,
-credits only cited explicit evidence, and ships with its coverage so the user
-can see how much evidence backs the number. A score measures observed
-professional alignment, never candidate quality, culture fit, or a hiring
-decision.
+specific candidates. For each requested axis — Team DNA alignment,
+job-description match, or a loaded saved rubric — return one separate 0-100
+score when sufficient scoreable evidence exists; otherwise report that no
+score is available and explain the missing coverage. Each score is computed
+from the transparent method below, credits only cited explicit evidence, and
+ships with its coverage so the user can see how much evidence backs the number.
+A score measures observed professional alignment, never candidate quality,
+culture fit, or a hiring decision.
 
 This skill was written against server contract `3.8.0`. On any conflict,
 prefer the live tool description and schema field descriptions.
@@ -37,8 +38,10 @@ prefer the live tool description and schema field descriptions.
   `get_team_dna` readout through the general routing skill, not a
   scoring request.
 - Creating, browsing, or loading a rubric without a candidate-scoring request
-  uses the `rubrics` skill. When scoring names a saved rubric, run that skill's
-  private lookup step first and return here with the complete loaded rubric.
+  uses the `rubrics` skill. When scoring names a saved rubric, reuse a complete
+  rubric already loaded in this conversation unless the user requests the
+  latest version. Otherwise run that skill's private lookup step and return
+  here with the complete loaded rubric.
 - Recorded compensation compatibility, work authorization, job-search
   status, and similar private facts belong to the `candidate-question`
   skill; they never feed a score.
@@ -50,11 +53,12 @@ prefer the live tool description and schema field descriptions.
 
 Before promising scores, confirm the tools required by the requested axes. A
 Team DNA axis requires `get_team_dna` with exactly one `department` enum. A
-named saved-rubric axis requires `get_rubrics` under the `rubrics` skill. When
-the enrichment step below must run, also require `enrich_candidate` under the
-`linkedin-enrichment` skill's contract and the shared `get_operation_status`
-poll tool. Loading this skill does not prove that Pluto initialized or that the
-connected server matches the pinned contract.
+named saved-rubric axis requires `get_rubrics` under the `rubrics` skill only
+when a complete rubric is not already loaded or the user requests the latest
+version. When the enrichment step below must run, also require
+`enrich_candidate` under the `linkedin-enrichment` skill's contract and the
+shared `get_operation_status` poll tool. Loading this skill does not prove that
+Pluto initialized or that the connected server matches the pinned contract.
 
 If a required tool is absent or its schema differs, follow the
 `connection-recovery` skill. If recovery does not expose what the request
@@ -85,11 +89,13 @@ user points at. A bare job title with no stated requirements is not enough.
 Never invent, recall, or web-search requirements the user did not state.
 
 The saved-rubric axis activates only when the user names or selects a saved
-rubric, or points to one already loaded in this conversation. Follow the
-`rubrics` skill to list and load the complete rubric. Keep its `rubricId`
-private, preserve every returned field exactly, and never regenerate it from a
-job description. If the user asks to score without naming any axis and no
-scoring context is settled, ask one focused question before enrichment.
+rubric, or points to one already loaded in this conversation. Reuse a complete
+rubric already loaded in this conversation unless the user asks for the latest
+version. If no complete rubric is loaded or freshness is explicit, follow the
+`rubrics` skill to list and load it. Keep its `rubricId` private, preserve every
+returned field exactly, and never regenerate it from a job description. If the
+user asks to score without naming any axis and no scoring context is settled,
+ask one focused question before enrichment.
 
 If the target candidates or the intent are ambiguous, ask one focused
 question before calling any tool.
@@ -252,8 +258,8 @@ evidence, not a rejected candidate; say which it is.
 
 ## Compute the saved-rubric score
 
-When the saved-rubric axis is active, apply the complete rubric returned by
-`get_rubrics` in this order.
+When the saved-rubric axis is active, apply the complete loaded rubric in this
+order.
 
 Evaluate every profile exclusion first. Mark an exclusion `failed` only when
 explicit candidate evidence contradicts it. Mark it `passed` when explicit
@@ -295,7 +301,7 @@ bounds. Otherwise lead with the exact JD or saved-rubric name in use. Then
 present one scorecard per candidate, scores first:
 
 ```markdown
-**<Candidate name> — Team DNA: <n>/100 (<k>/8 dimensions) · JD match: <m>/100 (<met>/<total> met, <u> unverified) · <rubric name>: <r>/100 (<known>/<total> criteria known)**
+**<Candidate name> — Team DNA: <n>/100 (<k>/8 dimensions) · JD match: <m>/100 (<met>/<total> met, <u> unverified) · <rubric name>: [<r>/100 | No score] (<known>/<total> criteria known)**
 
 | Team DNA dimension | Alignment | Evidence |
 | --- | --- | --- |
@@ -309,13 +315,16 @@ present one scorecard per candidate, scores first:
 
 Omit every inactive axis, line, and table. When Team DNA came back
 `insufficient_data`, state that in place of its number. For an active rubric,
-show profile-exclusion outcomes before its criterion table. Keep candidates in
-the user's stated order, or in returned order when they came from one Pluto
-search; a server-judged roster keeps its returned order and tiers, and these
-scores do not re-tier it. When the user asks which candidate scored highest,
-answer with the computed numbers and their coverage differences, framed as
-observed alignment, never as a hiring recommendation or proof one candidate is
-better.
+show profile-exclusion outcomes before its criterion table. When no rubric
+criteria are known, render `<rubric name>: No score (0/<total> criteria known)`,
+explain that the available professional evidence cannot support a score, and
+keep every unknown criterion visible as an open screening question. Keep
+candidates in the user's stated order, or in returned order when they came from
+one Pluto search; a server-judged roster keeps its returned order and tiers,
+and these scores do not re-tier it. When the user asks which candidate scored
+highest, answer with the computed numbers and their coverage differences,
+framed as observed alignment, never as a hiring recommendation or proof one
+candidate is better.
 
 Close each scorecard with unknown dimensions, unverified requirements, unknown
 rubric criteria, and unknown exclusions framed as open screening questions
