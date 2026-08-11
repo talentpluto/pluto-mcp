@@ -3,13 +3,15 @@
 ## Purpose and eligibility
 
 `answer_candidate_question` answers one free-form question about one explicitly
-selected candidate whose search-experience card has
-`networkStatus: in_network`. It accepts only the unchanged `candidateRef` and
-`selectionToken` returned together by `discover_candidates`, the user's
+selected in-network candidate. It accepts only an unchanged `candidateRef`
+and `selectionToken` pair issued together by a Pluto result, the user's
 unchanged single `question`, and an optional exact authorized `projectId`.
-Cards with `networkStatus: out_of_network | unknown` are external and
-ineligible. Presentation lane does not establish membership; missing
-`networkStatus` is a contract mismatch.
+Out-of-network and unknown-membership selections are ineligible, and
+candidates presented by the current search surface carry no handles or
+network-status field — the assessment is not available for them until a
+Pluto result issues handles. Presentation lane never establishes membership;
+if the server rejects a handle for this action, relay the safe message and
+stop.
 
 The server requires:
 

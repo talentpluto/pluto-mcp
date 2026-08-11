@@ -6,11 +6,11 @@ description: Use when a user explicitly selects candidates returned by Pluto and
 # Candidate interest and email enrichment
 
 Use this skill only when the user clearly asks Pluto to act on one in-network
-candidate, get available emails for one to 500 candidates returned by
-`discover_candidates`, or enrich one to 500 LinkedIn profile URLs the user
-directly supplied for email addresses. Selection or URL submission alone is not
-authorization. A candidate being highly ranked, shortlisted, described as
-promising, or opened for discussion never authorizes a tool call.
+candidate, get available emails for one to 500 candidates Pluto returned, or
+enrich one to 500 LinkedIn profile URLs the user directly supplied for email
+addresses. Selection or URL submission alone is not authorization. A candidate
+being highly ranked, shortlisted, described as promising, or opened for
+discussion never authorizes a tool call.
 
 If the user asks to draft, review, create, start, or launch an email campaign
 for selected external candidates, use the `outbound-campaign` skill instead.
@@ -31,22 +31,28 @@ question before calling a tool.
 
 ## Choose the action-specific route
 
-Use the selected search-experience card's returned `networkStatus` as the
-routing source. `bestMatches`, `expandedSuggestions`, and
-`verificationCandidates` are presentation lanes and do not establish network
-membership. Do not decode the selection token or infer provenance from a name,
-profile URL, recommendation, match status, or lane.
+Route by which handles the selected candidate actually carries. Candidates
+presented by the current search surface (`materialize_candidates` cards)
+intentionally carry no `candidateRef`, `selectionToken`, or network-status
+field — for them, email enrichment uses the direct-URL branch below with each
+card's returned `profileUrl`. Only a Pluto result that explicitly issued a
+paired `candidateRef` and `selectionToken` (a legacy discovery result or a
+completed email-enrichment item) provides handles. Never decode a token,
+invent a handle, or infer network membership from a name, profile URL, or
+presentation lane.
 
-- Exactly one selection with `networkStatus: in_network` can use
-  `express_candidate_interest` when the user asks to add, select, prospect, or
-  otherwise express interest in that candidate for a role.
-- One to 500 explicitly selected candidates of any returned network status form
-  one email-enrichment batch. Use `enrich_email` followed by the shared
-  `get_operation_status` poll tool. Run this route only when the user
-  explicitly asks for contact information or available emails.
-
-If a discovery result's `networkStatus` is missing, report a server/plugin
-contract mismatch. Do not guess an action-specific route or try both tools.
+- `express_candidate_interest` requires one selection whose handles came from
+  a Pluto result that issued them for an in-network candidate. Search cards
+  do not issue these handles; when the user selects a search-presented
+  candidate for pipeline interest and no issued handle exists, report that
+  the in-network interest action is not available for that selection yet
+  rather than substituting the email route or a fabricated handle. If the
+  server rejects a handle as invalid for this action, relay the safe message
+  and stop.
+- One to 500 explicitly selected candidates form one email-enrichment batch.
+  Use `enrich_email` followed by the shared `get_operation_status` poll
+  tool. Run this route only when the user explicitly asks for contact
+  information or available emails.
 
 Do not call `express_candidate_interest` for an external selection. The server
 rejects that action-specific route. Email enrichment is separate: it does not
@@ -55,17 +61,18 @@ start onboarding, or contact a candidate.
 
 A direct batch of one to 500 LinkedIn profile URLs can use the same
 email-enrichment route when the user explicitly asks for email addresses. Do not
-run discovery first and do not invent a `networkStatus`, `candidateRef`, or
+run a search first and do not invent a `networkStatus`, `candidateRef`, or
 `selectionToken`. The server resolves the profile identity and safely blocks an
 unverifiable profile; in-network status does not itself block email enrichment.
 Generate one fresh private UUID `requestId` per URL and preserve URL order.
 
-This direct-URL branch applies only when the user supplied the URLs as the
-enrichment input. If a candidate came from `discover_candidates`, always use
-that result's exact `candidateRef` and `selectionToken`; never replace a
-missing, invalid, or expired discovery handle with the visible profile URL.
-Mixed discovery-handle and direct-URL items may share one batch only when the
-user explicitly selected or supplied every item.
+The direct-URL branch is the normal route for candidates presented by the
+current search surface: use each selected card's returned `profileUrl` as the
+supplied URL. If a candidate's result DID issue a paired `candidateRef` and
+`selectionToken`, always use those exact handles; never replace a missing,
+invalid, or expired issued handle with the visible profile URL for that item.
+Mixed handle and direct-URL items may share one batch only when the user
+explicitly selected or supplied every item.
 
 If an email request includes an in-network candidate, keep the request on the
 email-enrichment route; never convert it into pipeline interest. If the user
@@ -111,13 +118,13 @@ another candidate's data.
 For a direct URL, preserve the supplied LinkedIn URL and do not create or
 substitute discovery handles.
 
-Include each selected candidate at most once in a batch. If either handle is
-missing, do not substitute a name, profile URL, internal ID, or stale token and
-do not silently omit that selection. Explain which displayed candidate cannot
-be included and ask whether to continue with the remaining explicit
-selections. An invalid or expired handle may require fresh discovery. Because
-discovery can use organization credits, get the user's approval before running
-it again.
+Include each handle-bearing selected candidate at most once in a batch. If an
+issued handle is invalid or expired, do not substitute a name, internal ID, or
+stale token for that item and do not silently omit the selection. A
+search-presented candidate without issued handles is not a missing-handle
+case: enrich them through the direct-URL branch with their returned
+`profileUrl`. Because searches can use organization credits, get the user's
+approval before running a fresh search to re-derive anyone.
 
 ## Enrich one to 500 candidates or profiles
 
@@ -325,8 +332,13 @@ server/plugin contract mismatch rather than filling in missing data.
 
 ## Express interest in one selected in-network candidate
 
-For an authorized selection with `networkStatus: in_network`, call
-`express_candidate_interest` once with the unchanged candidate handles.
+For an authorized selection carrying an issued `candidateRef` and
+`selectionToken` pair, call `express_candidate_interest` once with those
+unchanged handles. If either handle is missing, the selection is not
+eligible — report that boundary instead of substituting or fabricating a
+handle. The server performs the final in-network authorization; if it
+rejects the handles as invalid for this action, relay its safe message and
+stop.
 Supply `projectId` only when the user selected an exact returned active role and
 its project UUID is available. Omit it when the server can resolve the sole
 active role. Never guess a role or project UUID, and do not pass an enrichment

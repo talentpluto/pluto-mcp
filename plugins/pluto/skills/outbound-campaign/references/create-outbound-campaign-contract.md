@@ -9,8 +9,17 @@ and cancellation sections cover their respective tools.
 
 - `campaignName` must contain from 1 through 160 characters after trimming.
 - Accept one to 100 explicitly selected out-of-network candidates.
-- Use a candidate returned by `discover_candidates`, or the fresh
-  `candidateRef` and `selectionToken` returned by completed email enrichment.
+- Use the fresh `candidateRef` and `selectionToken` returned by completed
+  email enrichment, or a handle pair issued by a legacy discovery result.
+- A candidate presented by the current search surface carries no handles and
+  can join a campaign only after one explicitly user-authorized
+  email-enrichment batch mints their pair: confirm the user wants that paid
+  contact lookup for the selected candidates, run it through the
+  candidate-interest skill's bounded start-and-poll flow, and build the
+  campaign from the completed items' handles. Campaign creation then reuses
+  each committed disclosure without another lookup or credit. Never enrich
+  silently as campaign preparation, and never pass a profile URL in place of
+  a handle.
 - Each `candidateRef` may appear only once.
 - Preserve every handle pair together, unchanged, hidden, and in selected
   order. Never substitute a name, LinkedIn URL, email, internal ID, or stale

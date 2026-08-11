@@ -6,10 +6,10 @@ description: Use when a user asks one private, bounded question about an explici
 # Private candidate question
 
 Use this skill only for one user-authored question about one explicitly selected
-in-network candidate returned by `discover_candidates`. The tool is a
-privacy-preserving assessment of permitted recorded information, not a private
-record lookup, candidate search filter, comparison engine, or independent
-verification service.
+in-network candidate for whom a Pluto result issued a paired `candidateRef` and
+`selectionToken`. The tool is a privacy-preserving assessment of permitted
+recorded information, not a private record lookup, candidate search filter,
+comparison engine, or independent verification service.
 
 Read [Answer candidate question contract](references/answer-candidate-question-contract.md)
 before the first tool call and whenever the question concerns compensation,
@@ -17,19 +17,22 @@ work authorization, sponsorship, relocation, or work arrangement.
 
 ## Keep discovery and private assessment separate
 
-Use the selected search-experience card's returned `networkStatus` as the
-routing source:
+Route by issued handles, not by presentation:
 
-- `networkStatus: in_network` is eligible for this workflow when every
-  server-side authorization, relationship, consent, visibility, and evidence
-  check passes.
-- `networkStatus: out_of_network | unknown` is not eligible. Do not use email
-  enrichment, interest, a name, a profile URL, or another candidate's handles
-  as a fallback.
+- Eligible: one selection whose Pluto result issued a paired `candidateRef`
+  and `selectionToken` for an in-network candidate, when every server-side
+  authorization, relationship, consent, visibility, and evidence check
+  passes.
+- Not eligible: out-of-network or unknown-membership selections, and
+  candidates presented by the current search surface
+  (`materialize_candidates` cards), which intentionally carry no handles or
+  network-status field. For those, report that the private assessment is not
+  available for that selection yet. Do not use email enrichment, interest, a
+  name, a profile URL, or another candidate's handles as a fallback, and do
+  not fabricate a handle.
 
-The presentation lane does not establish membership. If `networkStatus` is
-missing, report a server/plugin contract mismatch instead of guessing or
-calling the tool.
+The presentation lane never establishes membership. If the server rejects a
+handle for this action, relay the safe message and stop.
 
 Discovery alone does not authorize a private assessment. The user must clearly
 select one returned in-network candidate and ask one question about that
@@ -39,8 +42,8 @@ candidate and one question before making a tool call.
 
 Never use `answer_candidate_question` to discover, filter, shortlist, rank, or
 bulk-compare candidates. Do not run it serially across a list to approximate a
-private filter. When the user asks to use one of those subjects as a discovery
-criterion, send the complete request through `discover_candidates`; this
+private filter. When the user asks to use one of those subjects as a search
+criterion, the `candidate-discovery` skill owns explaining that boundary; this
 selected-candidate workflow remains limited to one question about one person.
 
 ## Confirm the exact tool and permission
