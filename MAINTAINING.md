@@ -26,7 +26,7 @@ in `lib/mcp/candidates/server-config.ts` and the generated snapshot in
 `contracts/candidate-mcp.json` (regenerated with `npm run
 mcp:contract:update`). The skills here pin the version they were written
 against at the top of
-`plugins/pluto/skills/candidate-discovery/references/discover-candidates-contract.md`.
+`plugins/pluto/skills/candidate-discovery/references/candidate-search-contract.md`.
 
 Any webapp change that bumps the contract version must open a paired PR in
 this repo reviewing every skill against the new contract — numbers (page

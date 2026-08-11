@@ -9,8 +9,10 @@ and cancellation sections cover their respective tools.
 
 - `campaignName` must contain from 1 through 160 characters after trimming.
 - Accept one to 100 explicitly selected out-of-network candidates.
-- Use a candidate returned by `discover_candidates`, or the fresh
-  `candidateRef` and `selectionToken` returned by completed email enrichment.
+- Use the fresh `candidateRef` and `selectionToken` returned by completed
+  email enrichment, or a handle pair issued by a legacy discovery result.
+  Candidates presented by the current search surface carry no handles; route
+  them through email enrichment first.
 - Each `candidateRef` may appear only once.
 - Preserve every handle pair together, unchanged, hidden, and in selected
   order. Never substitute a name, LinkedIn URL, email, internal ID, or stale
