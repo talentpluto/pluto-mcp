@@ -193,17 +193,29 @@ whether `emailPriority` is absent and inherits the organization setting or is
 an explicit `work` or `personal` override. Never add `templateId` to campaign
 creation; pass the resulting reviewed `sequenceSettings` directly.
 
-Use `save_outbound_campaign_template` or
+Use `save_reusable_outreach_template` or
 `delete_outbound_campaign_template` only when the user explicitly asks for
 that exact mutation and the live catalog exposes the required tool. A new save
 stores the reviewed reusable sequence plus its name and optional description;
 it never stores recipients, campaign name, delivery route, or sender inbox.
+
+Before saving or updating, label the review **Template review — no campaign
+will be created** and say plainly: **This saves reusable template prefill only.
+It will not create a campaign, add recipients, prepare drafts, schedule
+follow-ups, or send email.** End with **Save this reusable template?** and ask
+the user to reply `save template` or request changes. A bare “yes” counts only
+when it directly answers that exact question and no edit or topic change
+intervened. Template approval never authorizes `create_outbound_campaign`.
 
 To update, first load the exact template, review the complete changed settings,
 and pass its private `templateId` with the unchanged `updatedAt`. On `stale`,
 load the latest version, show the relevant changes, and ask again. On
 `name_conflict`, no write occurred; ask whether to load and update that exact
 existing template or use another name.
+
+After a successful save, say that the reusable template was saved and that no
+campaign was created. Do not continue into campaign creation unless the user
+separately reviews and explicitly confirms a complete campaign.
 
 To delete, load the exact template, show its name, description, and cadence,
 explain that deletion cannot be undone but does not affect existing campaigns,
