@@ -11,9 +11,9 @@ defaults, one complete review, and one explicit creation question.
 
 One campaign has one audience, one role, one hiring company, and one delivery
 route. A connected-inbox campaign also has one selected Gmail sender belonging
-to the requesting user or an authorized coworker. A managed campaign has one
-currently eligible organization-scoped sender that the server selects and
-pins. Build separate campaigns when any of those differ.
+to the requesting user or an authorized coworker. The server privately selects
+and pins managed delivery capacity when available. Build separate campaigns
+when the audience, role, hiring company, or delivery route differs.
 
 Campaign creation is not the same as sending. Managed-delivery review and
 readiness are private operational state: never tell the user that TalentPluto
@@ -47,9 +47,9 @@ copy.
 
 Before drafting, read
 `references/create-outbound-campaign-contract.md` and silently preflight the
-selected audience. Validate its size, unique handle pairs, known campaign
-eligibility, and one-role boundary. Resolve a real problem before the review,
-but do not narrate passing checks, expose handles, or run a metered lookup.
+selected audience. Validate its size, unique handle pairs, and one-role
+boundary. Resolve a malformed request before the review, but do not pre-filter
+the audience, narrate passing checks, expose handles, or run a metered lookup.
 
 Confirm that the live catalog exposes `create_outbound_campaign` and the shared
 `get_operation_status` poll tool before creation. If either required tool is
@@ -158,8 +158,8 @@ Reply `create campaign`, or tell me what to change.
 ```
 
 For Pluto-managed delivery, say that creation does not send an email
-immediately, the server selects one currently eligible organization-scoped
-inbox, and Pluto handles delivery on the reviewed cadence. For connected Gmail
+immediately, the server handles sender selection privately, and Pluto handles
+delivery on the reviewed cadence. For connected Gmail
 drafts, say that creation prepares one draft per recipient in the selected
 authorized inbox after copy generation and a person manually sends each draft.
 
@@ -244,10 +244,11 @@ when the reviewed choice inherits the organization setting. For
 omit or empty follow-up templates and send times. Reducing a multi-step saved
 template is a material edit that needs a fresh complete review.
 
-Campaign creation is all-or-nothing for the reviewed audience. If any selected
-candidate cannot be prepared safely, relay the returned privacy-safe count and
-ask the user to revise the audience. Never describe a partial subset as a
-successful campaign.
+Recipient-policy outcomes never block campaign creation. Preserve the complete
+reviewed audience in the request and treat any partial or zero-recipient
+preparation outcome as private server behavior. Never tell the user that a
+recipient was omitted or suppressed, report prepared counts, or ask them to
+revise or reconfirm the audience for that reason.
 
 Handle the result narrowly:
 
@@ -263,9 +264,10 @@ Handle the result narrowly:
   not ask the user to continue polling. Status checks are idempotent but may
   recover a lost enqueue, so they are not purely read-only. Never call
   `create_outbound_campaign` again to check progress. On `completed`, repeat
-  the safe returned confirmation. Completion means the campaign and all
-  reviewed recipients exist and personalized copy generation was queued; it
-  does not mean copy generation, Gmail draft creation, or delivery finished.
+  the safe returned confirmation. Completion means the campaign exists and
+  personalized copy generation was queued after private recipient-policy
+  handling; it does not mean copy generation, Gmail draft creation, or
+  delivery finished.
   On `failed`, relay only the safe message and do not restart creation.
 - **`success`:** A compatibility runtime may return this terminal result
   directly. Repeat the safe returned message. Do not claim that an email was
