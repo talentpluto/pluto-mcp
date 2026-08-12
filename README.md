@@ -30,8 +30,8 @@ work with the retrieved leads directly in the conversation.
   cites explicit evidence, and candidates are enriched first when their
   profile facts are not already in the session.
 - Review and create an email campaign for selected out-of-network candidates
-  from one complete editable review, using Pluto-managed delivery, one
-  connected Gmail inbox, or one ready dedicated campaign inbox.
+  from one complete editable review, using Pluto-managed delivery or one
+  authorized Gmail inbox belonging to the requester or a coworker.
 - Cancel an existing outbound campaign after confirming the exact one,
   stopping its remaining scheduled emails.
 - Express interest in an in-network candidate for an active role.
@@ -177,7 +177,8 @@ exact campaign.
   culture-fit judgment, protected-trait proxy, or hiring decision, and
   non-founder employees appear only as aggregate patterns.
 - Connected-inbox campaigns are always one email per recipient. Pluto creates
-  one Gmail draft per recipient after copy generation, and each draft is sent
+  one Gmail draft per recipient in the selected authorized inbox belonging to
+  the requester or a coworker after copy generation, and each draft is sent
   manually from Gmail.
 - Cancelling a campaign permanently stops its remaining scheduled emails and
   any still-pending Gmail draft preparation. It does not recall emails already

@@ -54,7 +54,8 @@ exposes it. The input is empty and the result is read-only:
 
 - `emailPriority` is the organization's current Campaigns default.
 - `senderOptions` contains up to 100 authorized active Gmail choices. Each
-  safe option has an email, optional display name, and private `connectionId`.
+  safe option has an email, optional display name, private `connectionId`, and
+  `ownership` of `current_user` or `coworker`.
 - `templates` contains organization-shared summaries with private `templateId`
   and `updatedAt`; it deliberately excludes reusable copy and generation
   instructions.
@@ -68,41 +69,49 @@ never creates a campaign and does not require separate user approval.
 
 Pass exactly one delivery object:
 
-- Pluto-managed inboxes: `delivery: { method: 'talentpluto' }`
-- Personal inbox drafts:
+- Pluto-managed delivery: `delivery: { method: 'talentpluto' }`
+- Connected Gmail drafts:
   `delivery: { method: 'connected_inbox', connectionId }`
-- Dedicated campaign inbox:
+- Compatibility-only managed alias:
   `delivery: { method: 'client_campaign_inbox' }`
 
-For personal inbox drafts, pair the private `connectionId` only with its safe
-email from trusted context or a `needs_sender` response. Never place two
-delivery routes or two senders in one campaign. For a dedicated campaign
-inbox, never pass an inbox identifier: the server verifies readiness, selects
-one organization-owned dedicated inbox, and pins it to the campaign.
+For connected Gmail drafts, pair the private `connectionId` only with its safe
+email and ownership label from trusted context or a `needs_sender` response.
+Never place two delivery routes or two senders in one campaign. For managed
+delivery, never pass an inbox identifier: the server verifies current
+organization eligibility, selects one inbox from the managed pool, and pins it
+to the campaign. Use `talentpluto` for new managed campaigns. Treat
+`client_campaign_inbox` as the same pool rather than a separate user choice,
+and preserve it only for an unchanged retry that already used that alias.
 
-Personal-inbox copy must represent the real person and organization behind
+Connected-inbox copy must represent the real person and organization behind
 that inbox. Never write as TalentPluto unless it is the sender's actual
 organization, and never impersonate an employee of a separate hiring company.
 Describe the sender as recruiting for or working with that company when
 appropriate. Do not add TalentPluto's managed-delivery mailing-address or
 unsubscribe footer.
 
-For normal personal-inbox creation, use a `connectionId` returned by
+For normal connected-inbox creation, use a `connectionId` returned by
 `get_outbound_campaign_setup`. Omitting it is only a recovery fallback when
 setup context was unavailable or changed; the tool can then return
 `needs_sender` without creating a campaign. After a returned sender is
 selected, never omit its connection ID.
 
-Personal inbox drafts are single-email only. If a saved template contains
+Connected Gmail drafts are single-email only. If a saved template contains
 follow-ups, show the one-email version as a material change and obtain fresh
-confirmation, or use one of the managed routes. Never silently truncate a
-reviewed sequence.
+confirmation, or use managed delivery. Never silently truncate a reviewed
+sequence.
 
-Dedicated campaign inbox copy uses the recruiting organization's perspective.
-Use `{senderName}` rather than inventing a dedicated inbox identity. Both
-`talentpluto` and `client_campaign_inbox` remain subject to private server-side
-managed-delivery readiness and policy gates. Never mention an internal review,
-approval, confirmation, or wait to the user.
+Managed campaign copy uses the recruiting organization's perspective. Use
+`{senderName}` rather than inventing a managed inbox identity. Both managed
+method values remain subject to private server-side readiness and eligibility
+gates. Pool composition, including temporary versus dedicated senders, is
+private server state and never a user choice. Current sender eligibility
+controls only new campaign creation; an inbox becoming ineligible does not
+cancel campaigns already pinned to it. Never infer existing campaign or reply
+visibility from current eligibility, and never describe managed routing as
+forwarding messages to another email address. Never mention an internal
+review, approval, confirmation, or wait to the user.
 
 ## Sequence mapping
 
@@ -114,7 +123,7 @@ approval, confirmation, or wait to the user.
   review and launch confirmation.
 - `connected_inbox` requires `totalStepCount: 1` and `followUpDelays: []`.
   Omit `followUpTemplates` and `followUpSendTimes`, or pass them as empty
-  arrays. The server rejects every multi-step personal-inbox campaign.
+  arrays. The server rejects every multi-step connected-inbox campaign.
 - For managed routes, `totalStepCount` is the total number of emails, including
   the initial email, and must be from 1 through 21.
 - `followUpDelays` must contain exactly `totalStepCount - 1` whole-day values.
@@ -141,9 +150,9 @@ template field. A fully templated campaign still needs a `generationPrompt`
 that records the opportunity, audience, tone, factual boundaries, purpose of
 each step, and call to action.
 
-Every non-empty body template for `connected_inbox` or
-`client_campaign_inbox` must include `{senderName}`. Never hard-code a
-person's name in either route's signoff.
+Every non-empty body template for `connected_inbox`, `talentpluto`, or
+`client_campaign_inbox` must include `{senderName}`. Never hard-code a person's
+name in any route's signoff.
 
 For a hybrid campaign:
 
@@ -205,7 +214,7 @@ instructions.
   may recover a lost enqueue and is therefore not purely read-only.
 - Completion means the campaign and all reviewed recipients exist and
   personalized copy generation was queued in the background. It does not
-  mean copy generation, personal-inbox draft creation, or delivery completed.
+  mean copy generation, connected-inbox draft creation, or delivery completed.
 - On `completed` or `success`, repeat the tool's message exactly unless a
   legacy managed-route result mentions internal review, approval,
   confirmation, or waiting. Normalize that legacy result to **Campaign created
@@ -272,10 +281,10 @@ it takes no request ID, candidate handles, or delivery fields.
 - `already_cancelled` returns `campaignName` with a fixed message: the
   campaign was already stopped before this request.
 - Cancellation is one-way. Remaining managed sends and any still-pending
-  personal-inbox draft preparation stop, and this tool cannot resume or
+  connected-inbox draft preparation stop, and this tool cannot resume or
   restart the campaign.
   It does not recall emails already sent, does not remove Gmail drafts already
-  created in a personal inbox, and does not delete the campaign, which stays
+  created in a connected inbox, and does not delete the campaign, which stays
   visible in Pluto Campaigns as Stopped.
 - A repeat cancel of the same campaign is safe to direct after an ambiguous
   failure: a campaign that already stopped reports `already_cancelled`.

@@ -16,8 +16,10 @@ measures observed professional alignment — background familiarity with the
 team, or evidence-verified match to the stated requirements — never
 candidate quality, culture fit, or a hiring decision.
 
-This skill was written against server contract `4.0.0` and remains compatible with server contract `4.1.0` and with server contract `4.7.0`. On any conflict,
-prefer the live tool description and schema field descriptions.
+This skill was written against server contract `4.0.0`. It remains compatible
+with server contract `4.1.0` and server contract `4.7.0`. It also remains
+compatible with server contract `4.8.0`. On any conflict, prefer the live tool
+description and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
 
