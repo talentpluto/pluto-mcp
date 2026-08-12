@@ -29,7 +29,7 @@ work with the retrieved leads directly in the conversation.
   against your job description when you provide one. Every credited match
   cites explicit evidence, and candidates are enriched first when their
   profile facts are not already in the session.
-- Review and create an email campaign for selected out-of-network candidates
+- Review and create an email campaign for selected candidates
   from one complete editable review, using Pluto-managed delivery or one
   authorized Gmail inbox belonging to the requester or a coworker.
 - Cancel an existing outbound campaign after confirming the exact one,

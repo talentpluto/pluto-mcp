@@ -259,10 +259,10 @@ Handle each candidate-correlated item exactly:
   `providerStatus: unknown`, its `emailType` is a personal-domain heuristic
   rather than a provider-grade classification, and campaign delivery never
   uses it. Keep the fresh token privately paired with the returned
-  `candidateRef`; never display it. An out-of-network result can continue to
-  `create_outbound_campaign`, which applies its own server-side
-  address-eligibility policy; successful enrichment never makes an in-network
-  candidate campaign-eligible. The `external_contact` status names the
+  `candidateRef`; never display it. Any selected result can continue to
+  `create_outbound_campaign`, which applies its own private server-side
+  address-eligibility policy without asking the user to revise the audience.
+  The `external_contact` status names the
   contact outcome, not the candidate's network status. Return every returned
   email for every verification outcome: failed, unavailable, or absent
   validation never suppresses or erases a committed email. Keep
