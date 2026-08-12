@@ -238,12 +238,17 @@ instructions.
   overrides, step count, cadence, optional send times, and optional email
   priority. It excludes recipients, handles, campaign name, delivery route,
   and sender inbox.
-- Call `save_outbound_campaign_template` only for an explicit request to save
-  or update the exact reviewed reusable settings. Omit `templateId` and
+- Call `save_reusable_outreach_template` only for an explicit request to save
+  or update the exact reviewed reusable settings. Immediately before asking
+  for confirmation, state that this saves template prefill only and does not
+  create a campaign, add recipients, prepare drafts, schedule follow-ups, or
+  send email. Ask **Save this reusable template?** and treat template approval
+  as separate from campaign launch approval. Omit `templateId` and
   `expectedUpdatedAt` for a new save. For an update, load the exact template
   first and pass both its private `templateId` and unchanged `updatedAt`. A
   `stale` or `name_conflict` result means no write occurred; load and review
-  the relevant current template before asking again.
+  the relevant current template before asking again. After success, state that
+  the reusable template was saved and no campaign was created.
 - Call `delete_outbound_campaign_template` only after loading the exact
   template and obtaining explicit deletion confirmation. Pass its private
   `templateId` and unchanged `updatedAt`. A `stale` result deletes nothing and
