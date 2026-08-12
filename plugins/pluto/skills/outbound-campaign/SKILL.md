@@ -10,28 +10,31 @@ design the workflow or fill out a form. Give the user control through editable
 defaults, one complete review, and one explicit creation question.
 
 One campaign has one audience, one role, one hiring company, and one delivery
-route. A personal-inbox campaign also has one selected Gmail sender. A
-dedicated campaign-inbox campaign has one ready sender that the server selects
-and pins. Build separate campaigns when any of those differ.
+route. A connected-inbox campaign also has one selected Gmail sender belonging
+to the requesting user or an authorized coworker. A managed campaign has one
+currently eligible organization-scoped sender that the server selects and
+pins. Build separate campaigns when any of those differ.
 
 Campaign creation is not the same as sending. Managed-delivery review and
 readiness are private operational state: never tell the user that TalentPluto
 must internally review, approve, or confirm a campaign, and never ask them to
 wait for that internal step.
 
-- **Pluto-managed inboxes** use Pluto's managed sender pool and delivery
-  lifecycle.
-- **Personal inbox drafts** use one selected Gmail inbox and create one draft
-  per recipient. The user manually sends each draft from Gmail.
-- **Dedicated campaign inboxes** use one ready dedicated inbox owned by the
-  organization. The server selects and pins it for managed delivery.
+- **Pluto-managed delivery** uses the organization's server-selected eligible
+  campaign-inbox pool. The available pool may change without becoming a user
+  setting.
+- **Connected Gmail drafts** use one authorized inbox belonging to the
+  requesting user or a coworker and create one draft per recipient. A person
+  manually sends each draft from Gmail.
 
-Personal-inbox copy represents the real person and organization behind the
+Connected-inbox copy represents the real person and organization behind the
 selected Gmail inbox. Never write as TalentPluto unless that is the sender's
 actual organization. Never imply that the sender works for the hiring company
 when they do not; describe them truthfully as recruiting for or working with
 that company. Do not add TalentPluto's managed-delivery mailing-address or
-unsubscribe footer to a personal-inbox draft.
+unsubscribe footer to a connected-inbox draft. Managed delivery does not
+forward messages to an external email address; campaign and reply visibility
+remain in Pluto.
 
 Use the audience, role, hiring company, tone, and preferences already
 established in the conversation. Never ask the user to repeat a settled choice.
@@ -55,11 +58,12 @@ when recovery succeeds.
 
 When available, call `get_outbound_campaign_setup` once before drafting. It is
 read-only and returns the organization's current recipient email priority,
-authorized active Gmail sender choices, and saved-template summaries. Use
-those values as editable prefill without asking for separate setup approval or
-making the user repeat them. A missing setup tool alone can reflect a live
-catalog that has not refreshed; do not tell the user to reconnect solely for
-that optional lookup. Continue with established context and safe defaults.
+authorized active Gmail sender choices labeled as the requesting user's or a
+coworker's inbox, and saved-template summaries. Use those values as editable
+prefill without asking for separate setup approval or making the user repeat
+them. A missing setup tool alone can reflect a live catalog that has not
+refreshed; do not tell the user to reconnect solely for that optional lookup.
+Continue with established context and safe defaults.
 
 If the user named a saved template, or one returned template clearly matches
 the request, call `get_outbound_campaign_templates` with its private
@@ -77,15 +81,17 @@ Derive a complete proposal from trusted context:
 - **Audience.** Preserve the exact selected candidate set and order. Do not ask
   for the audience again.
 - **Delivery.** Respect an explicit route. Otherwise propose Pluto-managed
-  inboxes as an editable default in the review. Do not add a separate route
+  delivery as an editable default in the review. Do not add a separate route
   question.
-- **Sender.** For personal-inbox delivery, use a sender returned by campaign
-  setup. When several are available, propose the one best supported by context
-  and show the safe alternatives in the same review. Keep connection IDs
-  private. If no sender is available, stop before drafting and ask the user to
-  connect Gmail or choose a managed route.
-- **Sequence.** Personal inbox drafts always contain exactly one email and no
-  follow-ups. For a managed route, preserve the requested cadence or loaded
+- **Sender.** For connected-inbox delivery, use only a sender returned by
+  campaign setup and use its ownership label to distinguish the requesting
+  user's inbox from a coworker's. When several are available, propose the one
+  best supported by context and show the safe alternatives in the same review.
+  Keep connection IDs private. If no sender is available, stop before drafting
+  and ask the user to connect Gmail or choose managed delivery.
+- **Sequence.** Personal inbox drafts always contain exactly one email;
+  authorized coworker connected-inbox drafts do too, and neither supports
+  follow-ups. For managed delivery, preserve the requested cadence or loaded
   template. Otherwise propose three emails: day 0, day 3, and day 10, stored as
   follow-up delays `[3, 7]`.
 - **Recipient email priority.** Preserve a loaded template's explicit override
@@ -126,9 +132,9 @@ Use this compact structure:
 
 **<campaign name>** · <candidate count> selected candidate(s) · <role> at <hiring company>
 
-- Delivery: <route and selected personal sender when applicable>
+- Delivery: <route, sender, and requester/coworker ownership when applicable>
 - Recipient email priority: <organization default or explicit override>; the other verified type remains a fallback
-- Sequence: <one personal draft, or the initial email and cumulative day of each managed follow-up>
+- Sequence: <one connected Gmail draft, or the initial email and cumulative day of each managed follow-up>
 - Follow-up times: <reviewed America/New_York times; omit when unset>
 - Writing: <exact shared copy, recipient-specific generation, or hybrid>
 - Saved template: <name and any reviewed edits; omit when unused>
@@ -151,12 +157,11 @@ Use this compact structure:
 Reply `create campaign`, or tell me what to change.
 ```
 
-For Pluto-managed inboxes, say that creation does not send an email
-immediately and Pluto handles delivery on the reviewed cadence. For personal
-inbox drafts, say that creation prepares one Gmail draft per recipient after
-copy generation and the user manually sends each draft. For dedicated
-campaign inboxes, say that creation does not send immediately and Pluto uses
-one ready organization-owned dedicated inbox on the reviewed cadence.
+For Pluto-managed delivery, say that creation does not send an email
+immediately, the server selects one currently eligible organization-scoped
+inbox, and Pluto handles delivery on the reviewed cadence. For connected Gmail
+drafts, say that creation prepares one draft per recipient in the selected
+authorized inbox after copy generation and a person manually sends each draft.
 
 The audience line must identify every selected candidate by displayed name,
 even for a large campaign. Keep candidate references, selection tokens,
@@ -212,10 +217,13 @@ live input schema. Keep the campaign projectless: never look up, retain, or
 pass `projectId`; `create_outbound_campaign` does not return `needs_role`.
 
 Call `create_outbound_campaign` only after the user explicitly authorizes the
-latest complete review. Map personal inbox drafts to `connected_inbox` with the
-selected private `connectionId`, Pluto-managed inboxes to `talentpluto`, and
-dedicated campaign inboxes to `client_campaign_inbox` without any inbox
-identifier. Create exactly the reviewed campaign and no others.
+latest complete review. Map connected Gmail drafts to `connected_inbox` with
+the selected private `connectionId` and Pluto-managed delivery to
+`talentpluto`, without any managed inbox identifier. Treat
+`client_campaign_inbox` only as a compatibility alias for the same managed
+pool: do not present it as a separate route or use it for a new campaign, and
+preserve it only when retrying an unchanged legacy request that already used
+it. Create exactly the reviewed campaign and no others.
 
 Map recipient email priority without erasing its meaning: pass `work` or
 `personal` only for an explicit reviewed override, and omit `emailPriority`
@@ -235,7 +243,7 @@ Handle the result narrowly:
   no campaign was created. Show every returned safe sender option. After the
   user chooses one, render the complete updated review and obtain fresh
   creation confirmation before retrying with the same request ID. If no option
-  exists, relay the connection guidance or offer either managed route.
+  exists, relay the connection guidance or offer managed delivery.
 - **`queued`:** Keep the returned `operationId` private, wait at least
   `retryAfterMs`, and call `get_operation_status` with that exact unchanged
   value until the operation is `completed` or `failed`. Continue automatically
@@ -273,7 +281,7 @@ Cancellation is a list-then-confirm flow:
    `campaignId`.
 
 Before confirmation, explain that cancellation permanently stops remaining
-scheduled emails and pending personal-inbox draft preparation. It does not
+scheduled emails and pending connected-inbox draft preparation. It does not
 recall sent email, remove Gmail drafts already created, or delete the campaign;
 the campaign stays visible in Pluto Campaigns as Stopped.
 

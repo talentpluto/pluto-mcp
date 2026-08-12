@@ -19,8 +19,10 @@ a candidate, establish that two people worked together, or provide a
 warm-introduction path. Say that plainly when the user's wording asks for a
 specific teammate, then provide the aggregate overlap their request supports.
 
-This skill was written against server contract `4.0.0` and remains compatible with server contract `4.1.0` and with server contract `4.7.0`. On any conflict,
-prefer the live tool descriptions and schema field descriptions.
+This skill was written against server contract `4.0.0`. It remains compatible
+with server contract `4.1.0` and server contract `4.7.0`. It also remains
+compatible with server contract `4.8.0`. On any conflict, prefer the live tool
+descriptions and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
 
