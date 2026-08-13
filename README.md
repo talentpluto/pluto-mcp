@@ -29,8 +29,10 @@ work with the retrieved leads directly in the conversation.
   against your job description when you provide one. Every credited match
   cites explicit evidence, and candidates are enriched first when their
   profile facts are not already in the session.
-- Review and create an email campaign for selected candidates
-  from one complete editable review, using Pluto-managed delivery or one
+- Review and create an email campaign for selected candidates.
+  Pluto reuses completed email enrichment, prepares only missing recipient
+  emails, asks once between a saved template and custom content, then produces
+  one complete editable review. Delivery can use Pluto-managed delivery or one
   authorized Gmail inbox belonging to the requester or a coworker.
 - Cancel an existing outbound campaign after confirming the exact one,
   stopping its remaining scheduled emails.
@@ -125,9 +127,9 @@ After a search, select the relevant candidates before asking Pluto to continue:
 ```text
 @pluto Get and verify the available emails for these candidates.
 
-@pluto Create a campaign for these candidates. Load my defaults and relevant
-saved templates, draft one complete editable review, and ask me to confirm that
-exact campaign.
+@pluto Create a campaign for these candidates. Prepare any missing recipient
+emails, ask me once whether to use a saved template or custom content, then show
+one complete editable review and ask me to confirm that exact campaign.
 
 @pluto Express interest in this candidate for the Senior Engineer role.
 
@@ -146,6 +148,11 @@ exact campaign.
 - A successful email lookup can use one credit for that candidate. It uses
   none when the candidate already has an accepted TalentPluto profile, when
   reusing an earlier successful lookup, or when no email is found.
+- An explicit campaign request reuses completed email-enrichment results and
+  runs one prerequisite enrichment batch only for selected recipients still
+  missing them. Pluto states the maximum first; each new successful lookup may
+  use one shared organization credit, while reuse consumes no new lookup
+  credit.
 - LinkedIn profile enrichment runs one asynchronous operation for 1–100
   supplied profile URLs, reuses a stored profile fetched within the last 3
   months, and uses two shared organization credits per newly admitted profile.

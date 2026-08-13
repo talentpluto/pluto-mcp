@@ -1,6 +1,6 @@
 {
   "name": "pluto",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with validated emails and derived employment-company intelligence, candidate-to-Team DNA comparison, 0-100 candidate scoring against Team DNA and a supplied job description, outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
@@ -57,7 +57,7 @@
       "Deep-enrich the LinkedIn profiles I selected with professional profiles, validated emails, and derived employment-company intelligence.",
       "How does the background of the candidate I supplied overlap with our Team DNA?",
       "Score the candidate I selected against our Team DNA and this job description.",
-      "Create a campaign for the candidates I selected. Load my defaults and saved templates, draft one complete editable review, and ask me to confirm that exact campaign.",
+      "Create a campaign for the candidates I selected. Prepare any missing recipient emails, ask once whether I want a saved template or custom content, then show one complete editable review for confirmation.",
       "Cancel my outbound campaign for the payments role.",
       "Continue with the candidate and role I selected in Pluto."
     ],

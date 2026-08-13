@@ -1,12 +1,13 @@
 ---
 name: outbound-campaign
-description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected candidates; browse, reuse, save, update, or delete an outbound campaign template; or cancel or stop an existing campaign. Loads campaign defaults, sender choices, and saved-template summaries up front, turns known context into one complete editable review, and calls create_outbound_campaign only after explicit confirmation of that exact campaign. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
+description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected candidates; browse, reuse, save, update, or delete an outbound campaign template; or cancel or stop an existing campaign. Loads campaign setup, enriches only recipients without reusable email-enrichment results, asks one compact saved-template-or-custom content question, turns the answer into one complete editable review, and calls create_outbound_campaign only after explicit confirmation of that exact campaign. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
 ---
 
 # Outbound campaigns
 
 Turn a selected audience into one reviewable campaign without making the user
-design the workflow or fill out a form. Give the user control through editable
+design the workflow or fill out a form. Prepare missing recipient emails,
+collect one content-source choice, and give the user control through editable
 defaults, one complete review, and one explicit creation question.
 
 One campaign has one audience, one role, one hiring company, and one delivery
@@ -43,16 +44,20 @@ established in the conversation. Never ask the user to repeat a settled choice.
 
 An opening request to create, launch, start, or send a campaign starts the
 review flow. It is not permission to create a campaign with unseen settings or
-copy.
+copy. It does authorize the one prerequisite email-enrichment batch described
+below for selected recipients who do not already have a reusable completed
+email-enrichment result.
 
 Before drafting, read
 `references/create-outbound-campaign-contract.md` and silently preflight the
 selected audience. Validate its size, unique handle pairs, and one-role
 boundary. Resolve a malformed request before the review, but do not pre-filter
-the audience, narrate passing checks, expose handles, or run a metered lookup.
+the audience, narrate passing checks, expose handles, or run a metered lookup
+outside the missing-recipient-email step below.
 
 Confirm that the live catalog exposes `create_outbound_campaign` and the shared
-`get_operation_status` poll tool before creation. If either required tool is
+`get_operation_status` poll tool before creation. When any selected recipient
+needs email preparation, also require `enrich_email`. If any required tool is
 missing or unusable, follow the `connection-recovery` skill and resume only
 when recovery succeeds.
 
@@ -65,12 +70,70 @@ them. A missing setup tool alone can reflect a live catalog that has not
 refreshed; do not tell the user to reconnect solely for that optional lookup.
 Continue with established context and safe defaults.
 
-If the user named a saved template, or one returned template clearly matches
-the request, call `get_outbound_campaign_templates` with its private
-`templateId` and use the exact loaded `sequenceSettings`. Identify the template
-by name in the review. If no template clearly matches, draft normally and show
-the most relevant saved template names only as optional alternatives; do not
-block the review on a template-selection step.
+## Prepare missing recipient emails
+
+Before choosing campaign content, classify each selected recipient from trusted
+conversation state. A reusable completed email-enrichment result has
+`status: external_contact` plus the fresh `candidateRef` and `selectionToken`
+returned together for that recipient. Reuse that exact pair. A visible email,
+a search result, or a legacy discovery handle alone does not prove that the
+recipient has completed email enrichment.
+
+If every selected recipient has a reusable completed result, skip enrichment
+without mentioning another lookup or using another credit. For a mixed
+audience, enrich only the recipients missing that result. An explicit request
+to create, start, launch, or send the campaign authorizes this one prerequisite
+batch; do not add a separate approval question. Before starting it, say in one
+short progress update that Pluto is preparing emails for the named count and
+that it can use up to one shared organization credit for each recipient needing
+a new lookup. Stop instead if the user set a conflicting no-spend boundary.
+
+A request only to draft, refine, or review content does not authorize the paid
+batch. Continue to the content choice and review with the missing-recipient
+count labeled as pending. If the user later asks to create that campaign, run
+the prerequisite batch, update the complete review with the final email
+preparation state, and obtain exact creation confirmation.
+
+Build and run that batch through `enrich_email` using the candidate-interest
+skill's handle-versus-direct-URL mapping, fresh per-item request IDs, result
+validation, and bounded `get_operation_status` polling. Call `enrich_email`
+once for the missing subset, keep the returned addresses and opaque handles
+private, and do not render the standalone email table or CSV unless the user
+also asked to receive the addresses. Retain each successful result's fresh
+handle pair for campaign creation.
+
+Every selected recipient needs a usable handle pair before Pluto can build the
+reviewed campaign request. If prerequisite enrichment returns
+`contact_unavailable`, `blocked`, a failed operation, or an invalid result
+without that pair for any recipient, no campaign has been created. Identify the
+affected recipients only by their displayed names and safe messages, then ask
+whether to remove only those recipients; render a fresh complete review after
+any audience change. Never automatically repeat the paid operation. This
+handle-admission failure is distinct from private recipient-policy handling
+after creation, which never triggers audience revision or disclosure.
+
+## Choose the campaign content once
+
+Use any content choice already established in the conversation without asking
+again. Otherwise, after campaign setup and any prerequisite enrichment:
+
+- When saved templates are available, ask one compact question: use one of the
+  named saved templates or create custom content? Put the clearly relevant
+  template first, but do not select it for the user. Explain in the same
+  question that custom content can be exact copy or instructions they provide,
+  or Pluto can draft it from the known role and hiring-company context.
+- Combine any genuinely missing role or hiring-company clarification into that
+  same question. Do not create a separate intake step.
+- When no saved template exists, skip the impossible template choice and draft
+  concise custom content from established context. The complete review remains
+  editable, so the user can replace it with their own copy before creation.
+
+After the user selects a saved template, call
+`get_outbound_campaign_templates` with its private `templateId` and preserve
+the exact loaded `sequenceSettings` until the user reviews an edit. Identify
+the template by name in the review. A clearly matching template is a suggested
+choice, not permission to load or use it. Choosing a content source never
+authorizes campaign creation.
 
 Derive a complete proposal from trusted context:
 
@@ -97,10 +160,12 @@ Derive a complete proposal from trusted context:
 - **Recipient email priority.** Preserve a loaded template's explicit override
   or inheritance. Otherwise use the organization default returned by campaign
   setup. The other verified address type remains a fallback.
-- **Writing.** Use exact copy when the user supplied it. Use recipient-specific
-  generation when they ask Pluto to personalize from instructions. Otherwise
-  draft concise exact shared templates immediately. Do not ask the user to
-  choose a writing mode before showing useful copy.
+- **Writing.** For custom content, use exact copy when the user supplied it and
+  recipient-specific generation when they ask Pluto to personalize from
+  instructions. If they choose custom content without supplying copy or
+  instructions, draft concise exact shared templates immediately from trusted
+  context. Do not add another writing-mode question after the single content
+  choice.
 
 Candidate-facing copy asks only questions a human recruiter would naturally
 ask. When search evidence left a criterion unverified, phrase it as a normal
@@ -123,8 +188,10 @@ wording.
 
 ## Render the complete review
 
-Show the settings and copy together in the first substantive campaign response.
-Do not force separate basics, writing-mode, drafting, or final-review stages.
+After the content choice, show the settings and copy together in the next
+substantive campaign response.
+Do not force separate basics, writing-mode, drafting, or final-review stages
+beyond the one necessary saved-template-or-custom choice.
 Use this compact structure:
 
 ```markdown
@@ -136,10 +203,11 @@ Use this compact structure:
 - Recipient email priority: <organization default or explicit override>; the other verified type remains a fallback
 - Sequence: <one connected Gmail draft, or the initial email and cumulative day of each managed follow-up>
 - Follow-up times: <reviewed America/New_York times; omit when unset>
+- Content: <saved template name, user-supplied custom copy, or Pluto-drafted custom copy>
 - Writing: <exact shared copy, recipient-specific generation, or hybrid>
 - Saved template: <name and any reviewed edits; omit when unused>
 - Template values: <campaign-wide overrides; omit when unused>
-- Contact preparation: up to <count needing a new lookup> shared credits
+- Email preparation: <complete for every recipient; compact reused and newly enriched counts>
 - Audience: <every selected candidate's displayed name, compactly>
 
 #### Email sequence

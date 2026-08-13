@@ -10,27 +10,42 @@ and cancellation sections cover their respective tools.
 - `campaignName` must contain from 1 through 160 characters after trimming.
 - Accept one to 100 explicitly selected candidates regardless of network
   status.
-- Use the fresh `candidateRef` and `selectionToken` returned by completed
-  email enrichment, or a handle pair issued by a legacy discovery result.
-- A candidate presented by the current search surface carries no handles and
-  can join a campaign only after one explicitly user-authorized
-  email-enrichment batch mints their pair: confirm the user wants that paid
-  contact lookup for the selected candidates, run it through the
-  candidate-interest skill's bounded start-and-poll flow, and build the
-  campaign from the completed items' handles. Campaign creation then reuses
-  each committed disclosure without another lookup or credit. Never enrich
-  silently as campaign preparation, and never pass a profile URL in place of
-  a handle.
+- Use the fresh `candidateRef` and `selectionToken` returned together by a
+  completed email-enrichment result. A legacy discovery pair can start the
+  prerequisite enrichment operation but is not itself proof that email
+  enrichment completed.
+- An explicit request to create, start, launch, or send a campaign authorizes
+  one prerequisite email-enrichment batch for the selected recipients who do
+  not already have reusable completed results. State the missing-recipient
+  count and maximum one shared organization credit per new lookup in a compact
+  progress update, then run the batch without another approval question unless
+  the user set a conflicting no-spend boundary.
+- A candidate presented by the current search surface carries no handles. Use
+  the card's returned `profileUrl` only as the direct-URL input to prerequisite
+  `enrich_email`; after completion, build the campaign from the newly minted
+  handle pair. Never pass a profile URL to `create_outbound_campaign`.
 - Each `candidateRef` may appear only once.
 - Preserve every handle pair together, unchanged, hidden, and in selected
   order. Never substitute a name, LinkedIn URL, email, internal ID, or stale
   token.
-- Campaign creation performs its own contact preparation. Do not call email
-  enrichment first unless the user separately asked to receive email
-  addresses. Reuse a successful enrichment handle when one already exists.
+- Enrich only recipients without reusable completed results. For a mixed
+  audience, call `enrich_email` once with only the missing subset and reuse
+  every prior successful handle unchanged. Keep returned addresses private
+  unless the user separately asked to receive them; the campaign-preparation
+  route does not render the candidate-interest table or CSV.
+- Campaign creation still revalidates address freshness, contactability,
+  identity, prior enrollment, and recipient-policy eligibility. Passing a
+  completed enrichment handle reuses its committed disclosure without another
+  contact lookup or credit.
 - Successful enrichment handles may be used for campaign creation regardless
   of network status. Preserve the complete selected audience without asking
   the user to remove in-network candidates.
+- Every selected recipient must have a usable handle pair before the reviewed
+  request can be built. If prerequisite enrichment does not return one for any
+  item, no campaign-creation call occurs; relay only that item's displayed name
+  and safe outcome, and obtain a fresh complete review before creating a
+  changed audience. This handle-admission failure is distinct from the private
+  recipient-policy outcomes below.
 - An account or login email may be visible in enrichment results but is never
   eligible for campaign delivery, even when independently validated.
 - Recipient-policy outcomes never block campaign creation. The server may
@@ -58,10 +73,13 @@ exposes it. The input is empty and the result is read-only:
   and `updatedAt`; it deliberately excludes reusable copy and generation
   instructions.
 
-Use these values as editable prefill in the first complete review. Load a
-named or clearly matching template through `get_outbound_campaign_templates`
-with its private ID before using its exact `sequenceSettings`. The setup lookup
-never creates a campaign and does not require separate user approval.
+Use these values as editable prefill in the first complete review. If the user
+has not already chosen campaign content and templates are available, ask once
+whether to use one of the named templates or create custom content. Load only
+the template the user selects through `get_outbound_campaign_templates` with
+its private ID before using its exact `sequenceSettings`. A clearly matching
+template may be suggested first but is never selected automatically. The setup
+lookup never creates a campaign and does not require separate user approval.
 
 ## Delivery mapping
 
@@ -197,9 +215,10 @@ instructions.
 - Never automatically retry an ambiguous timeout or transport failure.
 - Call the tool once for each explicitly confirmed campaign. Do not merge
   separate reviewed campaigns.
-- A candidate needing a new contact lookup may use up to one shared
-  organization credit. A successful-enrichment handle reuses its committed
-  contact without a new lookup credit.
+- The prerequisite email-enrichment batch may use up to one shared
+  organization credit for each recipient needing a new lookup. Campaign
+  creation reuses every successful-enrichment disclosure without a second
+  lookup credit.
 - Only a fresh campaign-safe verified address is eligible. An enrichment result
   alone does not establish campaign eligibility.
 - A `queued` result returns an opaque `operationId` with `retryAfterMs`. Keep the
@@ -227,6 +246,10 @@ instructions.
 - Call `get_outbound_campaign_templates` without `templateId` to list bounded
   summaries, then with the selected private `templateId` to load the complete
   `sequenceSettings`. Keep `templateId` and `updatedAt` hidden.
+- If the user did not already choose campaign content, present the available
+  template names and custom content in one compact question. Custom content may
+  be exact copy or instructions from the user, or Pluto-drafted copy from known
+  context. Choosing either path is not campaign-creation approval.
 - A loaded template is editable prefill, not campaign launch approval. Preserve
   all loaded settings and preserve whether `emailPriority` is absent
   (organization-default inheritance) or present (template override) until the

@@ -5,16 +5,23 @@ description: Use when a user explicitly selects candidates returned by Pluto and
 
 # Candidate interest and email enrichment
 
-Use this skill only when the user clearly asks Pluto to act on one in-network
-candidate, get available emails for one to 500 candidates Pluto returned, or
-enrich one to 500 LinkedIn profile URLs the user directly supplied for email
-addresses. Selection or URL submission alone is not authorization. A candidate
-being highly ranked, shortlisted, described as promising, or opened for
-discussion never authorizes a tool call.
+Use this skill directly when the user clearly asks Pluto to act on one
+in-network candidate, get available emails for one to 500 candidates Pluto
+returned, or enrich one to 500 LinkedIn profile URLs the user directly supplied
+for email addresses. Its email-enrichment mechanics may also be invoked
+privately by `outbound-campaign` for recipients missing prerequisite results
+after the user explicitly requests campaign creation. Selection or URL
+submission alone is not authorization. A candidate being highly ranked,
+shortlisted, described as promising, or opened for discussion never authorizes
+a tool call.
 
-If the user asks to draft, review, create, start, or launch an email campaign
-for selected external candidates, use the `outbound-campaign` skill instead.
-Do not enrich emails first unless the user separately asks for the addresses.
+If the user asks to draft, review, create, start, launch, or send an email
+campaign for selected candidates regardless of network status, use the
+`outbound-campaign` skill instead. That skill may run one email-enrichment batch
+as an explicitly requested campaign prerequisite for recipients without
+reusable completed results. It keeps returned addresses private unless the user
+also asks to receive them and still requires a separate exact campaign review
+before creation.
 
 If the user asks for full public profile details for supplied LinkedIn
 profile URLs or selected candidates, rather than contact information, use the
@@ -52,7 +59,8 @@ presentation lane.
 - One to 500 explicitly selected candidates form one email-enrichment batch.
   Use `enrich_email` followed by the shared `get_operation_status` poll
   tool. Run this route only when the user explicitly asks for contact
-  information or available emails.
+  information or available emails, or when an explicit campaign request routes
+  the missing-recipient subset through `outbound-campaign` as a prerequisite.
 
 Do not call `express_candidate_interest` for an external selection. The server
 rejects that action-specific route. Email enrichment is separate: it does not
@@ -60,11 +68,13 @@ select a role, add anyone to TalentPluto, create a campaign, send outreach,
 start onboarding, or contact a candidate.
 
 A direct batch of one to 500 LinkedIn profile URLs can use the same
-email-enrichment route when the user explicitly asks for email addresses. Do not
-run a search first and do not invent a `networkStatus`, `candidateRef`, or
-`selectionToken`. The server resolves the profile identity and safely blocks an
-unverifiable profile; in-network status does not itself block email enrichment.
-Generate one fresh private UUID `requestId` per URL and preserve URL order.
+email-enrichment route when the user explicitly asks for email addresses or
+when `outbound-campaign` needs to prepare selected search cards for an
+explicitly requested campaign. Do not run a search first and do not invent a
+`networkStatus`, `candidateRef`, or `selectionToken`. The server resolves the
+profile identity and safely blocks an unverifiable profile; in-network status
+does not itself block email enrichment. Generate one fresh private UUID
+`requestId` per URL and preserve URL order.
 
 The direct-URL branch is the normal route for candidates presented by the
 current search surface: use each selected card's returned `profileUrl` as the
@@ -276,9 +286,13 @@ Handle each candidate-correlated item exactly:
   about credits. Otherwise relay only its safe message, without discarding
   successful sibling results.
 
-Always return a Markdown table, including for one candidate with one
-returned email. Use one row per returned email, repeat the candidate fields
-when there are multiple emails, and preserve candidate and email order:
+When email enrichment runs solely as an `outbound-campaign` prerequisite,
+return its validated result to that flow, retain each fresh successful handle
+pair privately, and do not show the email table or CSV unless the user also
+asked to receive the addresses. For a standalone email request, always return
+a Markdown table, including for one candidate with one returned email. Use one
+row per returned email, repeat the candidate fields when there are multiple
+emails, and preserve candidate and email order:
 
 ```markdown
 | LinkedIn URL | Name | Email | Type | Provider status | Verification or result |
@@ -307,8 +321,8 @@ candidate-summary fields, the legacy source-status normalization, phone
 availability, storage details, credit usage, or outreach details unless the
 user specifically asks for an allowed field.
 
-Immediately after the table, always provide a complete UTF-8 CSV export named
-`candidate-email-enrichment.csv` with this exact header:
+Immediately after a standalone-request table, always provide a complete UTF-8
+CSV export named `candidate-email-enrichment.csv` with this exact header:
 
 ```csv
 linkedin_url,name,email,email_type,provider_status,verification_or_result
