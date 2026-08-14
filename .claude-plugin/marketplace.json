@@ -10,7 +10,7 @@
     {
       "name": "pluto",
       "source": "./plugins/pluto",
-      "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, candidate work-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with validated emails and derived employment-company intelligence, candidate-to-Team DNA comparison, 0-100 candidate scoring against Team DNA and a supplied job description, outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+      "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, candidate work-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with validated emails and derived employment-company intelligence, candidate-to-Team DNA comparison, 0-100 candidate scoring against Team DNA and a supplied job description, outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, Ashby ATS sourcing with job-driven search, ATS dedupe, and reviewed candidate export through the user's own Ashby MCP connection, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
       "category": "productivity",
       "keywords": [
         "candidates",
@@ -34,6 +34,10 @@
         "cancel campaign",
         "candidate questions",
         "private assessment",
+        "ashby",
+        "ats",
+        "ats sourcing",
+        "ats dedupe",
         "market snapshot",
         "talent market",
         "recruiting",
