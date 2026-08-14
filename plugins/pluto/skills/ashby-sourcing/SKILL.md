@@ -73,11 +73,12 @@ and applications from Ashby. Two uses, both read-only:
 - The overlap set anchors the dedupe when results come back.
 
 The identity join key is the LinkedIn profile URL, when the ATS record
-carries one; a name or email alone is supporting evidence, not identity.
-Never fabricate a LinkedIn URL for an ATS record or claim two records are
-the same person without a matching URL or matching email — an uncertain
-match is disclosed as a possible duplicate, never silently merged or
-silently dropped.
+carries one: only a matching URL identifies the same person automatically.
+An email-only match is a possible duplicate, not an identity — disclose it
+and get the user's confirmation before attaching to or creating a record on
+its basis. A name alone is supporting evidence only. Never fabricate a
+LinkedIn URL for an ATS record, and never silently merge or silently drop
+an uncertain match.
 
 Report credit usage only from Pluto's returned accounting, exactly as
 `candidate-discovery` requires; never promise that deduplication changed
@@ -105,18 +106,23 @@ enthusiasm about a candidate never authorizes an ATS write.
 
 For each explicitly selected candidate:
 
-1. Search Ashby for an existing record first (LinkedIn URL, then email). If
-   one exists, say so and do not create a duplicate; ask whether to attach
-   the existing record to the job instead.
+1. Search Ashby for an existing record first. A LinkedIn URL match is the
+   same person: say so, do not create a duplicate, and ask whether to attach
+   the existing record to the job instead. An email-only match is a possible
+   duplicate: disclose it and confirm with the user before attaching to it
+   or creating a new record.
 2. Create the candidate with the professional fields from their materialized
    card: name, current title and company, location, and the LinkedIn profile
    URL. Use only the card's returned values; never enrich the record from
    memory or inference.
 3. Add them to the selected job through the live Ashby tool for considering
    a candidate (application at its initial stage unless the user directs
-   otherwise). When the live schema supports source attribution and a
-   matching source exists in the user's instance, attribute the application
-   to Pluto; never invent a source identifier.
+   otherwise). When the live schema supports source attribution and the
+   user's instance has a configured Pluto source, set only the application's
+   source field to that value; otherwise leave the source unset. Never
+   invent a source identifier, and never mark Pluto, a provider, or
+   membership anywhere else on the record — not in tags, labels, or other
+   candidate fields.
 4. When the user wants the sourcing rationale in the ATS, add one note
    containing only what the materialized card disclosed: verified evidence
    with its wording, and which required criteria remain unverified. Write it
@@ -139,11 +145,13 @@ Contact details and interest remain Pluto actions with their own skills. If
 the user asks for emails for selected candidates, follow
 `candidate-interest`'s enrichment route; write a returned address into the
 Ashby candidate's contact fields only when the user explicitly asks for
-that, and copy only the address itself — never verification internals or
-per-item accounting. If the user asks to express interest in an eligible
-in-network candidate, follow `candidate-interest`; after a confirmed
-interest action, move the Ashby application's stage only on the user's
-explicit request and only to a stage the live Ashby contract exposes. Do
+that, and copy only returned work addresses — a personal address, and any
+verification data or per-item accounting, never enters the ATS even when
+the user saw it in the conversation. If the user asks to express interest
+in an eligible in-network candidate, follow `candidate-interest`; after a
+confirmed interest action, move the Ashby application's stage only on the
+user's explicit request and only to a stage the live Ashby contract
+exposes. Do
 not mirror Pluto pipeline state into Ashby automatically, and do not send
 outreach through Ashby — campaigns belong to the `outbound-campaign` skill
 and its rules.

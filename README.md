@@ -39,9 +39,9 @@ work with the retrieved leads directly in the conversation.
 - Express interest in an in-network candidate for an active role.
 - Source candidates for an Ashby job when you also connect Ashby's MCP
   server: Pluto compiles the job's requirements into a search, checks your
-  ATS before credits are spent, flags results already in your pipeline, and
-  adds only the candidates you pick to the job in Ashby with an
-  evidence-backed sourcing note.
+  ATS before credits are spent, flags results already in your pipeline,
+  adds only the candidates you pick to the job in Ashby, and attaches an
+  evidence-backed sourcing note when you ask for one.
 - Check your organization's shared Pluto credit balance.
 
 ## How candidate search works
