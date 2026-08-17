@@ -18,7 +18,10 @@ candidate quality, culture fit, or a hiring decision.
 
 This skill was written against server contract `4.0.0`. It remains compatible
 with server contract `4.1.0` and server contract `4.7.0`. It also remains
-compatible with server contract `4.10.0` and server contract `4.11.0`. On any conflict, prefer the live tool
+compatible with server contract `4.10.0` through server contract
+`4.13.0` (4.12.0 adds search-time auto-verify via verifyBudget; 4.13.0
+adds investor-backed and deal-recency cohort filters — both additive).
+On any conflict, prefer the live tool
 description and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
