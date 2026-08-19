@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pluto candidate rubrics"
+  short_description: "Create a candidate scoring rubric"
+  default_prompt: "Use $rubrics to draft one complete candidate rubric from my role context, ask whether I want changes or want it created, and call create_rubric only after I confirm the exact draft."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "pluto"
+      description: "Pluto's authenticated TalentPluto recruiting MCP server"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp"

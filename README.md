@@ -22,6 +22,8 @@ work with the retrieved leads directly in the conversation.
   aggregate Team DNA to surface evidence-backed common ground,
   complementarity, and unknowns. This workflow does not identify a
   non-founder teammate or claim a personal relationship.
+- Draft and save a client-shared candidate scoring rubric from a job
+  description or role requirements after one complete editable review.
 - Score selected candidates or supplied LinkedIn profiles from 0-100 against
   your company's stored Team DNA — shared prior companies, titles, seniority,
   locations, schools, recent-joiner patterns, founder backgrounds, and
@@ -118,6 +120,10 @@ validated emails, and employment-company intelligence:
 
 @pluto Who on my team has the strongest connection to this candidate?
 [paste one LinkedIn profile URL]
+
+@pluto Create a candidate scoring rubric from this job description. Show me
+the draft, then ask whether I want changes or want it created:
+[paste the job description]
 
 @pluto Score this candidate against our Team DNA and this job description:
 [paste one LinkedIn profile URL or select a returned candidate, plus the JD]
