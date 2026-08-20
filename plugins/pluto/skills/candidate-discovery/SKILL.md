@@ -14,6 +14,8 @@ verify, and presenting the materialized roster honestly.
 This skill is aligned through Candidate MCP server contract `4.14.2`.
 That contract does not impose an item-count cap on typed OR-list fields:
 preserve every value the user supplies instead of taking only the first N.
+The canonical reference also covers the `4.13.0` company-investor and
+funding-recency fields and the `4.12.0` search-time `verifyBudget` flow.
 
 If the user asks one supported private question about one explicitly selected
 in-network candidate, use the `candidate-question` skill instead. Never add a
@@ -89,7 +91,13 @@ people all live in that session and never survive outside it.
    employees, and returns compact cards with opaque refs and decided
    verdicts. When more pages exist the response carries `nextCursor`; pass it
    back with the same spec to page deeper without re-fetching people the
-   session already holds.
+   session already holds. Optionally pass `verifyBudget` from 1 to 50 to spend
+   up to that many one-credit profile verifications on the best-ranked cards
+   whose REQUIRED criteria are still undecided. The returned `autoVerify`
+   block reports credits spent, people enriched, and why verification stopped.
+   Auto-verification and `enrich_person` share the same per-session, per-ref
+   billing ledger, so a later manual enrichment of the same ref is not billed
+   again.
 4. **`enrich_person`** (1 organization credit per person, never re-billed
    for the same ref in a session) — fetch one person's verified work and
    education history and re-verify them against the originating spec. This is

@@ -2,11 +2,13 @@
 
 Aligned through server contract `4.14.2`. Contract `4.14.2` removes
 item-count caps from typed candidate-search OR lists and preserves every
-supplied value through preview and retrieval compilation. When the live server
-reports a newer version, behaviors here may be incomplete; prefer the live
-tool descriptions and schema field descriptions on any conflict. If the live
-catalog exposes the retired bundled search operation instead of these tools,
-the server predates the granular contract: follow that live tool's own
+supplied value through preview and retrieval compilation. Contract `4.13.0`
+adds typed investor-backed and deal-recency company cohorts; contract `4.12.0`
+adds search-time auto-verification through `verifyBudget`. When the live
+server reports a newer version, behaviors here may be incomplete; prefer the
+live tool descriptions and schema field descriptions on any conflict. If the
+live catalog exposes the retired bundled search operation instead of these
+tools, the server predates the granular contract: follow that live tool's own
 description and do not simulate the toolbox on top of it.
 
 ## Purpose
@@ -38,7 +40,14 @@ enrichment, choosing what to materialize, and honest presentation.
   (name, title, company, location, startedAt, opaque `ref`, decided `verdicts`)
   plus `laneOutcomes`, filtered/withheld counts, an optional `nextCursor`, and
   a session `recap`. Pass `planHash` from the reviewed preview; pass `cursor`
-  to page deeper without refetching held people.
+  to page deeper without refetching held people. Optional `verifyBudget` is an
+  integer from 1 to 50 representing a ceiling in one-credit profile
+  verifications. The server enriches the best-ranked cards whose REQUIRED
+  criteria remain undecided, stopping at the budget or call deadline, and
+  returns an `autoVerify` block with credits spent, people enriched, and the
+  stop reason. Auto-verification uses the same per-session, per-ref billing
+  ledger as `enrich_person`, so later manual enrichment of an auto-verified ref
+  is not re-billed.
 - `enrich_person` — verifies one ref's work and education history and
   re-verifies the originating spec, returning `updatedVerdicts` and
   cross-verified fields. Bills 1 organization credit per person; an exact
@@ -72,9 +81,17 @@ A spec is a strict typed object; unknown fields and unknown enum values are
 rejected with the valid values named. Lane-defining blocks (at least one):
 `employers` (anchors with optional relationship current/past/ever),
 `company` (current-employer cohort: stages, industries, size, funding, age,
-description keywords, lookalike `similarTo`), `namedPeople`, required
-`titles` or `department` (the anchor-less open-market lane), or
-`semanticQuery`.
+backing investors, deal recency, description keywords, lookalike `similarTo`),
+`namedPeople`, required `titles` or `department` (the anchor-less open-market
+lane), or `semanticQuery`.
+
+Inside `company`, `investors` is a nonempty array of user-supplied investor
+firm names. Every named investor is required (AND semantics); an investor that
+cannot be resolved fails the plan explicitly instead of dropping that value.
+`raisedWithinMonths` is an integer from 1 to 60 and means the latest announced
+funding round falls within that many months. The funding-cohort surface reports
+both predicates as native exact coverage when available; otherwise the plan
+reports the unavailable coverage instead of weakening either requirement.
 
 Person-scope criteria: `titles` (terms, `match` words|phrase, `scope`
 current|past), `seniority`, `location` (city, state, or preset metro,
@@ -124,9 +141,11 @@ Previews, company resolution, and `search_people` are free, although retrieval
 requires a positive organization balance and provider-spend admission. Each
 newly materialized person settles 1 shared organization credit, once per
 person per session. Each newly enriched person also settles 1 credit, once per
-person per session. Enrichment through this toolbox returns no contact data;
-email enrichment is a separate tool family with its own pricing. Never
-calculate balances or usage; report only returned accounting fields, and use
+person per session, whether initiated by `enrich_person` or by
+`search_people.verifyBudget`; the same ref is never billed twice in that
+session. Enrichment through this toolbox returns no contact data; email
+enrichment is a separate tool family with its own pricing. Never calculate
+balances or usage; report only returned accounting fields, and use
 `get_credit_balance` for the balance.
 
 ## Presentation

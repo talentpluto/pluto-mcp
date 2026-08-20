@@ -16,12 +16,16 @@ work with the retrieved leads directly in the conversation.
   or directly supplied LinkedIn profiles.
 - Pull full public profile details for LinkedIn profile URLs you supply.
 - Deep-enrich one to 50 explicitly selected LinkedIn profiles with the
-  identity-safe professional profile, validated work and personal emails, and
-  derived recruiter intelligence for profile-identified employment companies.
+  identity-safe professional profile and derived recruiter intelligence for
+  profile-identified employment companies.
+- Full-enrich the same kind of selection to additionally gather cited
+  public-web findings about each person.
 - Compare supplied candidates' public professional backgrounds with your
   aggregate Team DNA to surface evidence-backed common ground,
   complementarity, and unknowns. This workflow does not identify a
   non-founder teammate or claim a personal relationship.
+- Draft and save a client-shared candidate scoring rubric from a job
+  description or role requirements after one complete editable review.
 - Score selected candidates or supplied LinkedIn profiles from 0-100 against
   your company's stored Team DNA — shared prior companies, titles, seniority,
   locations, schools, recent-joiner patterns, founder backgrounds, and
@@ -112,12 +116,16 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 @pluto Get the full public profiles for these LinkedIn profile URLs:
 [paste the URLs]
 
-@pluto Deep-enrich these selected LinkedIn profiles with professional details,
-validated emails, and employment-company intelligence:
+@pluto Deep-enrich these selected LinkedIn profiles with professional details
+and employment-company intelligence:
 [paste up to 50 LinkedIn profile URLs]
 
 @pluto Who on my team has the strongest connection to this candidate?
 [paste one LinkedIn profile URL]
+
+@pluto Create a candidate scoring rubric from this job description. Show me
+the draft, then ask whether I want changes or want it created:
+[paste the job description]
 
 @pluto Score this candidate against our Team DNA and this job description:
 [paste one LinkedIn profile URL or select a returned candidate, plus the JD]
@@ -163,30 +171,36 @@ one complete editable review and ask me to confirm that exact campaign.
   credit.
 - LinkedIn profile enrichment runs one asynchronous operation for 1–100
   supplied profile URLs, reuses a stored profile fetched within the last 3
-  months, and uses two shared organization credits per newly admitted profile.
-  An exact retry uses no additional credits and may retain a legacy one-credit
-  admitted total. It returns public profile details, not contact information.
+  months, and uses one shared organization credit per newly admitted profile.
+  An exact retry uses no additional credits. It returns public profile details,
+  not contact information.
 - Deep candidate enrichment runs one asynchronous operation for 1–50
-  explicitly selected LinkedIn profiles and costs exactly five shared
-  organization credits per profile, up to 250 credits for a maximum batch. It
-  combines identity-safe professional profile enrichment, independently
-  validated available emails, and derived company bands and signals for up to
-  50 profile-identified employment companies per candidate. Companies without
+  explicitly selected LinkedIn profiles and costs exactly three shared
+  organization credits per profile, up to 150 credits for a maximum batch. It
+  combines identity-safe professional profile enrichment and derived company
+  bands and signals for up to 50 profile-identified employment companies per
+  candidate, and returns no emails. Companies without
   a stable profile-supplied identifier remain `identifier_unavailable` rather
   than being guessed by name. Company output is derived recruiter intelligence,
   not raw source records or precise headcount, funding, location, or financing
   details.
+- Full candidate enrichment (`full_enrich_candidate`) runs the same
+  one-operation batch shape for 1–50 explicitly selected profiles and costs
+  exactly five shared organization credits per profile, up to 250 credits for a
+  maximum batch. It returns the deep package plus cited public-web findings
+  about the person; findings are public citations with titles and URLs, never
+  verified facts, and never contact information.
 - The team-connection skill enriches 1–100 supplied profiles, reads the stored
   aggregate Team DNA projection, and compares explicit professional facts.
-  Newly admitted profile enrichment uses two credits per submitted URL; an
-  exact retry uses no additional credits and may retain its legacy admitted
-  total. The Team DNA read uses none. It can cite a returned public founder
-  background, but it never identifies non-founder members, verifies a personal
-  relationship, or offers a warm-introduction path.
+  Newly admitted profile enrichment uses one credit per submitted URL; an exact
+  retry uses no additional credits. The Team DNA read uses none. It can cite a
+  returned public founder background, but it never identifies non-founder
+  members, verifies a personal relationship, or offers a warm-introduction
+  path.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
-  and uses no candidate credits; profile enrichment it triggers uses two
-  credits per newly admitted URL. An exact retry uses no additional credits and
-  may retain its legacy admitted total. Scores are separate 0-100 measures of
+  and uses no candidate credits; profile enrichment it triggers uses one
+  credit per newly admitted URL. An exact retry uses no additional credits.
+  Scores are separate 0-100 measures of
   cited professional overlap — background familiarity with your team, and
   evidence-verified match to your job description when you supply one — never a
   culture-fit judgment, protected-trait proxy, or hiring decision, and
