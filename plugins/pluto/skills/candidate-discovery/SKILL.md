@@ -11,6 +11,15 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
+This skill is aligned through Candidate MCP server contract `4.14.3`.
+Every typed OR-list field publishes the same generous 256-value ceiling, and
+one complete spec may contain at most 256 list values in total. Preserve every
+value the user supplies instead of taking only the first N. Contract `4.14.3`
+rejects a larger raw or compiled provider request before spend and never
+truncates it.
+The canonical reference also covers the `4.13.0` company-investor and
+funding-recency fields and the `4.12.0` search-time `verifyBudget` flow.
+
 If the user asks one supported private question about one explicitly selected
 in-network candidate, use the `candidate-question` skill instead. Never add a
 private criterion to a search spec or use private answers to filter, rerank,
@@ -78,24 +87,31 @@ people all live in that session and never survive outside it.
 2. **`preview_search`** (free) — compile the typed spec. Read the returned
    counts, `planHash`, `notes`, and the per-predicate coverage report before
    spending anything. Iterate the spec here — previews are free.
-3. **`search_people`** (1 organization credit per call that returns at least
-   one person; empty searches are free) — execute with the reviewed
-   `planHash`. The server fans out across its sources, merges people by
-   identity, drops rows that decidably violate a required criterion, screens
-   out the caller's own employees, and returns compact cards with opaque
-   refs and decided verdicts. When more pages exist the response carries
-   `nextCursor`; pass it back with the same spec to page deeper without
-   re-fetching people the session already holds.
+3. **`search_people`** (free; requires a positive organization balance and
+   provider-spend admission) — execute with the reviewed `planHash`. The
+   server fans out across its sources, merges people by identity, drops rows
+   that decidably violate a required criterion, screens out the caller's own
+   employees, and returns compact cards with opaque refs and decided
+   verdicts. When more pages exist the response carries `nextCursor`; pass it
+   back with the same spec to page deeper without re-fetching people the
+   session already holds. Optionally pass `verifyBudget` from 1 to 50 to spend
+   up to that many one-credit profile verifications on the best-ranked cards
+   whose REQUIRED criteria are still undecided. The returned `autoVerify`
+   block reports credits spent, people enriched, and why verification stopped.
+   Auto-verification and `enrich_person` share the same per-session, per-ref
+   billing ledger, so a later manual enrichment of the same ref is not billed
+   again.
 4. **`enrich_person`** (1 organization credit per person, never re-billed
    for the same ref in a session) — fetch one person's verified work and
    education history and re-verify them against the originating spec. This is
    how undecided requirements become decided. Enrich the deciding few in
    priority order, not the whole page.
-5. **`materialize_candidates`** (free) — the ONLY door from session refs to
-   presentable candidates. The server re-screens employer safety, dedupes
-   against everyone already presented this session, withholds anyone whose
-   required criterion was decided against them, and returns the roster
-   evidence-ranked with per-card disclosures.
+5. **`materialize_candidates`** (1 organization credit per unique newly
+   presented person, never re-billed in the session) — the ONLY door from
+   session refs to presentable candidates. The server re-screens employer
+   safety, dedupes against everyone already presented this session, withholds
+   anyone whose required criterion was decided against them, and returns the
+   roster evidence-ranked with per-card disclosures.
 
 Never present, name, count, or summarize people from `search_people` or
 `enrich_person` observations; those are working data. Only materialized
@@ -107,6 +123,13 @@ Express every hard requirement as its own typed spec field, preserving the
 user's required-versus-preferred wording: `required` gates membership,
 `preferred` only sorts. Decomposition patterns that matter:
 
+- Typed OR-list fields accept the complete user-supplied list up to the
+  published 256-value per-list and aggregate budgets. Never truncate a list or
+  keep only a presumed smaller maximum. If validation reports that the raw spec
+  or its compiled provider filters exceed the safe aggregate boundary,
+  preserve every value by splitting OR branches into separate searches in the
+  same session and materializing their union.
+
 - Past roles ("was previously an IC seller", "cofounded a startup before")
   are `titles` with `scope: "past"`, never prose.
 - Past-employer attributes ("worked at a seed-stage fintech") are
@@ -114,9 +137,8 @@ user's required-versus-preferred wording: `required` gates membership,
   required, the server pairs them: the SAME stint must match both. These are
   never decidable at retrieval — plan on enrichment deciding them.
 - A current role combined with a past role ("GTM now, founder before") is one
-  spec gating the rarer past role, with the current role judged from the
-  returned cards — or two searches in the same session intersected through
-  stable refs.
+  spec: put the current role in `titles` and the previous role in
+  `pastTitles`. Both compile natively into the same search.
 - Exclusions ride the `exclude` block; named people ride `namedPeople`
   (names must come from the user's request — never invent one).
 - `semanticQuery` is plain-prose retrieval flavor only: boolean syntax is not
@@ -153,8 +175,9 @@ read. Never claim a criterion was enforced when coverage says otherwise.
 The session enforces leashes: total tool calls, total fetched rows, and
 per-tool caps (enrichment is bounded per session). A refused call returns
 guidance, not an error to retry. If a session-conflict result says nothing
-from a call was kept, that exact retry is safe; do not otherwise retry paid
-calls automatically — the first call may have completed. Each response
+from a call was kept, that exact retry is safe; do not otherwise retry calls
+with an ambiguous outcome automatically — the first call may have completed
+or incurred provider spend. Each response
 carries a `recap` (people held, presented, searches run); use it to keep a
 long investigation legible instead of re-deriving state.
 

@@ -1,13 +1,18 @@
 # Candidate search contract
 
-Aligned to server contract `4.0.0`, which replaced the bundled
-single-call discovery operation with the granular search toolbox. When the
+Aligned through server contract `4.14.3`. Contract `4.14.2` removes the narrow
+field-specific item-count caps from typed candidate-search OR lists and
+preserves every supplied value through preview and retrieval compilation.
+Contract `4.14.3` publishes the same 256-value ceiling on every list, applies
+that budget to the sum across a complete spec, and rejects a larger raw or
+compiled provider request without truncating any value. Contract
+`4.13.0` adds typed investor-backed and deal-recency company cohorts; contract
+`4.12.0` adds search-time auto-verification through `verifyBudget`. When the
 live server reports a newer version, behaviors here may be incomplete; prefer
 the live tool descriptions and schema field descriptions on any conflict. If
 the live catalog exposes the retired bundled search operation instead of
-these tools, the server predates this contract: follow that live tool's own
-description and do not simulate the toolbox on top of it. The one-credit
-`enrich_person` pricing below matches server contract `4.14.0`.
+these tools, the server predates the granular contract: follow that live
+tool's own description and do not simulate the toolbox on top of it.
 
 ## Purpose
 
@@ -33,25 +38,32 @@ enrichment, choosing what to materialize, and honest presentation.
   discloses exact-name ties; pinned identities auto-inject into later specs.
 - `preview_search` (free) — compiles a spec; returns counts (with basis),
   `planHash`, compile `notes`, and the per-predicate coverage report.
-- `search_people` — executes a compiled plan. Bills 1 organization credit per
-  call that returns at least one person; empty searches are free. Returns
-  compact cards (name, title, company, location, startedAt, opaque `ref`,
-  decided `verdicts`) plus `laneOutcomes`, filtered/withheld counts, an
-  optional `nextCursor`, and a session `recap`. Pass `planHash` from the
-  reviewed preview; pass `cursor` to page deeper without refetching held
-  people.
+- `search_people` (free; requires a positive organization balance and
+  provider-spend admission) — executes a compiled plan. Returns compact cards
+  (name, title, company, location, startedAt, opaque `ref`, decided `verdicts`)
+  plus `laneOutcomes`, filtered/withheld counts, an optional `nextCursor`, and
+  a session `recap`. Pass `planHash` from the reviewed preview; pass `cursor`
+  to page deeper without refetching held people. Optional `verifyBudget` is an
+  integer from 1 to 50 representing a ceiling in one-credit profile
+  verifications. The server enriches the best-ranked cards whose REQUIRED
+  criteria remain undecided, stopping at the budget or call deadline, and
+  returns an `autoVerify` block with credits spent, people enriched, and the
+  stop reason. Auto-verification uses the same per-session, per-ref billing
+  ledger as `enrich_person`, so later manual enrichment of an auto-verified ref
+  is not re-billed.
 - `enrich_person` — verifies one ref's work and education history and
   re-verifies the originating spec, returning `updatedVerdicts` and
   cross-verified fields. Bills 1 organization credit per person; an exact
   re-enrichment of the same ref in the same session is not re-billed.
   Session-capped; the refusal message carries guidance.
-- `materialize_candidates` (free) — the only door from refs to presentable
-  candidates. Re-screens employer safety (fail closed), dedupes against
-  everyone already presented in the session, withholds anyone whose REQUIRED
-  criterion was decided against them (`requirementWithheldCount`), and
-  returns candidates evidence-ranked with `unverifiedRequired` per card,
-  `limitations`, `rankingBasis`, `safetyWithheldCount`, `unknownRefs`, and
-  `alreadyPresentedRefs`.
+- `materialize_candidates` — the only door from refs to presentable
+  candidates. Bills 1 organization credit per unique newly presented person,
+  never re-billing that person in the session. Re-screens employer safety
+  (fail closed), dedupes against everyone already presented in the session,
+  withholds anyone whose REQUIRED criterion was decided against them
+  (`requirementWithheldCount`), and returns candidates evidence-ranked with
+  `unverifiedRequired` per card, `limitations`, `rankingBasis`,
+  `safetyWithheldCount`, `unknownRefs`, and `alreadyPresentedRefs`.
 - `get_credit_balance` — the only source for the organization's shared
   monthly balance.
 
@@ -72,9 +84,17 @@ A spec is a strict typed object; unknown fields and unknown enum values are
 rejected with the valid values named. Lane-defining blocks (at least one):
 `employers` (anchors with optional relationship current/past/ever),
 `company` (current-employer cohort: stages, industries, size, funding, age,
-description keywords, lookalike `similarTo`), `namedPeople`, required
-`titles` or `department` (the anchor-less open-market lane), or
-`semanticQuery`.
+backing investors, deal recency, description keywords, lookalike `similarTo`),
+`namedPeople`, required `titles` or `department` (the anchor-less open-market
+lane), or `semanticQuery`.
+
+Inside `company`, `investors` is a nonempty array of user-supplied investor
+firm names. Every named investor is required (AND semantics); an investor that
+cannot be resolved fails the plan explicitly instead of dropping that value.
+`raisedWithinMonths` is an integer from 1 to 60 and means the latest announced
+funding round falls within that many months. The funding-cohort surface reports
+both predicates as native exact coverage when available; otherwise the plan
+reports the unavailable coverage instead of weakening either requirement.
 
 Person-scope criteria: `titles` (terms, `match` words|phrase, `scope`
 current|past), `seniority`, `location` (city, state, or preset metro,
@@ -87,6 +107,14 @@ description keywords of SOME past employer; when past-scope titles are also
 required the SAME stint must match both; attributes are as of TODAY, not as
 of the stint), and `exclude` (companies with current/ever scope, title
 terms, locations, keywords).
+
+Typed OR-list fields share a 256-value public ceiling, and one complete spec
+may contain at most 256 list values in total. Preserve every user-supplied term,
+school, employer, location, language, certification, or other list value;
+never silently clip the list to a presumed smaller maximum. The server also
+bounds the compiled provider filter tree after alias and multi-field
+expansion. If either boundary rejects the request, split OR branches into
+separate searches in the same session and materialize their union.
 
 Every criterion carries `requirement`: `required` gates membership,
 `preferred` only sorts and never compiles into the source query.
@@ -114,15 +142,16 @@ to violation.
 
 ## Pricing
 
-Previews, company resolution, and materialization are free. Each
-`search_people` call that returns at least one person settles exactly 1
-shared organization credit (a conflicted or failed call settles zero, so
-retries never double-bill). Each newly enriched person settles 1 credit —
-the standard profile-enrichment price — once per person per session.
-Enrichment through this toolbox returns no contact data; email enrichment is
-a separate tool family with its own pricing. Never calculate balances or
-usage; report only returned accounting fields, and use `get_credit_balance`
-for the balance.
+Previews, company resolution, and `search_people` are free, although retrieval
+requires a positive organization balance and provider-spend admission. Each
+newly materialized person settles 1 shared organization credit, once per
+person per session. Each newly enriched person also settles 1 credit, once per
+person per session, whether initiated by `enrich_person` or by
+`search_people.verifyBudget`; the same ref is never billed twice in that
+session. Enrichment through this toolbox returns no contact data; email
+enrichment is a separate tool family with its own pricing. Never calculate
+balances or usage; report only returned accounting fields, and use
+`get_credit_balance` for the balance.
 
 ## Presentation
 
