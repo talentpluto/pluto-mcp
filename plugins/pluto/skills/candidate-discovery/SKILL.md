@@ -86,7 +86,7 @@ people all live in that session and never survive outside it.
    refs and decided verdicts. When more pages exist the response carries
    `nextCursor`; pass it back with the same spec to page deeper without
    re-fetching people the session already holds.
-4. **`enrich_person`** (2 organization credits per person, never re-billed
+4. **`enrich_person`** (1 organization credit per person, never re-billed
    for the same ref in a session) — fetch one person's verified work and
    education history and re-verify them against the originating spec. This is
    how undecided requirements become decided. Enrich the deciding few in

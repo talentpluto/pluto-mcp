@@ -16,7 +16,7 @@ with server contract `4.1.0` and server contract `4.7.0`. It also remains
 compatible with server contract `4.10.0` through server contract
 `4.14.0` (4.12.0 adds search-time auto-verify via verifyBudget; 4.13.0
 adds investor-backed and deal-recency cohort filters; 4.14.0 removes
-emails from deep enrichment and adds the separate ten-credit
+emails from deep enrichment and adds the separate five-credit
 `full_enrich_candidate` operation — none of which changes this route's
 own tools). On any conflict, prefer the live tool
 descriptions and schema field descriptions.
@@ -28,7 +28,7 @@ Keep neighboring requests on their own routes:
   never returns emails, and phone numbers are never requested.
 - A combined request for the professional profile and derived
   employment-company intelligence uses `deep-enrichment`; adding cited
-  public-web findings about the person is the separate ten-credit
+  public-web findings about the person is the separate five-credit
   `full_enrich_candidate` operation. Neither returns emails. Never silently
   upgrade a profile-only request to those paid routes.
 - One URL plus "find more people like this person" is a discovery request;
@@ -112,11 +112,10 @@ directs; do not resubmit the batch unchanged.
 Call `enrich_candidate` once per logical operation with the batch. Establish
 one private admitted credit total from the first successful response: use the
 top-level `creditsUsed` value for `queued`, or `summary.creditsUsed` for the
-compatibility `completed` response. Require that total to equal either the
-input length for an exact retry first admitted under the legacy one-credit
-contract, or twice the input length for a current operation. Pin that exact
-total for the rest of the operation; never select or change it from cache
-status, profile outcome, a later response, or inference. Accept only:
+compatibility `completed` response. Require that total to equal the input
+length. Pin that exact total for the rest of the operation; never select or
+change it from cache status, profile outcome, a later response, or inference.
+Accept only:
 
 - `status: queued` with a non-empty opaque `operationId`, `requested` equal to
   the input length, `creditsUsed` equal to the admitted credit total, and a
@@ -185,13 +184,12 @@ instead of served, and every fresh lookup is stored for future reuse. An
 accepted candidate uses the same provider-equivalent profile path as every
 other URL; bounded structured career facts are only a fallback when stored
 and live profile sources have no match. Every newly admitted profile uses
-exactly two shared organization candidate credits, including an accepted
+exactly one shared organization candidate credit, including an accepted
 internal candidate, a fresh stored result, an external lookup, or a completed
 `not_found` result. A later operation failure remains charged. An exact retry
 with the same `requestId` uses no additional credits and retains its originally
-admitted total; a retry first admitted under the legacy contract may therefore
-report one credit per profile. State cost only when the user asks, and do not
-apply discovery or email-enrichment credit rules to this route.
+admitted total. State cost only when the user asks, and do not apply discovery
+or email-enrichment credit rules to this route.
 
 ## Present the profiles
 
