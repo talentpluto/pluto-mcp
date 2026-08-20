@@ -21,16 +21,21 @@ specific teammate, then provide the aggregate overlap their request supports.
 
 This skill was written against server contract `4.0.0`. It remains compatible
 with server contract `4.1.0` and server contract `4.7.0`. It also remains
-compatible with server contract `4.10.0` and server contract `4.11.0`. On any conflict, prefer the live tool
+compatible with server contract `4.10.0` through server contract
+`4.14.0` (4.12.0 adds search-time auto-verify via verifyBudget; 4.13.0
+adds investor-backed and deal-recency cohort filters; 4.14.0 removes
+emails from deep enrichment and adds the separate ten-credit
+`full_enrich_candidate` operation — none of which changes this route's
+own tools). On any conflict, prefer the live tool
 descriptions and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
 
 - Full professional profile details without a team-overlap request use the
   `linkedin-enrichment` skill.
-- A combined request for profile details, validated emails, and derived
-  employment-company intelligence uses `deep-enrichment`; do not substitute
-  that higher-cost package for this Team DNA comparison.
+- A combined request for profile details and derived employment-company
+  intelligence uses `deep-enrichment`; do not substitute that higher-cost
+  package for this Team DNA comparison.
 - A numeric grade or assessment against Team DNA or a job description uses the
   `score-candidate` skill. This skill gives a narrative comparison and never a
   numeric score.

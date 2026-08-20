@@ -16,8 +16,10 @@ work with the retrieved leads directly in the conversation.
   or directly supplied LinkedIn profiles.
 - Pull full public profile details for LinkedIn profile URLs you supply.
 - Deep-enrich one to 50 explicitly selected LinkedIn profiles with the
-  identity-safe professional profile, validated work and personal emails, and
-  derived recruiter intelligence for profile-identified employment companies.
+  identity-safe professional profile and derived recruiter intelligence for
+  profile-identified employment companies.
+- Full-enrich the same kind of selection to additionally gather cited
+  public-web findings about each person.
 - Compare supplied candidates' public professional backgrounds with your
   aggregate Team DNA to surface evidence-backed common ground,
   complementarity, and unknowns. This workflow does not identify a
@@ -114,8 +116,8 @@ In Codex, mention `@pluto`. In Claude Code, say "Use Pluto" in your request.
 @pluto Get the full public profiles for these LinkedIn profile URLs:
 [paste the URLs]
 
-@pluto Deep-enrich these selected LinkedIn profiles with professional details,
-validated emails, and employment-company intelligence:
+@pluto Deep-enrich these selected LinkedIn profiles with professional details
+and employment-company intelligence:
 [paste up to 50 LinkedIn profile URLs]
 
 @pluto Who on my team has the strongest connection to this candidate?
@@ -175,13 +177,19 @@ one complete editable review and ask me to confirm that exact campaign.
 - Deep candidate enrichment runs one asynchronous operation for 1–50
   explicitly selected LinkedIn profiles and costs exactly five shared
   organization credits per profile, up to 250 credits for a maximum batch. It
-  combines identity-safe professional profile enrichment, independently
-  validated available emails, and derived company bands and signals for up to
-  50 profile-identified employment companies per candidate. Companies without
+  combines identity-safe professional profile enrichment and derived company
+  bands and signals for up to 50 profile-identified employment companies per
+  candidate, and returns no emails. Companies without
   a stable profile-supplied identifier remain `identifier_unavailable` rather
   than being guessed by name. Company output is derived recruiter intelligence,
   not raw source records or precise headcount, funding, location, or financing
   details.
+- Full candidate enrichment runs the same one-operation batch shape for 1–50
+  explicitly selected profiles and costs exactly ten shared organization
+  credits per profile, up to 500 credits for a maximum batch. It returns the
+  deep package plus cited public-web findings about the person; findings are
+  public citations with titles and URLs, never verified facts, and never
+  contact information.
 - The team-connection skill enriches 1–100 supplied profiles, reads the stored
   aggregate Team DNA projection, and compares explicit professional facts.
   Newly admitted profile enrichment uses two credits per submitted URL; an

@@ -1,6 +1,6 @@
 ---
 name: linkedin-enrichment
-description: Use when a user explicitly supplies one to 100 LinkedIn profile URLs, or explicitly selects returned candidates with visible LinkedIn URLs, and asks Pluto for full professional profile details without the deeper email-and-company package. Runs enrich_candidate and polls the unchanged operation to completion or failure, keeps the operation ID and request ID private, presents enriched or not-found profiles in input order, and never returns contact information or raw call data.
+description: Use when a user explicitly supplies one to 100 LinkedIn profile URLs, or explicitly selects returned candidates with visible LinkedIn URLs, and asks Pluto for full professional profile details without the deeper company-intelligence package. Runs enrich_candidate and polls the unchanged operation to completion or failure, keeps the operation ID and request ID private, presents enriched or not-found profiles in input order, and never returns contact information or raw call data.
 ---
 
 # LinkedIn profile enrichment
@@ -13,7 +13,12 @@ shortlisted, or under discussion never authorizes a tool call.
 
 This skill was written against server contract `4.0.0`. It remains compatible
 with server contract `4.1.0` and server contract `4.7.0`. It also remains
-compatible with server contract `4.10.0` and server contract `4.11.0`. On any conflict, prefer the live tool
+compatible with server contract `4.10.0` through server contract
+`4.14.0` (4.12.0 adds search-time auto-verify via verifyBudget; 4.13.0
+adds investor-backed and deal-recency cohort filters; 4.14.0 removes
+emails from deep enrichment and adds the separate ten-credit
+`full_enrich_candidate` operation — none of which changes this route's
+own tools). On any conflict, prefer the live tool
 descriptions and schema field descriptions.
 
 Keep neighboring requests on their own routes:
@@ -21,10 +26,11 @@ Keep neighboring requests on their own routes:
 - Contact information uses the `candidate-interest` email-enrichment route.
   Profile enrichment is a professional-profile lookup, not a contact lookup; it
   never returns emails, and phone numbers are never requested.
-- A combined request for the professional profile, validated emails, and
-  derived employment-company intelligence uses `deep-enrichment`. Never
-  silently upgrade a profile-only request to that five-credit-per-profile
-  route.
+- A combined request for the professional profile and derived
+  employment-company intelligence uses `deep-enrichment`; adding cited
+  public-web findings about the person is the separate ten-credit
+  `full_enrich_candidate` operation. Neither returns emails. Never silently
+  upgrade a profile-only request to those paid routes.
 - One URL plus "find more people like this person" is a discovery request;
   use the `candidate-discovery` skill's reference-profile search.
 - One or more URLs plus "how does this background overlap with our team" is a
