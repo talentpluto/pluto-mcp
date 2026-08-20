@@ -1,15 +1,18 @@
 # Candidate search contract
 
-Aligned through server contract `4.14.2`. Contract `4.14.2` removes
-item-count caps from typed candidate-search OR lists and preserves every
-supplied value through preview and retrieval compilation. Contract `4.13.0`
-adds typed investor-backed and deal-recency company cohorts; contract `4.12.0`
-adds search-time auto-verification through `verifyBudget`. When the live
-server reports a newer version, behaviors here may be incomplete; prefer the
-live tool descriptions and schema field descriptions on any conflict. If the
-live catalog exposes the retired bundled search operation instead of these
-tools, the server predates the granular contract: follow that live tool's own
-description and do not simulate the toolbox on top of it.
+Aligned through server contract `4.14.3`. Contract `4.14.2` removes the narrow
+field-specific item-count caps from typed candidate-search OR lists and
+preserves every supplied value through preview and retrieval compilation.
+Contract `4.14.3` publishes the same 256-value ceiling on every list, applies
+that budget to the sum across a complete spec, and rejects a larger raw or
+compiled provider request without truncating any value. Contract
+`4.13.0` adds typed investor-backed and deal-recency company cohorts; contract
+`4.12.0` adds search-time auto-verification through `verifyBudget`. When the
+live server reports a newer version, behaviors here may be incomplete; prefer
+the live tool descriptions and schema field descriptions on any conflict. If
+the live catalog exposes the retired bundled search operation instead of
+these tools, the server predates the granular contract: follow that live
+tool's own description and do not simulate the toolbox on top of it.
 
 ## Purpose
 
@@ -105,11 +108,13 @@ required the SAME stint must match both; attributes are as of TODAY, not as
 of the stint), and `exclude` (companies with current/ever scope, title
 terms, locations, keywords).
 
-Typed OR-list fields have no item-count cap. Preserve every user-supplied
-term, school, employer, location, language, certification, or other list
-value; never silently clip the list to a presumed maximum. Provider-specific
-limits are handled by server fan-out, demotion, or post-filtering and are
-disclosed through coverage and plan notes.
+Typed OR-list fields share a 256-value public ceiling, and one complete spec
+may contain at most 256 list values in total. Preserve every user-supplied term,
+school, employer, location, language, certification, or other list value;
+never silently clip the list to a presumed smaller maximum. The server also
+bounds the compiled provider filter tree after alias and multi-field
+expansion. If either boundary rejects the request, split OR branches into
+separate searches in the same session and materialize their union.
 
 Every criterion carries `requirement`: `required` gates membership,
 `preferred` only sorts and never compiles into the source query.

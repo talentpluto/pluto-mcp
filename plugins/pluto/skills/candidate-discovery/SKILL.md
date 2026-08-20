@@ -11,9 +11,12 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
-This skill is aligned through Candidate MCP server contract `4.14.2`.
-That contract does not impose an item-count cap on typed OR-list fields:
-preserve every value the user supplies instead of taking only the first N.
+This skill is aligned through Candidate MCP server contract `4.14.3`.
+Every typed OR-list field publishes the same generous 256-value ceiling, and
+one complete spec may contain at most 256 list values in total. Preserve every
+value the user supplies instead of taking only the first N. Contract `4.14.3`
+rejects a larger raw or compiled provider request before spend and never
+truncates it.
 The canonical reference also covers the `4.13.0` company-investor and
 funding-recency fields and the `4.12.0` search-time `verifyBudget` flow.
 
@@ -120,10 +123,12 @@ Express every hard requirement as its own typed spec field, preserving the
 user's required-versus-preferred wording: `required` gates membership,
 `preferred` only sorts. Decomposition patterns that matter:
 
-- Typed OR-list fields accept the complete user-supplied list. Never truncate
-  a list, keep only a presumed maximum, or split a spec solely because of an
-  assumed item-count cap. If a provider cannot express the full list natively,
-  the server owns fan-out or post-filtering and reports that in coverage.
+- Typed OR-list fields accept the complete user-supplied list up to the
+  published 256-value per-list and aggregate budgets. Never truncate a list or
+  keep only a presumed smaller maximum. If validation reports that the raw spec
+  or its compiled provider filters exceed the safe aggregate boundary,
+  preserve every value by splitting OR branches into separate searches in the
+  same session and materializing their union.
 
 - Past roles ("was previously an IC seller", "cofounded a startup before")
   are `titles` with `scope: "past"`, never prose.
