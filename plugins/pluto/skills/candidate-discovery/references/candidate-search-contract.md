@@ -6,7 +6,8 @@ live server reports a newer version, behaviors here may be incomplete; prefer
 the live tool descriptions and schema field descriptions on any conflict. If
 the live catalog exposes the retired bundled search operation instead of
 these tools, the server predates this contract: follow that live tool's own
-description and do not simulate the toolbox on top of it.
+description and do not simulate the toolbox on top of it. The one-credit
+`enrich_person` pricing below matches server contract `4.14.0`.
 
 ## Purpose
 
@@ -41,7 +42,7 @@ enrichment, choosing what to materialize, and honest presentation.
   people.
 - `enrich_person` — verifies one ref's work and education history and
   re-verifies the originating spec, returning `updatedVerdicts` and
-  cross-verified fields. Bills 2 organization credits per person; an exact
+  cross-verified fields. Bills 1 organization credit per person; an exact
   re-enrichment of the same ref in the same session is not re-billed.
   Session-capped; the refusal message carries guidance.
 - `materialize_candidates` (free) — the only door from refs to presentable
@@ -116,7 +117,7 @@ to violation.
 Previews, company resolution, and materialization are free. Each
 `search_people` call that returns at least one person settles exactly 1
 shared organization credit (a conflicted or failed call settles zero, so
-retries never double-bill). Each newly enriched person settles 2 credits —
+retries never double-bill). Each newly enriched person settles 1 credit —
 the standard profile-enrichment price — once per person per session.
 Enrichment through this toolbox returns no contact data; email enrichment is
 a separate tool family with its own pricing. Never calculate balances or

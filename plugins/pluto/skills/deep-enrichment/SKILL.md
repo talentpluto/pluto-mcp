@@ -23,7 +23,7 @@ descriptions and schema field descriptions.
 
 Selection or URL submission alone is not authorization. A candidate being
 visible, shortlisted, or discussed never authorizes this operation, which
-costs five credits per candidate. Do not silently substitute deep enrichment
+costs three credits per candidate. Do not silently substitute deep enrichment
 for a cheaper or narrower workflow.
 
 ## Keep neighboring requests on their own routes
@@ -33,7 +33,7 @@ for a cheaper or narrower workflow.
 - Available emails use the `candidate-interest` skill and `enrich_email`.
   No deep- or full-enrichment tier returns them.
 - The extended package that adds cited public-web findings about the person
-  runs `full_enrich_candidate` at ten credits per profile; route it through
+  runs `full_enrich_candidate` at five credits per profile; route it through
   the general `index` skill until a dedicated skill lands. Never silently
   upgrade a deep-enrichment request to that route.
 - Finding people, comparing a candidate with Team DNA, scoring, and outbound
@@ -88,8 +88,8 @@ Keep `requestId` private. Reuse it only for an exact retry of the same ordered
 normalized URL list. A changed selection or a deliberate new operation needs a
 new UUID.
 
-Each newly admitted profile costs exactly five shared organization credits.
-The batch total is therefore `5 x selected profiles`, up to 250 credits for 50
+Each newly admitted profile costs exactly three shared organization credits.
+The batch total is therefore `3 x selected profiles`, up to 150 credits for 50
 profiles. Stored profiles and terminal `partial` or `not_found` results have
 the same admitted price. An exact retry retains the original admitted price.
 Do not apply the separate profile-only or email-only credit rules.
@@ -105,7 +105,7 @@ person's name.
 Call `deep_enrich_candidate` once for the logical operation. Accept only:
 
 - `status: queued` with a non-empty opaque `operationId`, `requested` equal to
-  the input length, `creditsUsed` equal to five times that length, and a valid
+  the input length, `creditsUsed` equal to three times that length, and a valid
   `retryAfterMs`; or
 - `status: completed` with the terminal result contract below, when the live
   runtime completes synchronously.
@@ -131,7 +131,7 @@ an ID was received, only an exact retry may reuse the original `requestId` and
 ordered batch; never mint a replacement UUID for an ambiguous start.
 
 Any unknown status, changed operation ID or type, malformed response,
-mismatched requested count, or credit total other than exactly five per
+mismatched requested count, or credit total other than exactly three per
 selected profile is a server/plugin contract mismatch. Report it and stop
 without starting another paid operation.
 
@@ -176,7 +176,7 @@ Require the summary to reconcile with the result items:
 - `requested` equals the batch length;
 - `enriched`, `partial`, and `notFound` equal their item counts and sum to
   `requested`;
-- `creditsUsed` equals exactly five times `requested`; and
+- `creditsUsed` equals exactly three times `requested`; and
 - `companiesEnriched` and `companiesUnavailable` match the returned company
   statuses.
 
