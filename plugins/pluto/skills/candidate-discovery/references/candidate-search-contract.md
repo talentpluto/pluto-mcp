@@ -1,13 +1,14 @@
 # Candidate search contract
 
-Aligned through server contract `4.14.3`. Contract `4.14.2` removes the narrow
+Aligned through server contract `4.16.0`. Contract `4.14.2` removes the narrow
 field-specific item-count caps from typed candidate-search OR lists and
 preserves every supplied value through preview and retrieval compilation.
 Contract `4.14.3` publishes the same 256-value ceiling on every list, applies
 that budget to the sum across a complete spec, and rejects a larger raw or
 compiled provider request without truncating any value. Contract
 `4.13.0` adds typed investor-backed and deal-recency company cohorts; contract
-`4.12.0` adds search-time auto-verification through `verifyBudget`. When the
+`4.12.0` adds search-time auto-verification through `verifyBudget`. Contracts
+`4.15.0` and `4.16.0` add capabilities outside candidate search. When the
 live server reports a newer version, behaviors here may be incomplete; prefer
 the live tool descriptions and schema field descriptions on any conflict. If
 the live catalog exposes the retired bundled search operation instead of

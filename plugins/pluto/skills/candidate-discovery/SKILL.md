@@ -11,7 +11,7 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
-This skill is aligned through Candidate MCP server contract `4.14.3`.
+This skill is aligned through Candidate MCP server contract `4.16.0`.
 Every typed OR-list field publishes the same generous 256-value ceiling, and
 one complete spec may contain at most 256 list values in total. Preserve every
 value the user supplies instead of taking only the first N. Contract `4.14.3`
@@ -19,6 +19,8 @@ rejects a larger raw or compiled provider request before spend and never
 truncates it.
 The canonical reference also covers the `4.13.0` company-investor and
 funding-recency fields and the `4.12.0` search-time `verifyBudget` flow.
+Contracts `4.15.0` and `4.16.0` add capabilities outside candidate search and
+do not change this toolbox.
 
 If the user asks one supported private question about one explicitly selected
 in-network candidate, use the `candidate-question` skill instead. Never add a

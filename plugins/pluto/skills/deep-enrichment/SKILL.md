@@ -17,9 +17,11 @@ contract `4.10.0` through server contract `4.13.0` (4.12.0 adds search-time
 auto-verify via verifyBudget; 4.13.0 adds investor-backed and deal-recency
 cohort filters — both additive). Server contract `4.14.0` removes emails
 from this route and derives the company intelligence from public-web
-evidence; this skill matches `4.14.0`. Against an older server whose live
-result still carries email fields on this route, prefer the live tool
-descriptions and schema field descriptions.
+evidence; this skill matches server contract `4.14.0` through server contract
+`4.16.0`. Contract `4.15.0` facets full-enrichment web presence, and contract
+`4.16.0` adds rubric editing; neither changes this route. Against an older
+server whose live result still carries email fields on this route, prefer the
+live tool descriptions and schema field descriptions.
 
 Selection or URL submission alone is not authorization. A candidate being
 visible, shortlisted, or discussed never authorizes this operation, which
