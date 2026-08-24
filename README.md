@@ -27,6 +27,8 @@ work with the retrieved leads directly in the conversation.
 - Draft, save, and edit a client-shared candidate scoring rubric from a job
   description or role requirements after a complete editable review. Saved
   rubric replacements are loaded first and never overwrite a newer revision.
+  Preferred and avoided employers can each carry a high, medium, or low
+  priority.
 - Score selected candidates or supplied LinkedIn profiles from 0-100 against
   your company's stored Team DNA — shared prior companies, titles, seniority,
   locations, schools, recent-joiner patterns, founder backgrounds, and
@@ -124,12 +126,15 @@ and employment-company intelligence:
 @pluto Who on my team has the strongest connection to this candidate?
 [paste one LinkedIn profile URL]
 
-@pluto Create a candidate scoring rubric from this job description. Show me
-the draft, then ask whether I want changes or want it created:
+@pluto Create a candidate scoring rubric from this job description. Prefer
+Stripe at high priority and Adyen at medium priority; avoid Oracle at low
+priority. Show me the complete draft, then ask whether I want changes or want
+it created:
 [paste the job description]
 
 @pluto Load my "Senior Backend Engineer" rubric and update its system design
-criterion. Show me the complete replacement before saving it.
+criterion, then change Stripe from medium to high preferred priority. Show me
+the complete replacement before saving it.
 
 @pluto Score this candidate against our Team DNA and this job description:
 [paste one LinkedIn profile URL or select a returned candidate, plus the JD]
@@ -201,6 +206,12 @@ one complete editable review and ask me to confirm that exact campaign.
   returned public founder background, but it never identifies non-founder
   members, verifies a personal relationship, or offers a warm-introduction
   path.
+- Rubric company preferences use explicit employment evidence. Preferred
+  matches add 10, 5, or 2 points at high, medium, or low priority. Avoided
+  matches exclude at high priority and subtract 5 or 2 points at medium or low.
+  All soft company adjustments are summed and capped between -10 and +10.
+  Case-insensitive duplicates collapse to the strongest priority, and Avoid
+  wins when the same employer appears in both lists.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and uses no candidate credits; profile enrichment it triggers uses one
   credit per newly admitted URL. An exact retry uses no additional credits.
