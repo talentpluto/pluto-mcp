@@ -178,22 +178,22 @@ one complete editable review and ask me to confirm that exact campaign.
   missing them. Pluto states the maximum first; each new successful lookup may
   use one shared organization credit, while reuse consumes no new lookup
   credit.
-- LinkedIn profile enrichment runs one asynchronous operation for 1–100
+- Small lookup (`small_lookup`) runs one asynchronous operation for 1–100
   supplied profile URLs, reuses a stored profile fetched within the last 3
   months, and uses one shared organization credit per newly admitted profile.
   An exact retry uses no additional credits. It returns public profile details,
   not contact information.
-- Deep candidate enrichment runs one asynchronous operation for 1–50
+- Medium lookup (`medium_lookup`) runs one asynchronous operation for 1–50
   explicitly selected LinkedIn profiles and costs exactly three shared
   organization credits per profile, up to 150 credits for a maximum batch. It
-  combines identity-safe professional profile enrichment and derived company
+  combines identity-safe professional profile lookup and derived company
   bands and signals for up to 50 profile-identified employment companies per
   candidate, and returns no emails. Companies without
   a stable profile-supplied identifier remain `identifier_unavailable` rather
   than being guessed by name. Company output is derived recruiter intelligence,
   not raw source records or precise headcount, funding, location, or financing
   details.
-- Full candidate enrichment (`full_enrich_candidate`) runs the same
+- Heavy lookup (`heavy_lookup`) runs the same
   one-operation batch shape for 1–50 explicitly selected profiles and costs
   exactly five shared organization credits per profile, up to 250 credits for a
   maximum batch. It returns the deep package plus cited public-web findings

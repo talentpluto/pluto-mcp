@@ -11,17 +11,18 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
-This skill is aligned through Candidate MCP server contract `4.18.0`.
+This skill is aligned through Candidate MCP server contract `4.19.0`.
 Every typed OR-list field publishes the same generous 256-value ceiling, and
 one complete spec may contain at most 256 list values in total. Preserve every
 value the user supplies instead of taking only the first N. Contract `4.14.3`
 rejects a larger raw or compiled provider request before spend and never
 truncates it.
 The canonical reference also covers the `4.13.0` company-investor and
-funding-recency fields and the `4.12.0` search-time `verifyBudget` flow.
-Contracts `4.15.0` through `4.18.0` add capabilities outside candidate search,
-including rubric editing and company-priority scoring, and do not change this
-toolbox.
+funding-recency fields, the `4.12.0` search-time `verifyBudget` flow, the
+`4.18.1` `presentTop` collapse, and the `4.18.2`/`4.18.3` first-party
+`memberContext` block. Contract `4.19.0` renames the bundled profile
+packages to `small_lookup`, `medium_lookup`, and `heavy_lookup` and does
+not change this toolbox.
 
 If the user asks one supported private question about one explicitly selected
 in-network candidate, use the `candidate-question` skill instead. Never add a
@@ -206,10 +207,12 @@ criterion from a headline that merely looks suggestive.
 
 ## Present only the materialized roster
 
-Call `materialize_candidates` with the refs the user should see, then present
-every returned candidate in returned order — the roster is evidence-ranked
-server-side. Relay `requirementWithheldCount`, `safetyWithheldCount`, and
-every returned limitation exactly once.
+Call `materialize_candidates` with the refs the user should see, or pass
+`presentTop` on `search_people` to materialize the top N cards in that
+same call through the identical safety, dedupe, and per-person billing
+path. Present every returned candidate in returned order — the roster is
+evidence-ranked server-side. Relay `requirementWithheldCount`,
+`safetyWithheldCount`, and every returned limitation exactly once.
 
 Each card may carry `unverifiedRequired`: required criteria still undecided
 for that person. Present those people as leads needing confirmation on those
@@ -221,11 +224,15 @@ entries.
 Use only the candidate's returned `profileUrl` for the name link. Before
 rendering it, require an absolute HTTPS URL whose hostname is `linkedin.com`,
 `linkedin.cn`, or a subdomain of either; never construct, search for, or infer
-a profile URL. Render one candidate pool: never label candidates by source,
-network membership, or provider, and never name any external data provider.
-Escape table-breaking Markdown in returned text. A names-only table is never
-sufficient — carry current role, location, and the verified evidence that
-justifies inclusion.
+a profile URL. Never name any external data provider. When a card has
+`network: "member"`, tell the user they are a confirmed TalentPluto
+member and use every field in `memberContext` (about, highlights,
+confirmed career, education, past roles, segments, years) so they see
+the full confirmed profile, not a public-search row. First-page
+`memberSuggestions` are additional private member refs; materialize any
+you intend to present. Escape table-breaking Markdown in returned text.
+A names-only table is never sufficient — carry current role, location,
+and the verified evidence that justifies inclusion.
 
 Report the exact returned credit and budget fields when the user asks about
 cost; never calculate credit usage from result counts or provider pricing.

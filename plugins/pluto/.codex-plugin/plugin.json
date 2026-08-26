@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.3.5",
-  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with derived employment-company intelligence, full candidate enrichment adding cited public-web findings, client-shared candidate rubric creation and full-replacement editing with per-company preferences and priorities, candidate-to-Team DNA comparison, 0-100 candidate scoring against Team DNA and a supplied job description, outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, Ashby ATS sourcing with job-driven search, ATS dedupe, and reviewed candidate export through the user's own Ashby MCP connection, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+  "version": "0.3.6",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, small lookup of LinkedIn profiles, medium lookup with derived employment-company intelligence, heavy lookup adding cited public-web findings, client-shared candidate rubric creation and full-replacement editing with per-company preferences and priorities, candidate-to-Team DNA comparison, 0-100 candidate scoring against Team DNA and a supplied job description, outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, Ashby ATS sourcing with job-driven search, ATS dedupe, and reviewed candidate export through the user's own Ashby MCP connection, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -13,6 +13,9 @@
     "bulk candidate email",
     "email verification",
     "linkedin profile",
+    "small lookup",
+    "medium lookup",
+    "heavy lookup",
     "profile enrichment",
     "deep candidate enrichment",
     "company intelligence",
