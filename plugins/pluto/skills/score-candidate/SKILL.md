@@ -16,16 +16,9 @@ measures observed professional alignment — background familiarity with the
 team, or evidence-verified match to the stated requirements — never
 candidate quality, culture fit, or a hiring decision.
 
-This skill was written against server contract `4.0.0`. It remains compatible
-with server contract `4.1.0` and server contract `4.7.0`. It also remains
-compatible with server contract `4.10.0` through server contract
-`4.18.0` (4.12.0 adds search-time auto-verify via verifyBudget; 4.13.0 adds
-investor-backed and deal-recency cohort filters; 4.14.0 removes emails from
-deep enrichment and adds the separate five-credit `full_enrich_candidate`
-operation; 4.15.0 facets full-enrichment web presence; and 4.16.0 through
-4.18.0 add rubric editing and company-priority scoring — none of which changes
-this route's own tools). On any conflict, prefer the live tool description and
-schema field descriptions.
+This skill was written against server contract `4.19.0`. The profile
+step uses `small_lookup`. On any conflict, prefer the live tool
+description and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
 
@@ -58,7 +51,7 @@ schema field descriptions.
 Before promising scores, confirm that the current host context exposes
 `get_team_dna` and inspect its live input schema, which must accept
 exactly one `department` enum. When the enrichment step below must run,
-also require `enrich_candidate` under the `linkedin-enrichment` skill's
+also require `small_lookup` under the `linkedin-enrichment` skill's
 contract and the shared `get_operation_status` poll tool. Loading this skill
 does not prove that Pluto initialized or that the connected server matches the
 pinned contract.
@@ -108,7 +101,7 @@ supplied, or the visible public URL of a returned candidate the user
 explicitly identified for scoring — run the `linkedin-enrichment` skill's
 async contract before scoring: one `profiles` batch covering every
 candidate in the request that needs enrichment, one private top-level UUID
-`requestId`, one call to `enrich_candidate`, then unchanged-ID
+`requestId`, one call to `small_lookup`, then unchanged-ID
 `get_operation_status` polling through completion or failure and result
 validation exactly as that skill specifies. Never derive a URL from an opaque
 handle or guess one from a name.

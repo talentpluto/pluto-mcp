@@ -1,9 +1,9 @@
 ---
 name: linkedin-enrichment
-description: Use when a user explicitly supplies one to 100 LinkedIn profile URLs, or explicitly selects returned candidates with visible LinkedIn URLs, and asks Pluto for full professional profile details without the deeper company-intelligence package. Runs enrich_candidate and polls the unchanged operation to completion or failure, keeps the operation ID and request ID private, presents enriched or not-found profiles in input order, and never returns contact information or raw call data.
+description: Use when a user explicitly supplies one to 100 LinkedIn profile URLs, or explicitly selects returned candidates with visible LinkedIn URLs, and asks Pluto for full professional profile details without the deeper company-intelligence package. Runs small_lookup and polls the unchanged operation to completion or failure, keeps the operation ID and request ID private, presents looked-up or not-found profiles in input order, and never returns contact information or raw call data.
 ---
 
-# LinkedIn profile enrichment
+# Small lookup
 
 Use this skill only when the user clearly asks Pluto for full professional
 details — current role, work history, education, and similar professional
@@ -11,18 +11,12 @@ facts — for LinkedIn profiles they explicitly supplied or explicitly
 selected. URL submission alone is not authorization. A profile being visible,
 shortlisted, or under discussion never authorizes a tool call.
 
-This skill was written against server contract `4.0.0`. It remains compatible
-with server contract `4.1.0` and server contract `4.7.0`. It also remains
-compatible with server contract `4.10.0` through server contract `4.18.0`
-(4.12.0 adds search-time auto-verify via verifyBudget; 4.13.0 adds
-investor-backed and deal-recency cohort filters; 4.14.0 removes emails from
-deep enrichment and adds the separate five-credit `full_enrich_candidate`
-operation; 4.15.0 facets full-enrichment web presence across general,
-code-hosting, personal-site, and publication searches and adds an optional
-category hint to web-presence findings; and 4.16.0 through 4.18.0 add rubric
-editing and company-priority scoring — none of which changes this route's own
-tools). On any conflict, prefer the live tool descriptions and schema field
-descriptions.
+This skill was written against server contract `4.19.0`. That release
+renames the three bundled profile packages to `small_lookup` (this
+route, one credit), `medium_lookup` (person plus employment-company
+package, three credits), and `heavy_lookup` (medium package plus cited
+public-web findings, five credits). On any conflict, prefer the live
+tool descriptions and schema field descriptions.
 
 Keep neighboring requests on their own routes:
 
@@ -32,7 +26,7 @@ Keep neighboring requests on their own routes:
 - A combined request for the professional profile and derived
   employment-company intelligence uses `deep-enrichment`; adding cited
   public-web findings about the person is the separate five-credit
-  `full_enrich_candidate` operation. Neither returns emails. Never silently
+  `heavy_lookup` operation. Neither returns emails. Never silently
   upgrade a profile-only request to those paid routes.
 - One URL plus "find more people like this person" is a discovery request;
   use the `candidate-discovery` skill's reference-profile search.
@@ -57,11 +51,11 @@ before calling a tool.
 
 ## Confirm the async pair is available
 
-Before promising or attempting enrichment, require `enrich_candidate` and the
-shared `get_operation_status` poll tool. Never call `enrich_candidate` when the
+Before promising or attempting enrichment, require `small_lookup` and the
+shared `get_operation_status` poll tool. Never call `small_lookup` when the
 poll tool is missing.
 
-Inspect the live input schemas: `enrich_candidate` must accept a `profiles`
+Inspect the live input schemas: `small_lookup` must accept a `profiles`
 array of one to 100 items that each contain only `linkedinUrl`, plus one
 top-level UUID `requestId`; for profile enrichment, call the poll tool with
 only the opaque `operationId` and never its search-only cursor. Loading this
@@ -78,7 +72,7 @@ If a required tool is absent or unusable, fail closed:
 - If recovery does not expose the pair, report that profile enrichment is not
   currently available and state that no enrichment ran.
 
-`enrich_candidate` and the poll tool use the existing `candidates:outbound`
+`small_lookup` and the poll tool use the existing `candidates:outbound`
 scope, so ordinary server updates do not require reconnection when the saved
 Pluto grant already includes it.
 
@@ -112,7 +106,7 @@ directs; do not resubmit the batch unchanged.
 
 ## Start and poll the operation
 
-Call `enrich_candidate` once per logical operation with the batch. Establish
+Call `small_lookup` once per logical operation with the batch. Establish
 one private admitted credit total from the first successful response: use the
 top-level `creditsUsed` value for `queued`, or `summary.creditsUsed` for the
 compatibility `completed` response. Require that total to equal the input

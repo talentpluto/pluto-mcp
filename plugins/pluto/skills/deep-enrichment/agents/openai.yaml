@@ -1,7 +1,7 @@
 interface:
-  display_name: "Pluto deep candidate enrichment"
-  short_description: "Enrich selected profiles with person and company intelligence"
-  default_prompt: "Use $deep-enrichment only when I explicitly select one to 50 LinkedIn profiles and ask for the combined deep person and employment-company package. Charge exactly three shared organization credits per selected profile, generate one private UUID requestId for the ordered batch, keep requestId, operationId, candidateRef, and selectionToken private, poll get_operation_status with the unchanged operationId and returned retry timing until completed or failed, preserve input order, present only identity-safe professional facts, profile-identified employment companies, and allowed derived recruiter intelligence, never contact information, never guess a company identifier by name, never imply campaign eligibility, and never name or expose an external data source or raw source fields."
+  display_name: "Pluto medium lookup"
+  short_description: "Look up selected profiles with person and company intelligence"
+  default_prompt: "Use $deep-enrichment only when I explicitly select one to 50 LinkedIn profiles and ask for the combined person and employment-company package. Charge exactly three shared organization credits per selected profile, generate one private UUID requestId for the ordered batch, start medium_lookup, keep requestId, operationId, candidateRef, and selectionToken private, poll get_operation_status with the unchanged operationId and returned retry timing until completed or failed, preserve input order, present only identity-safe professional facts, profile-identified employment companies, and allowed derived recruiter intelligence, never contact information, never guess a company identifier by name, never imply campaign eligibility, and never name or expose an external data source or raw source fields."
 
 dependencies:
   tools:

@@ -1,6 +1,6 @@
 ---
 name: team-connection
-description: Use when a user explicitly identifies one or more candidates by LinkedIn profile URL and asks how their professional backgrounds overlap with the authenticated client's team. Enriches the candidates through enrich_candidate, reads the aggregate Team DNA projection through get_team_dna, and presents evidence-backed common ground and complementarity without naming a non-founder teammate, claiming a relationship, producing a fit score, or implying a warm-introduction path.
+description: Use when a user explicitly identifies one or more candidates by LinkedIn profile URL and asks how their professional backgrounds overlap with the authenticated client's team. Looks up the candidates through small_lookup, reads the aggregate Team DNA projection through get_team_dna, and presents evidence-backed common ground and complementarity without naming a non-founder teammate, claiming a relationship, producing a fit score, or implying a warm-introduction path.
 ---
 
 # Team connection
@@ -19,16 +19,9 @@ a candidate, establish that two people worked together, or provide a
 warm-introduction path. Say that plainly when the user's wording asks for a
 specific teammate, then provide the aggregate overlap their request supports.
 
-This skill was written against server contract `4.0.0`. It remains compatible
-with server contract `4.1.0` and server contract `4.7.0`. It also remains
-compatible with server contract `4.10.0` through server contract
-`4.18.0` (4.12.0 adds search-time auto-verify via verifyBudget; 4.13.0 adds
-investor-backed and deal-recency cohort filters; 4.14.0 removes emails from
-deep enrichment and adds the separate five-credit `full_enrich_candidate`
-operation; 4.15.0 facets full-enrichment web presence; and 4.16.0 through
-4.18.0 add rubric editing and company-priority scoring — none of which changes
-this route's own tools). On any conflict, prefer the live tool descriptions and
-schema field descriptions.
+This skill was written against server contract `4.19.0`. The profile
+step uses `small_lookup`. On any conflict, prefer the live tool
+descriptions and schema field descriptions.
 
 ## Keep neighboring requests on their own routes
 
@@ -69,7 +62,7 @@ request across operations automatically.
 
 Require all three live tools before promising a result:
 
-- `enrich_candidate`, accepting a `profiles` array of one to 100 objects that
+- `small_lookup`, accepting a `profiles` array of one to 100 objects that
   each contain only `linkedinUrl`, plus one top-level UUID `requestId` for the
   exact ordered batch;
 - `get_operation_status`, called with only the opaque `operationId` for the
@@ -99,7 +92,7 @@ candidate silently. If the same normalized profile appears more than once,
 retain its first position and tell the user rather than submitting a duplicate.
 Reuse the UUID only for an exact retry of this batch.
 
-Call `enrich_candidate` once per logical operation. Follow the start, terminal
+Call `small_lookup` once per logical operation. Follow the start, terminal
 polling, and completed-result validation contract in `linkedin-enrichment`:
 keep the operation ID private, wait at least the returned delay, and poll the
 unchanged ID with `get_operation_status` until completed or failed without a
