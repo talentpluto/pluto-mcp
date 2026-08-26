@@ -7,7 +7,7 @@ description: Use when a user asks Pluto to create, draft, or save a candidate-ev
 
 Create or update one client-shared candidate rubric through a complete,
 review-first flow. This skill is aligned through Candidate MCP server contract
-`4.19.0`. Contract `4.16.0` adds full-replacement edits through
+`4.20.0`. Contract `4.16.0` adds full-replacement edits through
 `update_rubric`, contract `4.17.0` adds per-company priorities, and contract
 `4.18.0` makes company scoring and conflict normalization deterministic.
 Contract `4.19.0` renames the bundled profile packages and does not change

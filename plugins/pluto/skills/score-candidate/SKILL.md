@@ -16,7 +16,7 @@ measures observed professional alignment — background familiarity with the
 team, or evidence-verified match to the stated requirements — never
 candidate quality, culture fit, or a hiring decision.
 
-This skill was written against server contract `4.19.0`. The profile
+This skill was written against server contract `4.20.0`. The profile
 step uses `small_lookup`. On any conflict, prefer the live tool
 description and schema field descriptions.
 

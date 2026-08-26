@@ -11,7 +11,7 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
-This skill is aligned through Candidate MCP server contract `4.19.0`.
+This skill is aligned through Candidate MCP server contract `4.20.0`.
 Every typed OR-list field publishes the same generous 256-value ceiling, and
 one complete spec may contain at most 256 list values in total. Preserve every
 value the user supplies instead of taking only the first N. Contract `4.14.3`
@@ -21,8 +21,9 @@ The canonical reference also covers the `4.13.0` company-investor and
 funding-recency fields, the `4.12.0` search-time `verifyBudget` flow, the
 `4.18.1` `presentTop` collapse, and the `4.18.2`/`4.18.3` first-party
 `memberContext` block. Contract `4.19.0` renames the bundled profile
-packages to `small_lookup`, `medium_lookup`, and `heavy_lookup` and does
-not change this toolbox.
+packages to `small_lookup`, `medium_lookup`, and `heavy_lookup`.
+Contract `4.20.0` adds `network.membership` so a spec can require or
+prefer confirmed TalentPluto members.
 
 If the user asks one supported private question about one explicitly selected
 in-network candidate, use the `candidate-question` skill instead. Never add a
@@ -61,7 +62,7 @@ Treat any bounded, public, professional people-search criterion as searchable
 through Pluto: roles and past roles, employers and past employers, company
 attributes (stage, size, funding, industry), schools and degrees, spoken
 languages, certifications, professional locations, experience bounds, OSS
-signals, exclusions, and grouped logic.
+signals, confirmed TalentPluto membership, exclusions, and grouped logic.
 
 Block direct people-search requests that use demographics or sensitive
 personal traits, compensation, work authorization or sponsorship, desired
@@ -145,6 +146,14 @@ user's required-versus-preferred wording: `required` gates membership,
   `pastTitles`. Both compile natively into the same search.
 - Exclusions ride the `exclude` block; named people ride `namedPeople`
   (names must come from the user's request — never invent one).
+- Confirmed TalentPluto members are `network: { membership: "member" }`.
+  `required` (the default) keeps only accepted members; `preferred` ranks
+  members first without dropping public profiles. Membership does not
+  define a retrieval lane by itself: pair it with titles, location,
+  employers, or another lane-defining block. Required membership plus a
+  required location is enough to bound an open-market search ("Pluto
+  members in NYC") without a title. Do not send an unbounded members-only
+  spec.
 - `semanticQuery` is plain-prose retrieval flavor only: boolean syntax is not
   parsed, and nothing stated there is ever gated or verified. Anything that
   must be true belongs in a field.

@@ -19,7 +19,7 @@ a candidate, establish that two people worked together, or provide a
 warm-introduction path. Say that plainly when the user's wording asks for a
 specific teammate, then provide the aggregate overlap their request supports.
 
-This skill was written against server contract `4.19.0`. The profile
+This skill was written against server contract `4.20.0`. The profile
 step uses `small_lookup`. On any conflict, prefer the live tool
 descriptions and schema field descriptions.
 
