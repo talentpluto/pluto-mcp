@@ -11,7 +11,7 @@ lookup is the combined package: an identity-safe professional profile and
 derived intelligence for employment companies identified by the returned
 professional profile. It is not a contact lookup and never returns emails.
 
-This skill was written against server contract `4.19.0`. That release
+This skill was written against server contract `4.20.0`. Contract `4.19.0`
 renames this route from the former deep-enrichment tool to `medium_lookup`
 at three credits per profile. On any conflict, prefer the live tool
 descriptions and schema field descriptions. Against an older server whose

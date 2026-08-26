@@ -1,6 +1,6 @@
 # Candidate search contract
 
-Aligned through server contract `4.19.0`. Contract `4.14.2` removes the narrow
+Aligned through server contract `4.20.0`. Contract `4.14.2` removes the narrow
 field-specific item-count caps from typed candidate-search OR lists and
 preserves every supplied value through preview and retrieval compilation.
 Contract `4.14.3` publishes the same 256-value ceiling on every list, applies
@@ -11,8 +11,9 @@ compiled provider request without truncating any value. Contract
 Contract `4.18.1` adds optional `presentTop` on `search_people`. Contracts
 `4.18.2` and `4.18.3` put untruncated first-party `memberContext` on
 member cards. Contract `4.19.0` renames the bundled profile packages to
-`small_lookup`, `medium_lookup`, and `heavy_lookup` and does not change
-these search tools. When the live server reports a newer version, behaviors
+`small_lookup`, `medium_lookup`, and `heavy_lookup`. Contract `4.20.0`
+adds `network.membership` so a spec can require or prefer confirmed
+TalentPluto members. When the live server reports a newer version, behaviors
 here may be incomplete; prefer the live tool descriptions and schema field
 descriptions on any conflict. If the live catalog exposes the retired
 bundled search operation instead of these tools, the server predates the
@@ -98,7 +99,8 @@ rejected with the valid values named. Lane-defining blocks (at least one):
 `company` (current-employer cohort: stages, industries, size, funding, age,
 backing investors, deal recency, description keywords, lookalike `similarTo`),
 `namedPeople`, required `titles` or `department` (the anchor-less open-market
-lane), or `semanticQuery`.
+lane), required `location` with `network.membership` `member`, or
+`semanticQuery`. Membership alone does not define a lane.
 
 Inside `company`, `investors` is a nonempty array of user-supplied investor
 firm names. Every named investor is required (AND semantics); an investor that
@@ -110,15 +112,18 @@ reports the unavailable coverage instead of weakening either requirement.
 
 Person-scope criteria: `titles` (terms, `match` words|phrase, `scope`
 current|past), `seniority`, `location` (city, state, or preset metro,
-OR-set), `experience` (min/max total years, years in current role,
-recent-joiner window), `schools`, `education` (degrees, fields of study),
-`languages`, `certifications`, `keywords`, `github` (languages, stars),
-`signals` (leftCompanyWithinMonths, openToWork, profileUpdatedWithinMonths),
-`pastEmployers` (named companies, cross-scope AND), `pastCompany` (stage or
-description keywords of SOME past employer; when past-scope titles are also
-required the SAME stint must match both; attributes are as of TODAY, not as
-of the stint), and `exclude` (companies with current/ever scope, title
-terms, locations, keywords).
+OR-set), `network` (`membership: "member"`; `required` keeps only
+confirmed TalentPluto members, `preferred` ranks them first without
+dropping public profiles), `experience` (min/max total years, years in
+current role, recent-joiner window), `schools`, `education` (degrees,
+fields of study), `languages`, `certifications`, `keywords`, `github`
+(languages, stars), `signals` (leftCompanyWithinMonths, openToWork,
+profileUpdatedWithinMonths), `pastEmployers` (named companies,
+cross-scope AND), `pastCompany` (stage or description keywords of SOME
+past employer; when past-scope titles are also required the SAME stint
+must match both; attributes are as of TODAY, not as of the stint), and
+`exclude` (companies with current/ever scope, title terms, locations,
+keywords).
 
 Typed OR-list fields share a 256-value public ceiling, and one complete spec
 may contain at most 256 list values in total. Preserve every user-supplied term,
