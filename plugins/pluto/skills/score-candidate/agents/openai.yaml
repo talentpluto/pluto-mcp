@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate scoring"
   short_description: "Score candidates against Team DNA, a JD, or a rubric"
-  default_prompt: "Use $score-candidate to score the explicitly identified candidates against the requested Team DNA, job description, or saved rubric; omit protected-trait free-form profile exclusions before evaluating evidence, keep legitimate job and company exclusions enforceable, cite explicit evidence, disclose coverage and unknowns, and keep every score separate and non-decisional."
+  default_prompt: "Use $score-candidate to score the explicitly identified candidates against the requested Team DNA, job description, or saved rubric; use only a server-approved rubric scoring projection, return no rubric score when it is absent, and permit zero only for an approved exclusion backed by a grounded exact source excerpt."
 
 dependencies:
   tools:

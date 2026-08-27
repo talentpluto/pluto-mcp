@@ -1,6 +1,6 @@
 ---
 name: score-candidate
-description: Use when a user explicitly asks Pluto to score, grade, rate, or assess explicitly identified candidates against their company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches candidates when needed, loads only requested scoring context, and returns separate evidence-cited 0-100 scores with coverage and unknowns. For saved rubrics, omits protected-trait free-form profile exclusions before candidate-evidence evaluation while keeping legitimate job-related and structured company exclusions enforceable. Never presents a score as a culture-fit judgment, protected-trait proxy, rejection, or hiring decision.
+description: Use when a user explicitly asks Pluto to score, grade, rate, or assess explicitly identified candidates against their company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches candidates when needed, loads only requested scoring context, and returns separate evidence-cited 0-100 scores with coverage and unknowns. For saved rubrics, treats every score-affecting item as unvalidated unless the server returns an affirmative professional-policy disposition, omits every unapproved item, and permits a zero only for an approved exclusion with grounded exact-source evidence. Never presents a score as a culture-fit judgment, protected-trait proxy, rejection, or hiring decision.
 ---
 
 # Score candidate
@@ -14,11 +14,12 @@ evidence, and ships with coverage. A score measures observed professional
 alignment, never candidate quality, culture fit, rejection, or a hiring
 decision.
 
-This skill was written against server contract `4.20.0`. The profile step uses
+This skill was written against server contract `4.21.0`. The profile step uses
 `small_lookup`. Prefer live tool names, schemas, and field descriptions when
-they differ. The saved-rubric policy below is a client-side scoring boundary,
-not a write-time schema restriction; a content-neutral `create_rubric` or
-`update_rubric` contract does not remove that scoring boundary.
+they differ. Saved-rubric persistence is content-neutral, while automated
+rubric scoring requires a separate server-approved professional-content
+projection. Never substitute connector-side policy judgment for that server
+boundary.
 
 ## Keep neighboring requests on their own routes
 
@@ -60,16 +61,24 @@ Before promising scores, confirm the tools required by the active axes. A Team
 DNA axis requires `get_team_dna`, whose live input schema must accept exactly
 one `department` enum. A named saved-rubric axis requires `get_rubrics` under
 the `rubrics` skill when a complete rubric is not already loaded or the user
-requests the latest revision. When enrichment must run, also require
-`small_lookup` under the `linkedin-enrichment` skill's contract and the shared
+requests the latest revision. It also requires the live server result to carry
+a typed policy-approved scoring projection or affirmative professional-policy
+dispositions for every admitted rubric item. Raw stored rubric fields are not
+such a projection. When enrichment must run, also require `small_lookup` under
+the `linkedin-enrichment` skill's contract and the shared
 `get_operation_status` poll tool. Loading this skill does not prove that Pluto
 initialized or that the connected server matches the pinned contract.
 
 If a required tool is absent or its schema differs, follow the
 `connection-recovery` skill. If recovery does not expose what the request
-needs, report which part of scoring is unavailable and stop; do not
-substitute a team description recalled from memory, another data source,
-or web search.
+needs, report which part of scoring is unavailable; continue only with other
+independently requested axes whose contracts are complete. In particular, when
+`get_rubrics` returns only raw stored content, render the saved-rubric axis as
+`No score` because the server-approved projection is unavailable. A present
+raw-only `get_rubrics` tool is not a connection failure and does not justify an
+upgrade, reinstall, logout, or reconnect. Do not substitute a connector-side
+semantic classification, a team description recalled from memory, another data
+source, or web search.
 
 ## Gate the request and fix the inputs
 
@@ -276,55 +285,85 @@ evidence, not a rejected candidate; say which it is.
 
 ## Compute the saved-rubric score
 
-When the saved-rubric axis is active, apply the complete loaded rubric in this
-order. Do not update or normalize the stored rubric as part of scoring.
+When the saved-rubric axis is active, preserve the complete loaded rubric
+unchanged. Build an ephemeral scoring view only from content carrying an
+affirmative server-returned professional-policy disposition. Do not update,
+normalize, rewrite, or reclassify the stored rubric as part of scoring.
 
-### Remove policy-ineligible free-form exclusions first
+### Require the server-approved scoring projection first
 
-Before looking at any candidate evidence, partition the returned
-`profileExclusions` by the selection rule they express. Omit any free-form
-exclusion that selects candidates by a protected trait or proxy, including
-race or ethnicity, national origin or nationality, religion, sex or gender,
-sexual orientation, pregnancy, age, disability or medical status, genetic
-information, marital or family status, veteran status, or political
-affiliation.
+Before looking at candidate evidence, treat every score-affecting item in the
+loaded rubric as unvalidated:
 
-This is a scoring-only omission. Preserve the stored rubric unchanged and
-report only the number of configured exclusions omitted for policy; do not
-repeat or evaluate their text. An omitted exclusion must never appear as
-passed, failed, unknown, a risk, a weakness, a score explanation, a weak-fit
-recommendation, or a rejection. Never reconstruct one from candidate evidence,
-role context, scoring notes, or adjacent text.
+- `roleContext`;
+- each criterion together with its evidence guide and importance;
+- `scoringNotes` or equivalent guidance;
+- each `preferredCompanies` entry, including its company string and priority;
+- each `excludedCompanies` entry, including high-priority vetoes; and
+- each `profileExclusions` entry.
 
-Classify the selection rule, not isolated words. United States residence and
-work authorization remain eligible job-related exclusions. A professional
-requirement such as Irish market experience is not a national-origin
-preference. Structured `excludedCompanies` remain eligible independently of
-this free-form policy, including a company name such as Christian Dior.
+An item may enter scoring only when the live server response affirmatively
+marks that exact item eligible for professional scoring or includes it in a
+typed policy-approved effective scorecard. A structured field, plausible
+employer name, familiar requirement, or the assistant's own semantic judgment
+is never approval. A server disposition of `ineligible` or `review_required`, a
+missing or malformed disposition, or policy-resolution failure leaves the item
+unvalidated and omitted.
 
-### Evaluate eligible profile exclusions
+Require the server response to prove a complete, unambiguous mapping between
+the loaded items and the approved projection. Do not accept duplicate,
+out-of-range, or partially mapped dispositions. If policy resolution fails or
+the response cannot establish that complete mapping, the saved-rubric axis has
+no valid projection and must return `No score`; never salvage a partial score.
 
-Match every `excludedCompanies` entry against all confirmed employment
-evidence, including the candidate's current employer and prior employers. Add
-each confirmed high-priority match as a structured hard exclusion. Then
-evaluate every remaining eligible free-form profile exclusion and structured
-hard exclusion:
+The Candidate MCP 4.21 `get_rubrics` result returns raw stored rubric content
+without item-level policy dispositions or an effective scoring projection.
+When that remains true in the live schema and result, do not compute a
+saved-rubric score. Render `No score` and explain neutrally that a
+server-approved scoring projection was unavailable. Continue only with another
+independently requested axis. Do not run a connector-side policy classifier or
+infer approval from the rubric text.
 
-- `failed` only when explicit candidate evidence establishes the excluded
-  condition or contradicts a stated requirement;
+This is a scoring-only boundary. `create_rubric`, `update_rubric`, and
+`get_rubrics` preserve the rubric through existing normalization regardless of
+policy disposition. Omitted, ambiguous, or unvalidated content must not appear
+as candidate evidence, a criterion, context, guidance, a company signal, an
+exclusion outcome, a risk, a weakness, a score explanation, a weak-fit
+recommendation, or a rejection. Use only server-returned aggregate omission
+counts when available; do not repeat omitted text or invent item-level labels.
+
+Legitimate professional requirements such as United States residence, work
+authorization, or Irish market experience can enter scoring after affirmative
+server approval. Actual employer names in either company list require the same
+approval and do not bypass this boundary because their container is structured.
+
+### Evaluate approved profile exclusions
+
+Evaluate only profile exclusions in the server-approved projection, including
+approved high-priority `excludedCompanies` vetoes. Match an approved company
+rule against all confirmed employment evidence, including the candidate's
+current employer and prior employers. Classify each approved exclusion as:
+
+- `failed` only when one short exact excerpt from an identified permitted
+  candidate-evidence source directly establishes the excluded condition or
+  contradicts the requirement;
 - `passed` only when explicit candidate evidence establishes compliance; and
-- `unknown` when evidence is missing or ambiguous.
+- `unknown` when evidence is missing, ambiguous, inferred, paraphrased without
+  a groundable source excerpt, or otherwise ungrounded.
 
-Missing evidence is review-required, never failure. Do not infer residence,
-work authorization, employment, or another condition from silence or a proxy.
-Explicit residence or work-authorization evidence already available to this
-scoring workflow can pass or fail its corresponding legitimate exclusion, but
-a bounded `candidate-question` answer remains separate and cannot be folded
-into the score.
+For a failure, quote the exact contiguous source excerpt and identify its
+source. Verify that the excerpt appears in the supplied resume, public
+professional profile, or other evidence already permitted by this workflow.
+Without that grounding, change an attempted failure to `unknown`; it cannot
+produce a hard zero. Do not infer residence, work authorization, employment, or
+another condition from silence or a proxy. A bounded `candidate-question`
+answer remains separate and cannot be folded into the score.
 
-### Score criteria and company signals
+### Score approved criteria and company signals
 
-Score each returned criterion independently as:
+Score only criteria included in the server-approved projection. Use approved
+role context and scoring guidance only when the server includes them in that
+projection. Score each approved criterion independently as:
 
 - `5` — exceptional direct evidence;
 - `4` — strong direct evidence;
@@ -334,31 +373,34 @@ Score each returned criterion independently as:
 - `0` — explicit contradictory evidence; or
 - `unknown` — insufficient candidate evidence either way.
 
-Cite the exact candidate fact behind every numeric score and apply the loaded
-scoring notes. Use importance weights `core = 1`, `high = 0.8`,
-`medium = 0.6`, and `supporting = 0.4`. Exclude unknown criteria from both the
-numerator and denominator.
+Cite the exact candidate fact behind every numeric score and apply only approved
+scoring notes. Use importance weights `core = 1`, `high = 0.8`, `medium = 0.6`,
+and `supporting = 0.4`. Exclude unknown criteria from both the numerator and
+denominator. Policy-omitted criteria never enter either one.
 
-Classify documented employment matches separately from criteria. Match
+Classify approved company signals separately from criteria. Match only approved
 preferred companies and medium- or low-priority excluded companies against all
 confirmed employment evidence, including the candidate's current employer and
 prior employers. Preferred companies add +10 at high priority, +5 at medium,
 or +2 at low. Excluded companies subtract 5 at medium or 2 at low;
-high-priority matches were already handled as hard exclusions. Sum the soft
-adjustments and cap their combined effect between -10 and +10. Missing or
-ambiguous employment evidence produces no adjustment.
+server-approved high-priority matches were already handled as exclusions. Sum
+the soft adjustments and cap their combined effect between -10 and +10.
+Unapproved company entries and missing or ambiguous employment evidence produce
+no adjustment.
 
-If any policy-eligible free-form profile exclusion failed or any structured
-hard exclusion from a high-priority `excludedCompanies` entry matched, force
-the final rubric score to `0/100`, even when no criteria are known. Criterion
-strength and every company adjustment are ignored and cannot offset that zero.
-Explain the evidenced eligible exclusion or structured company match, but do
-not turn the result into a rejection or hiring decision. Otherwise, if no
-criteria are known, report no score rather than zero. When criteria are known,
-calculate their weighted average divided by 5, multiply by 100, round to the
-nearest integer, add the capped soft-company adjustment, and clamp the final
-result from 0 to 100. Always show known criteria out of total criteria and label
-coverage low when half or fewer are known.
+If any server-approved exclusion has a grounded `failed` outcome, force the
+final rubric score to `0/100`, even when no approved criteria are known.
+Criterion strength and every company adjustment are ignored and cannot offset
+that zero. Explain the approved exclusion using the grounded exact source
+excerpt, but do not turn the result into a rejection or hiring decision.
+
+Otherwise, if no approved criteria are known, report no score rather than zero.
+When approved criteria are known, calculate their weighted average divided by
+5, multiply by 100, round to the nearest integer, add the capped approved soft
+company adjustment, and clamp the final result from 0 to 100. Always show known
+approved criteria out of total approved criteria and label coverage low when
+half or fewer are known. Ineligible, review-required, ambiguous, unvalidated,
+or ungrounded content never lowers the score or changes a recommendation.
 
 Keep every active score separate. Never average, blend, or roll Team DNA, JD,
 or rubric scores into one composite, and never convert one into a letter grade,
@@ -386,14 +428,19 @@ in use. Then present one scorecard per candidate, scores first:
 
 Omit every inactive axis, line, and table. When Team DNA came back
 `insufficient_data`, state that in place of the number. For an active rubric,
-show the neutral count of policy-omitted profile exclusions, then the eligible
-failed, passed, and unknown outcomes before the criterion table. Do not list an
-omitted exclusion in those outcomes. When no rubric criteria are known, no
-eligible free-form exclusion failed, and no high-priority structured
-excluded-company rule matched, render `<rubric name>: No score (0/<total>
-criteria known)` rather than zero. When an eligible free-form exclusion failed
-or a high-priority structured excluded-company rule matched, render `0/100`
-even with zero known criteria and cite the explicit evidence.
+render `<rubric name>: No score (server-approved scoring projection
+unavailable)` when only raw stored rubric content was returned. Do not show a
+criterion table or exclusion outcome from raw content.
+
+When the server did return an approved projection, show its aggregate omitted
+profile-exclusion and other scorecard-content counts when provided, then the
+approved failed, passed, and unknown exclusion outcomes before the approved
+criterion table. Do not list omitted content in those outcomes. When no
+approved rubric criteria are known and no approved exclusion has a grounded
+failure, render `<rubric name>: No score (0/<total> approved criteria known)`
+rather than zero. Render `0/100` with zero known criteria only when an approved
+exclusion failed with a grounded exact source excerpt; cite that excerpt and
+its source.
 
 Keep candidates in the user's stated order, or in returned order when they
 came from one Pluto search; a server-judged roster keeps its returned order and
@@ -403,8 +450,8 @@ differences, framed as observed alignment, never as a hiring recommendation or
 proof one candidate is better.
 
 Close each scorecard with unknown dimensions, unverified requirements, unknown
-rubric criteria, and unknown eligible exclusions framed as open screening
-questions rather than weaknesses.
+approved rubric criteria, and unknown approved exclusions framed as open
+screening questions rather than weaknesses.
 
 ## Keep the privacy boundary
 

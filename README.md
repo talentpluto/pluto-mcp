@@ -28,16 +28,17 @@ work with the retrieved leads directly in the conversation.
   description or role requirements after a complete editable review. Saved
   rubric replacements are loaded first and never overwrite a newer revision.
   Preferred and avoided employers can each carry a high, medium, or low
-  priority. Stored free-form exclusions remain compatible; protected-trait
-  candidate selection is omitted before scoring without changing the saved
-  rubric.
+  priority. All confirmed content remains stored through existing
+  normalization; automated scoring uses only a server-approved professional
+  projection without changing the saved rubric.
 - Score selected candidates or supplied LinkedIn profiles from 0-100 against
   your company's stored Team DNA — shared prior companies, titles, seniority,
   locations, schools, recent-joiner patterns, founder backgrounds, and
   published hiring-preference signals — with a separate 0-100 match score
   against your job description when you provide one, or against a loaded saved
-  rubric. Every credited match cites explicit evidence, and candidates are
-  enriched first when their profile facts are not already in the session.
+  rubric when the server supplies its policy-approved scoring projection. Every
+  credited match cites explicit evidence, and candidates are enriched first
+  when their profile facts are not already in the session.
 - Review and create an email campaign for selected candidates.
   Pluto reuses completed email enrichment, prepares only missing recipient
   emails, asks once between a saved template and custom content, then produces
@@ -211,17 +212,32 @@ one complete editable review and ask me to confirm that exact campaign.
   returned public founder background, but it never identifies non-founder
   members, verifies a personal relationship, or offers a warm-introduction
   path.
-- Rubric company preferences use explicit employment evidence. Preferred
-  matches add 10, 5, or 2 points at high, medium, or low priority. Avoided
-  matches set the rubric score to 0 at high priority and subtract 5 or 2 points
-  at medium or low. All soft company adjustments are summed and capped between
-  -10 and +10. Case-insensitive duplicates collapse to the strongest priority,
-  and Avoid wins when the same employer appears in both lists.
-- Saved-rubric scoring omits protected-trait free-form profile exclusions
-  before candidate evidence is evaluated. Omitted exclusions cannot affect a
-  score, risk, recommendation, or rejection. Legitimate requirements such as
-  United States residence and work authorization remain enforceable from
-  explicit evidence, and missing or ambiguous evidence remains unknown.
+- After server policy approval, rubric company preferences use explicit
+  employment evidence. Preferred matches add 10, 5, or 2 points at high,
+  medium, or low priority. Avoided matches set the rubric score to 0 at high
+  priority and subtract 5 or 2 points at medium or low. All soft company
+  adjustments are summed and capped between -10 and +10. Case-insensitive
+  duplicates collapse to the strongest priority, and Avoid wins when the same
+  employer appears in both lists. An unapproved company entry has no effect.
+- Rubric creation, replacement, and retrieval remain content-neutral through
+  existing normalization. Role context, criteria and evidence guides, scoring
+  notes, preferred and avoided company entries, and profile exclusions remain
+  stored and round-trippable without policy-based rejection, rewriting, or
+  omission.
+- Saved-rubric scoring treats every score-affecting item as unvalidated until
+  the server returns an affirmative professional-policy disposition or an
+  approved effective scorecard. Ineligible, review-required, ambiguous,
+  undisposed, or policy-resolution-failed content remains stored but is omitted
+  from scoring and cannot lower a score or recommendation. Structured company
+  entries, including high-priority vetoes, do not bypass this boundary.
+- A server-approved exclusion can set a score to zero only when the candidate
+  failure has a grounded exact excerpt from an identified permitted evidence
+  source. Missing, ambiguous, or ungrounded evidence remains unknown and never
+  becomes a zero.
+- Candidate MCP 4.21 `get_rubrics` currently returns raw stored content without
+  the server-approved scoring projection. Until the live server exposes that
+  projection, the connector reports no saved-rubric score instead of recreating
+  the policy judge client-side.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and saved rubrics without candidate credits; profile enrichment it triggers
   uses one credit per newly admitted URL. An exact retry uses no additional
