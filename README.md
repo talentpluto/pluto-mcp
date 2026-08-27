@@ -47,11 +47,12 @@ work with the retrieved leads directly in the conversation.
 - Cancel an existing outbound campaign after confirming the exact one,
   stopping its remaining scheduled emails.
 - Express interest in an in-network candidate for an active role.
-- Source candidates for an Ashby job when you also connect Ashby's MCP
-  server: Pluto compiles the job's requirements into a search, checks your
-  ATS before credits are spent, flags results already in your pipeline,
-  adds only the candidates you pick to the job in Ashby, and attaches an
-  evidence-backed sourcing note when you ask for one.
+- Source candidates from a job description, then use TalentPluto's stored,
+  allowlisted Ashby connection to prepare candidate creation, a public
+  top-level note, consideration for a job, or an application-stage change.
+  Each action shows a complete review and waits for a later explicit
+  confirmation; Pluto does not expose general Ashby reads or require a
+  separate Ashby MCP connection.
 - Check your organization's shared Pluto credit balance.
 
 ## How candidate search works
@@ -147,8 +148,9 @@ rubric.
 
 @pluto Give me a directional US market snapshot for engineering talent.
 
-@pluto Source candidates for my Ashby "Senior Account Executive" role and
-flag anyone already in my pipeline. (Requires your own Ashby MCP connection.)
+@pluto Source candidates from this Senior Account Executive job description,
+then prepare to add the candidates I select to my Ashby job:
+[paste the job description]
 
 @pluto How many Pluto credits does my organization have left?
 ```
