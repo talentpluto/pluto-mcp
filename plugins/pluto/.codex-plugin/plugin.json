@@ -1,7 +1,7 @@
 {
   "name": "pluto",
-  "version": "0.3.10",
-  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, small lookup of LinkedIn profiles, medium lookup with derived employment-company intelligence, heavy lookup adding cited public-web findings, client-shared candidate rubric creation and full-replacement editing with per-company preferences and priorities, candidate-to-Team DNA comparison, separate 0-100 candidate scoring against Team DNA, a supplied job description, or a loaded saved rubric when the server supplies a policy-approved professional scoring projection, outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, review-first Ashby candidate creation, public top-level notes, job consideration, and application-stage changes through TalentPluto's stored Ashby connection, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
+  "version": "0.3.11",
+  "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, small lookup of LinkedIn profiles, medium lookup with derived employment-company intelligence, heavy lookup adding cited public-web findings, client-shared candidate rubric creation and full-replacement editing with per-company preferences and priorities, candidate-to-Team DNA comparison, separate 0-100 candidate scoring against Team DNA, a supplied job description, or a loaded saved rubric when the server supplies a policy-approved professional scoring projection, outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, explicitly directed Ashby candidate creation, public top-level notes, job consideration, and application-stage changes through TalentPluto's stored Ashby connection, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
   },
@@ -50,7 +50,7 @@
   "interface": {
     "displayName": "Pluto",
     "shortDescription": "Use TalentPluto recruiting, rubric, outbound, and market tools.",
-    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with derived employment-company intelligence, full candidate enrichment adding cited public-web findings, client-shared candidate rubric creation and full-replacement editing with preferred and avoided company priorities, candidate-to-Team DNA comparison, separate 0-100 candidate scoring against Team DNA, a supplied job description, or a loaded saved rubric when the server supplies a policy-approved professional scoring projection, reviewable outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, confirmed campaign cancellation, review-first candidate creation, public notes, job consideration, and application-stage changes through TalentPluto's stored Ashby connection, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and consequential actions require explicit user direction.",
+    "longDescription": "Connect once to use TalentPluto's live recruiting, candidate-email enrichment, LinkedIn profile enrichment, deep candidate enrichment with derived employment-company intelligence, full candidate enrichment adding cited public-web findings, client-shared candidate rubric creation and full-replacement editing with preferred and avoided company priorities, candidate-to-Team DNA comparison, separate 0-100 candidate scoring against Team DNA, a supplied job description, or a loaded saved rubric when the server supplies a policy-approved professional scoring projection, reviewable outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, confirmed campaign cancellation, explicitly directed candidate creation, public notes, job consideration, and application-stage changes through TalentPluto's stored Ashby connection, and market-insight workflows in Codex. Pluto advertises its current tools and input contracts from its MCP server, and clear Ashby write requests execute without redundant confirmation turns.",
     "developerName": "Pluto",
     "category": "Productivity",
     "capabilities": [
@@ -70,7 +70,7 @@
       "How does the background of the candidate I supplied overlap with our Team DNA?",
       "Create or edit a candidate scoring rubric with preferred and avoided companies at high, medium, or low priority, show the complete proposed contents, and save only after I confirm the exact proposal.",
       "Score the candidate I selected against our Team DNA, this job description, or one of my saved rubrics.",
-      "Source candidates from this job description and prepare to add the ones I pick to my Ashby job.",
+      "Source candidates from this job description and add the ones I pick to my Ashby job.",
       "Create a campaign for the candidates I selected. Prepare any missing recipient emails, ask once whether I want a saved template or custom content, then show one complete editable review for confirmation.",
       "Cancel my outbound campaign for the payments role.",
       "Continue with the candidate and role I selected in Pluto."
