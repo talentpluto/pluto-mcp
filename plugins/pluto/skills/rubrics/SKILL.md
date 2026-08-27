@@ -47,15 +47,27 @@ Any confirmed policy-eligible hard exclusion sets the final rubric score to
 cannot offset it. Missing or ambiguous evidence remains unknown and causes no
 score change or exclusion.
 
-Normalize company names case-insensitively before review. Repeated entries in
-one list collapse to their strongest priority. If the same company appears in
-both lists, keep only the avoided entry at its strongest avoided priority.
-Never present or submit a company as both preferred and avoided.
+Compare company names case-insensitively when preparing a write. Repeated
+entries in one list collapse to their strongest priority. If the same company
+appears in both lists, keep only the avoided entry at its strongest avoided
+priority. These are canonical write results, not silent pre-review mutations.
+
+`create_rubric` and `update_rubric` apply that canonicalization on write. If it
+would collapse entries or remove a conflicting preferred entry, show the user
+the original entries and the exact canonical result, include that result in the
+complete proposal, and explicitly state what saving will remove. Obtain clear
+confirmation of that disclosed change as part of the latest complete proposal;
+an earlier or generic confirmation of an unrelated edit does not authorize an
+undisclosed cleanup. Until then, preserve the supplied draft or loaded rubric
+content unchanged and do not call either mutation. If the user declines, leave
+the rubric unchanged. Never submit a company as both preferred and avoided or
+hide a canonical removal from the user.
 
 Preserve the client's rubric content as written and confirmed. Do not reject a
 create or update, rewrite requested rubric text, or silently omit stored
 content. This preserves compatibility with existing rubrics and the current
-`create_rubric` and `update_rubric` schemas.
+`create_rubric` and `update_rubric` schemas. The disclosed company-conflict
+canonicalization above is the only exception, and only after confirmation.
 
 Before showing a draft or replacement, identify any free-form
 `profileExclusions` that select candidates by a protected trait or proxy, such

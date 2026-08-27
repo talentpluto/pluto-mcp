@@ -304,9 +304,11 @@ this free-form policy, including a company name such as Christian Dior.
 
 ### Evaluate eligible profile exclusions
 
-Add each high-priority `excludedCompanies` entry as a structured hard
-exclusion for confirmed prior employment. Then evaluate every remaining
-eligible free-form profile exclusion and structured hard exclusion:
+Match every `excludedCompanies` entry against all confirmed employment
+evidence, including the candidate's current employer and prior employers. Add
+each confirmed high-priority match as a structured hard exclusion. Then
+evaluate every remaining eligible free-form profile exclusion and structured
+hard exclusion:
 
 - `failed` only when explicit candidate evidence establishes the excluded
   condition or contradicts a stated requirement;
@@ -337,22 +339,26 @@ scoring notes. Use importance weights `core = 1`, `high = 0.8`,
 `medium = 0.6`, and `supporting = 0.4`. Exclude unknown criteria from both the
 numerator and denominator.
 
-Classify documented employment matches separately from criteria. Preferred
-companies add +10 at high priority, +5 at medium, or +2 at low. Excluded
-companies subtract 5 at medium or 2 at low; high-priority matches were already
-handled as hard exclusions. Sum the soft adjustments and cap their combined
-effect between -10 and +10. Missing or ambiguous employment evidence produces
-no adjustment.
+Classify documented employment matches separately from criteria. Match
+preferred companies and medium- or low-priority excluded companies against all
+confirmed employment evidence, including the candidate's current employer and
+prior employers. Preferred companies add +10 at high priority, +5 at medium,
+or +2 at low. Excluded companies subtract 5 at medium or 2 at low;
+high-priority matches were already handled as hard exclusions. Sum the soft
+adjustments and cap their combined effect between -10 and +10. Missing or
+ambiguous employment evidence produces no adjustment.
 
-If any policy-eligible profile exclusion failed, the final rubric score is
-`0/100`, even when no criteria are known; criterion strength and company
-adjustments cannot offset the hard exclusion. Explain the evidenced eligible
-exclusion, but do not turn the result into a rejection or hiring decision.
-Otherwise, if no criteria are known, report no score rather than zero. When
-criteria are known, calculate their weighted average divided by 5, multiply by
-100, round to the nearest integer, add the capped soft-company adjustment, and
-clamp the final result from 0 to 100. Always show known criteria out of total
-criteria and label coverage low when half or fewer are known.
+If any policy-eligible free-form profile exclusion failed or any structured
+hard exclusion from a high-priority `excludedCompanies` entry matched, force
+the final rubric score to `0/100`, even when no criteria are known. Criterion
+strength and every company adjustment are ignored and cannot offset that zero.
+Explain the evidenced eligible exclusion or structured company match, but do
+not turn the result into a rejection or hiring decision. Otherwise, if no
+criteria are known, report no score rather than zero. When criteria are known,
+calculate their weighted average divided by 5, multiply by 100, round to the
+nearest integer, add the capped soft-company adjustment, and clamp the final
+result from 0 to 100. Always show known criteria out of total criteria and label
+coverage low when half or fewer are known.
 
 Keep every active score separate. Never average, blend, or roll Team DNA, JD,
 or rubric scores into one composite, and never convert one into a letter grade,
@@ -382,9 +388,11 @@ Omit every inactive axis, line, and table. When Team DNA came back
 `insufficient_data`, state that in place of the number. For an active rubric,
 show the neutral count of policy-omitted profile exclusions, then the eligible
 failed, passed, and unknown outcomes before the criterion table. Do not list an
-omitted exclusion in those outcomes. When no rubric criteria are known and no
-eligible exclusion failed, render `<rubric name>: No score (0/<total> criteria
-known)` rather than zero. When an eligible exclusion failed, render `0/100`
+omitted exclusion in those outcomes. When no rubric criteria are known, no
+eligible free-form exclusion failed, and no high-priority structured
+excluded-company rule matched, render `<rubric name>: No score (0/<total>
+criteria known)` rather than zero. When an eligible free-form exclusion failed
+or a high-priority structured excluded-company rule matched, render `0/100`
 even with zero known criteria and cite the explicit evidence.
 
 Keep candidates in the user's stated order, or in returned order when they
