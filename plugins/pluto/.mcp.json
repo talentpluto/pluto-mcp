@@ -7,7 +7,8 @@
         "candidates:read",
         "candidates:outbound",
         "candidates:private_assess",
-        "offline_access"
+        "offline_access",
+        "ashby:candidates.write"
       ],
       "oauth_resource": "https://app.talentpluto.com/api/mcp",
       "http_headers": {
