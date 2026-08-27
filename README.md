@@ -28,14 +28,16 @@ work with the retrieved leads directly in the conversation.
   description or role requirements after a complete editable review. Saved
   rubric replacements are loaded first and never overwrite a newer revision.
   Preferred and avoided employers can each carry a high, medium, or low
-  priority.
+  priority. Stored free-form exclusions remain compatible; protected-trait
+  candidate selection is omitted before scoring without changing the saved
+  rubric.
 - Score selected candidates or supplied LinkedIn profiles from 0-100 against
   your company's stored Team DNA — shared prior companies, titles, seniority,
   locations, schools, recent-joiner patterns, founder backgrounds, and
   published hiring-preference signals — with a separate 0-100 match score
-  against your job description when you provide one. Every credited match
-  cites explicit evidence, and candidates are enriched first when their
-  profile facts are not already in the session.
+  against your job description when you provide one, or against a loaded saved
+  rubric. Every credited match cites explicit evidence, and candidates are
+  enriched first when their profile facts are not already in the session.
 - Review and create an email campaign for selected candidates.
   Pluto reuses completed email enrichment, prepares only missing recipient
   emails, asks once between a saved template and custom content, then produces
@@ -136,6 +138,9 @@ it created:
 criterion, then change Stripe from medium to high preferred priority. Show me
 the complete replacement before saving it.
 
+@pluto Score this selected candidate against my "Senior Backend Engineer"
+rubric.
+
 @pluto Score this candidate against our Team DNA and this job description:
 [paste one LinkedIn profile URL or select a returned candidate, plus the JD]
 
@@ -208,18 +213,23 @@ one complete editable review and ask me to confirm that exact campaign.
   path.
 - Rubric company preferences use explicit employment evidence. Preferred
   matches add 10, 5, or 2 points at high, medium, or low priority. Avoided
-  matches exclude at high priority and subtract 5 or 2 points at medium or low.
-  All soft company adjustments are summed and capped between -10 and +10.
-  Case-insensitive duplicates collapse to the strongest priority, and Avoid
-  wins when the same employer appears in both lists.
+  matches set the rubric score to 0 at high priority and subtract 5 or 2 points
+  at medium or low. All soft company adjustments are summed and capped between
+  -10 and +10. Case-insensitive duplicates collapse to the strongest priority,
+  and Avoid wins when the same employer appears in both lists.
+- Saved-rubric scoring omits protected-trait free-form profile exclusions
+  before candidate evidence is evaluated. Omitted exclusions cannot affect a
+  score, risk, recommendation, or rejection. Legitimate requirements such as
+  United States residence and work authorization remain enforceable from
+  explicit evidence, and missing or ambiguous evidence remains unknown.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
-  and uses no candidate credits; profile enrichment it triggers uses one
-  credit per newly admitted URL. An exact retry uses no additional credits.
-  Scores are separate 0-100 measures of
-  cited professional overlap — background familiarity with your team, and
-  evidence-verified match to your job description when you supply one — never a
-  culture-fit judgment, protected-trait proxy, or hiring decision, and
-  non-founder employees appear only as aggregate patterns.
+  and saved rubrics without candidate credits; profile enrichment it triggers
+  uses one credit per newly admitted URL. An exact retry uses no additional
+  credits. Scores are separate 0-100 measures of cited professional overlap —
+  background familiarity with your team and evidence-verified match to your job
+  description or saved rubric — never a culture-fit judgment, protected-trait
+  proxy, rejection, or hiring decision, and non-founder employees appear only
+  as aggregate patterns.
 - Connected-inbox campaigns are always one email per recipient. Pluto creates
   one Gmail draft per recipient in the selected authorized inbox belonging to
   the requester or a coworker after copy generation, and each draft is sent

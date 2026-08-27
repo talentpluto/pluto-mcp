@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate rubrics"
   short_description: "Create or update complete candidate rubrics"
-  default_prompt: "Use $rubrics to draft or edit one complete candidate rubric, including every preferred and avoided company with its high, medium, or low priority, show the full proposed contents for review, and save only after I confirm the exact proposal."
+  default_prompt: "Use $rubrics to draft or edit one complete candidate rubric, including every preferred and avoided company with its high, medium, or low priority, preserve every confirmed field, label any protected-trait free-form profile exclusion as stored but omitted from candidate scoring, show the full proposal, and save only after I confirm it."
 
 dependencies:
   tools:
