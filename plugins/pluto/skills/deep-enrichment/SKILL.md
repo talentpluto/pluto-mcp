@@ -223,8 +223,9 @@ candidate. A lone handle is not a usable pair.
 Medium lookup does not make a candidate campaign-eligible. A later campaign
 request must still follow `outbound-campaign`, use only an allowed audience,
 apply its separate address-eligibility checks, show the complete editable
-review, and receive explicit launch confirmation. Never launch or imply
-outreach from this enrichment result alone.
+review when requested or needed to resolve ambiguity, and preserve any clear
+campaign-creation intent without a redundant confirmation turn. Never launch
+or imply outreach from this enrichment result alone.
 
 Never expose request or operation IDs, opaque handles, internal storage or
 transport fields, phone numbers, private candidate fields, or external source

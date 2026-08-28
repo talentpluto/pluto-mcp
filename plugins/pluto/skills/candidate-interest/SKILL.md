@@ -20,8 +20,9 @@ campaign for selected candidates regardless of network status, use the
 `outbound-campaign` skill instead. That skill may run one email-enrichment batch
 as an explicitly requested campaign prerequisite for recipients without
 reusable completed results. It keeps returned addresses private unless the user
-also asks to receive them and still requires a separate exact campaign review
-before creation.
+also asks to receive them and preserves the user's explicit campaign-creation
+intent through enrichment; `outbound-campaign` asks whether to create only when
+that intent is unclear and otherwise asks only for the missing material choice.
 
 If the user asks for full public profile details for supplied LinkedIn
 profile URLs or selected candidates, rather than contact information, use the

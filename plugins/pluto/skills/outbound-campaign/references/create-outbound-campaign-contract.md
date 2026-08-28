@@ -14,12 +14,24 @@ and cancellation sections cover their respective tools.
   completed email-enrichment result. A legacy discovery pair can start the
   prerequisite enrichment operation but is not itself proof that email
   enrichment completed.
-- An explicit request to create, start, launch, or send a campaign authorizes
-  one prerequisite email-enrichment batch for the selected recipients who do
-  not already have reusable completed results. State the missing-recipient
-  count and maximum one shared organization credit per new lookup in a compact
-  progress update, then run the batch without another approval question unless
-  the user set a conflicting no-spend boundary.
+- An explicit request to create, make, start, launch, or send a campaign
+  authorizes both one campaign creation and one prerequisite email-enrichment
+  batch for selected recipients who do not already have reusable completed
+  results. State the missing-recipient count and maximum one shared
+  organization credit per new lookup in a compact progress update, then run the
+  batch without another approval question unless the user set a conflicting
+  no-spend boundary.
+- A clear create, make, start, launch, or send request remains the authorization
+  through prerequisite enrichment, required clarifications, user-authorized
+  audience corrections, template loading, and edits within the requested
+  campaign. Do not ask the user to reconfirm merely because settings or copy
+  were not displayed earlier. Ask whether to create only when creation intent is
+  genuinely ambiguous. When a required material detail remains unauthorized or
+  the assembled campaign materially differs from the request, ask one focused
+  material-choice question rather than another creation confirmation; once the
+  user authorizes that choice, continue under the existing creation intent. A
+  draft-only or review-only request ends with the requested artifact, not a
+  launch question.
 - A candidate presented by the current search surface carries no handles. Use
   the card's returned `profileUrl` only as the direct-URL input to prerequisite
   `enrich_email`; after completion, build the campaign from the newly minted
@@ -40,17 +52,19 @@ and cancellation sections cover their respective tools.
 - Successful enrichment handles may be used for campaign creation regardless
   of network status. Preserve the complete selected audience without asking
   the user to remove in-network candidates.
-- Every selected recipient must have a usable handle pair before the reviewed
+- Every selected recipient must have a usable handle pair before the campaign
   request can be built. If prerequisite enrichment does not return one for any
   item, no campaign-creation call occurs; relay only that item's displayed name
-  and safe outcome, and obtain a fresh complete review before creating a
-  changed audience. This handle-admission failure is distinct from the private
-  recipient-policy outcomes below.
+  and safe outcome, then ask whether to remove or replace only that recipient.
+  This is a necessary audience clarification, not a new creation confirmation.
+  A user-authorized changed audience preserves active creation intent. This
+  handle-admission failure is distinct from the private recipient-policy
+  outcomes below.
 - An account or login email may be visible in enrichment results but is never
   eligible for campaign delivery, even when independently validated.
 - Recipient-policy outcomes never block campaign creation. The server may
   privately retain a subset or zero recipients while still creating the
-  reviewed campaign. Never expose those omissions, report prepared counts, or
+  authorized campaign. Never expose those omissions, report prepared counts, or
   ask the user to revise or reconfirm the audience for that reason.
 - Ask before repeating a metered discovery or enrichment operation for an
   expired or missing handle.
@@ -73,13 +87,15 @@ exposes it. The input is empty and the result is read-only:
   and `updatedAt`; it deliberately excludes reusable copy and generation
   instructions.
 
-Use these values as editable prefill in the first complete review. If the user
-has not already chosen campaign content and templates are available, ask once
-whether to use one of the named templates or create custom content. Load only
-the template the user selects through `get_outbound_campaign_templates` with
-its private ID before using its exact `sequenceSettings`. A clearly matching
-template may be suggested first but is never selected automatically. The setup
-lookup never creates a campaign and does not require separate user approval.
+Use these values as editable prefill in the complete campaign definition. If
+the user has not already chosen campaign content and templates are available,
+ask once whether to use one of the named templates or create custom content.
+Load only the template the user selects through
+`get_outbound_campaign_templates` with its private ID before using its exact
+`sequenceSettings`. A clearly matching template may be suggested first but is
+never selected automatically. The setup lookup never creates a campaign and
+does not require separate user approval. Answering this necessary content
+question preserves any earlier explicit creation intent.
 
 ## Delivery mapping
 
@@ -114,8 +130,8 @@ setup context was unavailable or changed; the tool can then return
 selected, never omit its connection ID.
 
 Connected Gmail drafts are single-email only. If a saved template contains
-follow-ups, show the one-email version as a material change and obtain fresh
-confirmation, or use managed delivery. Never silently truncate a reviewed
+follow-ups, treat the one-email version as a material difference that must be
+authorized, or use managed delivery. Never silently truncate the defined
 sequence.
 
 Managed campaign copy uses the recruiting organization's perspective. Use
@@ -132,11 +148,11 @@ the user.
 ## Sequence mapping
 
 - `emailPriority` is optional. Use `work` or `personal` only for an explicit
-  reviewed override. Omit it to inherit the organization's Campaigns
+  override. Omit it to inherit the organization's Campaigns
   configuration, including when a loaded template omitted it. The selected
   verified type is tried first and the other verified type remains a fallback.
-  Changing this choice is a material edit that requires a complete fresh
-  review and launch confirmation.
+  An unrequested change is a material difference that must be authorized; a
+  requested change does not erase active creation intent.
 - `connected_inbox` requires `totalStepCount: 1` and `followUpDelays: []`.
   Omit `followUpTemplates` and `followUpSendTimes`, or pass them as empty
   arrays. The server rejects every multi-step connected-inbox campaign.
@@ -205,16 +221,17 @@ instructions.
 
 - Generate a fresh random UUID for the initial creation call.
 - Reuse it only for either:
-  - a `needs_sender` continuation after the user selects one returned sender,
-    reviews the updated campaign, and confirms again; or
+  - a `needs_sender` continuation after the user selects one returned sender;
+    when original creation intent remains active, give a compact updated
+    summary and retry without another creation confirmation; or
   - a user-directed retry of the exact unchanged campaign, including when the
     tool says to retry shortly with the same request ID.
 - Use a fresh UUID for another campaign or any material setup change outside
   the explicit sender continuation, including a recipient email-priority
   change.
 - Never automatically retry an ambiguous timeout or transport failure.
-- Call the tool once for each explicitly confirmed campaign. Do not merge
-  separate reviewed campaigns.
+- Call the tool once for each explicitly authorized campaign. Do not merge
+  separate campaign requests.
 - The prerequisite email-enrichment batch may use up to one shared
   organization credit for each recipient needing a new lookup. Campaign
   creation reuses every successful-enrichment disclosure without a second
@@ -249,12 +266,15 @@ instructions.
 - If the user did not already choose campaign content, present the available
   template names and custom content in one compact question. Custom content may
   be exact copy or instructions from the user, or Pluto-drafted copy from known
-  context. Choosing either path is not campaign-creation approval.
-- A loaded template is editable prefill, not campaign launch approval. Preserve
-  all loaded settings and preserve whether `emailPriority` is absent
-  (organization-default inheritance) or present (template override) until the
-  user reviews a change. Campaign creation receives the reviewed
-  `sequenceSettings`, never a `templateId`.
+  context. Choosing either path alone does not establish creation intent, but
+  it preserves an earlier explicit request to create the campaign.
+- A loaded template is editable prefill, not creation intent by itself. An
+  explicit request to create a campaign using that template authorizes the
+  exact loaded settings without a post-load confirmation. Preserve all loaded
+  settings and whether `emailPriority` is absent (organization-default
+  inheritance) or present (template override) until the user requests a
+  change. Campaign creation receives the defined `sequenceSettings`, never a
+  `templateId`.
 - A template stores reusable generation guidance, fixed copy, variable
   overrides, step count, cadence, optional send times, and optional email
   priority. It excludes recipients, handles, campaign name, delivery route,
