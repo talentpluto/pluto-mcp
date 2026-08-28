@@ -50,11 +50,14 @@ work with the retrieved leads directly in the conversation.
   stopping its remaining scheduled emails.
 - Express interest in an in-network candidate for an active role.
 - Source candidates from a job description, then use TalentPluto's stored,
-  allowlisted Ashby connection to prepare candidate creation, a public
-  top-level note, consideration for a job, or an application-stage change.
-  Each action shows a complete review and waits for a later explicit
-  confirmation; Pluto does not expose general Ashby reads or require a
-  separate Ashby MCP connection.
+  allowlisted Ashby connection for explicitly directed candidate creation,
+  public top-level notes, job consideration, or application-stage changes. A
+  LinkedIn-only create request automatically runs medium profile and email
+  enrichment, stores only an enriched work email as an alternate Ashby email,
+  adds a bounded public professional note, and can target one exact job and
+  stage. Clear requests complete the prepare and confirm protocol without a
+  redundant user confirmation. Pluto does not expose general Ashby reads or
+  require a separate Ashby MCP connection.
 - Check your organization's shared Pluto credit balance.
 
 ## How candidate search works
@@ -151,7 +154,8 @@ rubric.
 @pluto Give me a directional US market snapshot for engineering talent.
 
 @pluto Source candidates from this Senior Account Executive job description,
-then prepare to add the candidates I select to my Ashby job:
+then add the candidates I explicitly select to the exact Ashby job and stage I
+give you:
 [paste the job description]
 
 @pluto How many Pluto credits does my organization have left?

@@ -1,12 +1,12 @@
 ---
 name: ashby-sourcing
-description: Use when a user asks Pluto to source candidates and then create a candidate, add a public note, consider a candidate for a job, or change an application stage in Ashby. Uses TalentPluto's four explicitly directed Ashby actions through the organization's stored connection; no separate Ashby MCP connection is required or available for general reads.
+description: Use when a user asks Pluto to create an Ashby candidate, add a public note, consider a candidate for a job, or change an application stage. Covers LinkedIn-only server-enriched creation through TalentPluto's stored Ashby connection; do not use for generic Ashby reads.
 ---
 
 # Ashby sourcing with Pluto
 
 Use this skill for the four Ashby actions exposed by Candidate MCP server
-contract `4.26.0`:
+contract `4.28.0`:
 
 - `create_candidate`
 - `add_note_to_candidate`
@@ -44,12 +44,19 @@ current request already gives clear authorization.
    write. If it is `confirmation_required`, treat that status as requiring the
    protocol's confirm call, not another user confirmation. Compare every field
    in the returned `review` or ordered `reviews` with the current user's
-   instruction. One batch returns one aggregate confirmation token.
+   instruction. One batch returns one aggregate confirmation token. For a
+   LinkedIn-only creation, expect `linkedInUrl` and
+   `enrichment: medium_and_email`, plus the exact resolved job and stage when
+   supplied. The enrichment marker describes server-owned prerequisites, not a
+   new user decision.
 3. If the instruction clearly authorizes the resolved action and the review
    or all resolved batch items faithfully implement it, immediately call the
    same tool with an operation containing only `mode: confirm` and the returned
    aggregate `confirmationToken`. Do this in the same response without showing
-   an intermediate proposal or asking the user again.
+   an intermediate proposal or asking the user again. An explicit LinkedIn-only
+   create or add request remains authorization while the server performs its
+   required profile and email enrichment, work-email storage, and public note.
+   Do not ask again before or after those prerequisites resolve.
 4. Ask only when the request is ambiguous, a required material detail was not
    authorized, or the prepared review differs materially. Show every review
    field in that case. If the user changes a material detail, prepare again
@@ -62,12 +69,14 @@ current request already gives clear authorization.
 
 This applies equally to candidate creation, public notes, job consideration,
 and application-stage changes. Batch same-type actions together when the user
-explicitly selected up to 50 candidates. A clear request may also name several
-necessary action types: complete each separate batch's prepare, confirm, and
-poll cycle in sequence in the same response. For example, “add these people to
-this job in Ashby” authorizes candidate creation where needed and then job
-consideration; poll creation to completion and use each returned candidate ID
-for the second batch. Do not broaden that instruction to contact fields, a
+explicitly selected up to 50 candidates. The LinkedIn-only creation branch
+bundles its server-owned enrichment, bounded public note, and optional exact
+job placement inside `create_candidate`. Do not decompose that branch into
+separate `medium_lookup`, `enrich_email`, `add_note_to_candidate`, or
+`consider_candidate_for_job` calls. A name-backed candidate creation followed
+by job consideration still uses separate action batches: poll creation to
+completion, then use the returned candidate ID for consideration in the same
+response. Do not broaden either path to unrelated contact fields, another
 note, outreach, or another write the user did not request.
 
 A request ID is a private correlation value, not authorization to retry an
@@ -84,18 +93,57 @@ others.
 
 ### Create a candidate
 
-Each `create_candidate` item requires `name` and supports only `email`,
-`alternateEmailAddresses`, `phoneNumber`, `linkedInUrl`, `githubUrl`, and
-`website`. Copy only exact professional facts the user supplied or a
-materialized Pluto result returned. The prepare step checks duplicates for
-the supplied email addresses. This action creates a candidate; it does not
-update an existing record.
+`create_candidate` has two mutually exclusive item shapes.
+
+#### Name-backed creation
+
+Supply `name` and only the bounded professional fields the user explicitly
+authorized: `email`, `alternateEmailAddresses`, `phoneNumber`, `linkedInUrl`,
+`githubUrl`, and `website`. Do not include a job selector or `stageName` in this
+shape. Copy only exact professional facts the user supplied or a materialized
+Pluto result returned. The prepare step checks duplicates for supplied email
+addresses. This branch creates a candidate; it does not update an existing
+record. If the user also requested job consideration, complete that as a
+separate action after creation returns the candidate ID.
+
+Only include an email when the user explicitly asks to copy it, and never copy
+a personal address into the ATS.
+
+#### LinkedIn-only server-enriched creation
+
+When an explicit create or add request identifies a selected candidate only by
+LinkedIn URL, send `linkedInUrl` and omit `name`, `email`,
+`alternateEmailAddresses`, `phoneNumber`, `githubUrl`, and `website`. Do not
+prefill those fields from an earlier search result or run enrichment tools
+yourself. The item may also include exactly one authorized job selector —
+`jobId`, `jobRequisitionId`, or `jobTitle` — and optional `stageName`.
+`stageName` requires that one job selector.
+
+Prepare performs only Ashby reads. Its review marks
+`enrichment: medium_and_email` and may resolve an existing candidate plus the
+exact job and active target stage. When that review matches the user's request,
+confirm it immediately. The durable worker then:
+
+- runs the default medium professional-profile and email enrichment;
+- resolves one professional name;
+- stores at most one enriched work email in `alternateEmailAddresses`, never
+  as the primary email and never a personal address;
+- creates or reuses the exact Ashby candidate and adds one bounded public
+  professional note with notifications disabled; and
+- when requested, reuses or creates the application in the reviewed exact job
+  and active stage.
+
+An exact existing candidate may receive the missing work-email alternate and
+the bounded note, but this path cannot update arbitrary candidate fields. The
+LinkedIn and enriched work-email identities must reconcile to one candidate.
+Conflicting or duplicate candidates, an ambiguous job, or an existing
+application in another stage fail closed. Report that outcome; do not work
+around it with a name-backed duplicate, a guessed target, or a silent stage
+change.
 
 Do not write opaque Pluto handles, refs, tokens, operation identifiers,
 credit accounting, provider hints, network or membership status, private
-candidate answers, or inferred facts into Ashby. Only include an email when
-the user explicitly asks to copy it, and never copy a personal address into
-the ATS.
+candidate answers, or inferred facts into Ashby.
 
 ### Add a note
 
@@ -104,7 +152,8 @@ Each `add_note_to_candidate` item requires exactly one candidate selector,
 plain-text, top-level note with notifications disabled. It cannot create a
 private note or a threaded reply; Ashby's API exposes no reply parameter.
 Keep the note to exact professional facts the user authorized for the hiring
-team.
+team. Do not duplicate the bounded note that the LinkedIn-only creation branch
+adds automatically; use this action only for a distinct user-requested note.
 
 ### Consider a candidate for a job
 
@@ -122,10 +171,10 @@ prevents creating a duplicate application. Job consideration still requires
 an active stage; use `change_application_stage` for an explicit Hired or
 Archived transition.
 
-Creating a candidate and considering that candidate for a job are separate
-actions. When the user requested both, prepare and confirm candidate creation,
-then use the returned candidate identifier to prepare and confirm job
-consideration in the same response. Never bulk-export an unenumerated roster.
+Creating a name-backed candidate and considering that candidate for a job are
+separate actions. LinkedIn-only creation may instead bundle one exact job
+selector and optional `stageName`; do not run a second consideration action for
+that bundled target. Never bulk-export an unenumerated roster.
 
 ### Change an application stage
 

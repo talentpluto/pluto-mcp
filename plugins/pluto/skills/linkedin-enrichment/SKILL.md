@@ -11,7 +11,7 @@ facts — for LinkedIn profiles they explicitly supplied or explicitly
 selected. URL submission alone is not authorization. A profile being visible,
 shortlisted, or under discussion never authorizes a tool call.
 
-This skill was validated against server contract `4.27.0`. Contract `4.19.0`
+This skill was validated against server contract `4.28.0`. Contract `4.19.0`
 renames the three bundled profile packages to `small_lookup` (this
 route, one credit), `medium_lookup` (person plus employment-company
 package, three credits), and `heavy_lookup` (medium package plus cited
