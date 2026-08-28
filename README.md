@@ -39,11 +39,13 @@ work with the retrieved leads directly in the conversation.
   rubric when the server supplies its policy-approved scoring projection. Every
   credited match cites explicit evidence, and candidates are enriched first
   when their profile facts are not already in the session.
-- Review and create an email campaign for selected candidates.
+- Draft, review, or create an email campaign for selected candidates.
   Pluto reuses completed email enrichment, prepares only missing recipient
-  emails, asks once between a saved template and custom content, then produces
-  one complete editable review. Delivery can use Pluto-managed delivery or one
-  authorized Gmail inbox belonging to the requester or a coworker.
+  emails, and asks at most once between a saved template and custom content. A
+  clear creation request proceeds after a compact summary without another
+  confirmation turn; draft-only and review-only requests remain editable and
+  do not launch. Delivery can use Pluto-managed delivery or one authorized
+  Gmail inbox belonging to the requester or a coworker.
 - Cancel an existing outbound campaign after confirming the exact one,
   stopping its remaining scheduled emails.
 - Express interest in an in-network candidate for an active role.
@@ -70,8 +72,8 @@ work with the retrieved leads directly in the conversation.
    interest.
 
 Pluto does not change your pipeline or create a campaign from search results
-alone. Consequential actions require an explicit request and, where
-applicable, your review of the final setup.
+alone. Consequential actions require an explicit request; Pluto asks a focused
+question only when the requested action or a material detail is unclear.
 
 ## Install Pluto
 
@@ -161,8 +163,9 @@ After a search, select the relevant candidates before asking Pluto to continue:
 @pluto Get and verify the available emails for these candidates.
 
 @pluto Create a campaign for these candidates. Prepare any missing recipient
-emails, ask me once whether to use a saved template or custom content, then show
-one complete editable review and ask me to confirm that exact campaign.
+emails, ask me once whether to use a saved template or custom content if I have
+not already chosen, then create it without asking me to repeat or reconfirm
+this request.
 
 @pluto Express interest in this candidate for the Senior Engineer role.
 
