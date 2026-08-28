@@ -1,14 +1,15 @@
 ---
 name: ashby-sourcing
-description: Use when a user asks Pluto to create an Ashby candidate, add a public note, consider a candidate for a job, or change an application stage. Covers LinkedIn-only server-enriched creation through TalentPluto's stored Ashby connection; do not use for generic Ashby reads.
+description: Use when a user asks Pluto to create or update an Ashby candidate, add a public note, consider a candidate for a job, or change an application stage. Covers bounded review-first writes through TalentPluto's stored Ashby connection; do not use for generic Ashby reads.
 ---
 
 # Ashby sourcing with Pluto
 
-Use this skill for the four Ashby actions exposed by Candidate MCP server
-contract `4.28.0`:
+Use this skill for the five Ashby actions exposed by Candidate MCP server
+contract `4.29.0`:
 
 - `create_candidate`
+- `update_candidate`
 - `add_note_to_candidate`
 - `consider_candidate_for_job`
 - `change_application_stage`
@@ -48,7 +49,8 @@ current request already gives clear authorization.
    LinkedIn-only creation, expect `linkedInUrl` and
    `enrichment: medium_and_email`, plus the exact resolved job and stage when
    supplied. The enrichment marker describes server-owned prerequisites, not a
-   new user decision.
+   new user decision. For a candidate update, expect one exact resolved
+   candidate and only the new field values the user requested.
 3. If the instruction clearly authorizes the resolved action and the review
    or all resolved batch items faithfully implement it, immediately call the
    same tool with an operation containing only `mode: confirm` and the returned
@@ -67,17 +69,18 @@ current request already gives clear authorization.
    the user to wait, poll, or resend the request. A completed batch preserves
    input order and reports one terminal result for every item.
 
-This applies equally to candidate creation, public notes, job consideration,
-and application-stage changes. Batch same-type actions together when the user
-explicitly selected up to 50 candidates. The LinkedIn-only creation branch
-bundles its server-owned enrichment, bounded public note, and optional exact
-job placement inside `create_candidate`. Do not decompose that branch into
-separate `medium_lookup`, `enrich_email`, `add_note_to_candidate`, or
-`consider_candidate_for_job` calls. A name-backed candidate creation followed
-by job consideration still uses separate action batches: poll creation to
-completion, then use the returned candidate ID for consideration in the same
-response. Do not broaden either path to unrelated contact fields, another
-note, outreach, or another write the user did not request.
+This applies equally to candidate creation, candidate-field updates, public
+notes, job consideration, and application-stage changes. Batch same-type
+actions together when the user explicitly selected up to 50 candidates. The
+LinkedIn-only creation branch bundles its server-owned enrichment, bounded
+public note, and optional exact job placement inside `create_candidate`. Do not
+decompose that branch into separate `medium_lookup`, `enrich_email`,
+`add_note_to_candidate`, or `consider_candidate_for_job` calls. A name-backed
+candidate creation followed by job consideration still uses separate action
+batches: poll creation to completion, then use the returned candidate ID for
+consideration in the same response. Do not broaden any path to unrelated
+contact fields, another note, outreach, or another write the user did not
+request.
 
 A request ID is a private correlation value, not authorization to retry an
 ambiguous write. Report each item's `succeeded`, `already_satisfied`, `failed`,
@@ -144,6 +147,30 @@ change.
 Do not write opaque Pluto handles, refs, tokens, operation identifiers,
 credit accounting, provider hints, network or membership status, private
 candidate answers, or inferred facts into Ashby.
+
+### Update a candidate
+
+Each `update_candidate` item requires exactly one candidate selector —
+`candidateId` or the candidate's current `candidateEmail` — and at least one
+explicitly authorized new value: `name`, primary `email`, one
+`alternateEmail`, `phoneNumber`, `linkedInUrl`, `githubUrl`, or `website`.
+The primary and alternate email cannot be the same. Send only fields the user
+asked to change; omitted fields remain untouched. Do not fill fields from
+enrichment or copy a personal enriched address into Ashby.
+
+Prepare resolves one exact existing candidate and checks that every requested
+email and LinkedIn identity does not belong to another candidate. The review's
+resolved candidate and new values are authoritative. When they match a clear
+edit request, confirm in the same response without asking whether to make the
+changes. A missing candidate, ambiguous current email, or conflicting email or
+LinkedIn identity fails closed; do not create a duplicate or silently choose a
+different candidate.
+
+Ashby's public candidate API does not expose direct writes for the built-in
+Education or Experience sections. State that limitation accurately. Do not
+hide education or experience content in another candidate field or public note
+as a workaround unless the user separately and explicitly requests that exact
+supported write.
 
 ### Add a note
 

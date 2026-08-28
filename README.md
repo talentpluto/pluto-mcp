@@ -51,13 +51,17 @@ work with the retrieved leads directly in the conversation.
 - Express interest in an in-network candidate for an active role.
 - Source candidates from a job description, then use TalentPluto's stored,
   allowlisted Ashby connection for explicitly directed candidate creation,
-  public top-level notes, job consideration, or application-stage changes. A
-  LinkedIn-only create request automatically runs medium profile and email
-  enrichment, stores only an enriched work email as an alternate Ashby email,
-  adds a bounded public professional note, and can target one exact job and
-  stage. Clear requests complete the prepare and confirm protocol without a
-  redundant user confirmation. Pluto does not expose general Ashby reads or
-  require a separate Ashby MCP connection.
+  bounded candidate-field updates, public top-level notes, job consideration,
+  or application-stage changes. A LinkedIn-only create request automatically
+  runs medium profile and email enrichment, stores only an enriched work email
+  as an alternate Ashby email, adds a bounded public professional note, and can
+  target one exact job and stage. Existing candidates can be updated only for
+  explicitly requested name, primary email, one alternate email, phone,
+  LinkedIn, GitHub, or website fields. Ashby's public candidate API does not
+  expose direct Education or Experience writes. Clear requests complete the
+  prepare and confirm protocol without a redundant user confirmation. Pluto
+  does not expose general Ashby reads or require a separate Ashby MCP
+  connection.
 - Check your organization's shared Pluto credit balance.
 
 ## How candidate search works
@@ -157,6 +161,11 @@ rubric.
 then add the candidates I explicitly select to the exact Ashby job and stage I
 give you:
 [paste the job description]
+
+@pluto Update the existing Ashby candidate selected by their current email
+with this new professional email and LinkedIn URL. If the review matches these
+exact changes, make them without asking me to confirm again:
+[paste the current email, new email, and LinkedIn URL]
 
 @pluto How many Pluto credits does my organization have left?
 ```
