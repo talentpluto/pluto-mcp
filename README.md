@@ -51,17 +51,21 @@ work with the retrieved leads directly in the conversation.
 - Express interest in an in-network candidate for an active role.
 - Source candidates from a job description, then use TalentPluto's stored,
   allowlisted Ashby connection for explicitly directed candidate creation,
-  bounded candidate-field updates, public top-level notes, job consideration,
-  or application-stage changes. A LinkedIn-only create request automatically
+  bounded candidate-field updates, native PDF resume uploads, public top-level
+  notes, job consideration, or application-stage changes. A LinkedIn-only
+  create request automatically
   runs medium profile and email enrichment, stores only an enriched work email
   as an alternate Ashby email, adds a bounded public professional note, and can
   target one exact job and stage. Existing candidates can be updated only for
   explicitly requested name, primary email, one alternate email, phone,
   LinkedIn, GitHub, or website fields. Ashby's public candidate API does not
-  expose direct Education or Experience writes. Clear requests complete the
-  prepare and confirm protocol without a redundant user confirmation. Pluto
-  does not expose general Ashby reads or require a separate Ashby MCP
-  connection.
+  expose direct Education or Experience writes. An explicitly supplied PDF can
+  be uploaded for one exact existing candidate when it is available as a
+  short-lived public HTTPS URL; Ashby parses it and may populate missing fields,
+  but existing fields are not promised to be overwritten. Clear requests
+  complete the prepare and confirm protocol without a redundant user
+  confirmation. Pluto does not expose general Ashby reads or require a separate
+  Ashby MCP connection.
 - Check your organization's shared Pluto credit balance.
 
 ## How candidate search works
@@ -166,6 +170,11 @@ give you:
 with this new professional email and LinkedIn URL. If the review matches these
 exact changes, make them without asking me to confirm again:
 [paste the current email, new email, and LinkedIn URL]
+
+@pluto Upload this attached PDF resume to the existing Ashby candidate with
+this current email. If the attachment is available as a short-lived public
+HTTPS URL and the review resolves this exact candidate, complete the upload:
+[attach the PDF and paste the candidate's current email]
 
 @pluto How many Pluto credits does my organization have left?
 ```
