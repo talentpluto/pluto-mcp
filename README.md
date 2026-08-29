@@ -53,9 +53,10 @@ work with the retrieved leads directly in the conversation.
   allowlisted Ashby connection for explicitly directed candidate creation,
   bounded candidate-field updates, native PDF resume uploads, public top-level
   notes, job consideration, or application-stage changes. A LinkedIn-only
-  create request automatically
-  runs medium profile and email enrichment, stores only an enriched work email
-  as an alternate Ashby email, adds a bounded public professional note, and can
+  create request automatically runs medium profile and email enrichment,
+  selects the strongest returned work or personal email, fills an empty primary
+  Ashby email or adds a distinct alternate without replacing an existing
+  primary, keeps personal addresses out of the public enrichment note, and can
   target one exact job and stage. Existing candidates can be updated only for
   explicitly requested name, primary email, one alternate email, phone,
   LinkedIn, GitHub, or website fields. Ashby's public candidate API does not

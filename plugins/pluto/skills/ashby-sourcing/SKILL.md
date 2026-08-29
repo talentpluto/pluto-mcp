@@ -6,7 +6,7 @@ description: Use when a user asks Pluto to create or update an Ashby candidate, 
 # Ashby sourcing with Pluto
 
 Use this skill for one bounded Ashby job read and the six actions exposed by
-Candidate MCP server contract `4.31.0`:
+Candidate MCP server contract `4.31.1`:
 
 - `get_ashby_job_options`
 - `create_candidate`
@@ -81,8 +81,8 @@ current request already gives clear authorization.
    aggregate `confirmationToken`. Do this in the same response without showing
    an intermediate proposal or asking the user again. An explicit LinkedIn-only
    create or add request remains authorization while the server performs its
-   required profile and email enrichment, work-email storage, and public note.
-   Do not ask again before or after those prerequisites resolve.
+   required profile and email enrichment, selected-email storage, and public
+   note. Do not ask again before or after those prerequisites resolve.
 4. Ask only when the request is ambiguous, a required material detail was not
    authorized, or the prepared review differs materially. Show every review
    field in that case. If the user changes a material detail, prepare again
@@ -156,20 +156,22 @@ confirm it immediately. The durable worker then:
 
 - runs the default medium professional-profile and email enrichment;
 - resolves one professional name;
-- stores at most one enriched work email in `alternateEmailAddresses`, never
-  as the primary email and never a personal address;
+- selects the strongest returned work or personal email, populates the primary
+  Ashby email when it is empty, or preserves an existing primary and adds a
+  distinct selected email as an alternate;
 - creates or reuses the exact Ashby candidate and adds one bounded public
-  professional note with notifications disabled; and
+  professional note with notifications disabled, without including a personal
+  email address; and
 - when requested, reuses or creates the application in the reviewed exact job
   and active stage.
 
-An exact existing candidate may receive the missing work-email alternate and
-the bounded note, but this path cannot update arbitrary candidate fields. The
-LinkedIn and enriched work-email identities must reconcile to one candidate.
-Conflicting or duplicate candidates, an ambiguous job, or an existing
-application in another stage fail closed. Report that outcome; do not work
-around it with a name-backed duplicate, a guessed target, or a silent stage
-change.
+An exact existing candidate may receive a missing primary email or a distinct
+alternate plus the bounded note, but this path cannot update arbitrary
+candidate fields. The LinkedIn and selected enriched-email identities must
+reconcile to one candidate. Conflicting or duplicate candidates, an ambiguous
+job, or an existing application in another stage fail closed. Report that
+outcome; do not work around it with a name-backed duplicate, a guessed target,
+or a silent stage change.
 
 Do not write opaque Pluto handles, refs, tokens, operation identifiers,
 credit accounting, provider hints, network or membership status, private
