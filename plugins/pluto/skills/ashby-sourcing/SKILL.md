@@ -1,16 +1,17 @@
 ---
 name: ashby-sourcing
-description: Use when a user asks Pluto to create or update an Ashby candidate, add a public note, consider a candidate for a job, or change an application stage. Resolves natural role wording from bounded active Ashby job choices before review-first writes; it does not support generic Ashby browsing.
+description: Use when a user asks Pluto to create or update an Ashby candidate, upload a PDF resume, add a public note, consider a candidate for a job, or change an application stage. Resolves natural role wording from bounded active Ashby job choices before review-first writes; it does not support generic Ashby browsing.
 ---
 
 # Ashby sourcing with Pluto
 
-Use this skill for one bounded Ashby job read and the five actions exposed by
-Candidate MCP server contract `4.30.1`:
+Use this skill for one bounded Ashby job read and the six actions exposed by
+Candidate MCP server contract `4.31.0`:
 
 - `get_ashby_job_options`
 - `create_candidate`
 - `update_candidate`
+- `upload_candidate_resume`
 - `add_note_to_candidate`
 - `consider_candidate_for_job`
 - `change_application_stage`
@@ -92,18 +93,18 @@ current request already gives clear authorization.
    the user to wait, poll, or resend the request. A completed batch preserves
    input order and reports one terminal result for every item.
 
-This applies equally to candidate creation, candidate-field updates, public
-notes, job consideration, and application-stage changes. Batch same-type
-actions together when the user explicitly selected up to 50 candidates. The
-LinkedIn-only creation branch bundles its server-owned enrichment, bounded
-public note, and optional exact job placement inside `create_candidate`. Do not
-decompose that branch into separate `medium_lookup`, `enrich_email`,
-`add_note_to_candidate`, or `consider_candidate_for_job` calls. A name-backed
-candidate creation followed by job consideration still uses separate action
-batches: poll creation to completion, then use the returned candidate ID for
-consideration in the same response. Do not broaden any path to unrelated
-contact fields, another note, outreach, or another write the user did not
-request.
+This applies equally to candidate creation, candidate-field updates, PDF resume
+uploads, public notes, job consideration, and application-stage changes. Batch
+same-type actions together when the user explicitly selected up to 50
+candidates. The LinkedIn-only creation branch bundles its server-owned
+enrichment, bounded public note, and optional exact job placement inside
+`create_candidate`. Do not decompose that branch into separate `medium_lookup`,
+`enrich_email`, `add_note_to_candidate`, or `consider_candidate_for_job` calls.
+A name-backed candidate creation followed by job consideration still uses
+separate action batches: poll creation to completion, then use the returned
+candidate ID for consideration in the same response. Do not broaden any path
+to unrelated contact fields, another note, outreach, or another write the user
+did not request.
 
 A request ID is a private correlation value, not authorization to retry an
 ambiguous write. Report each item's `succeeded`, `already_satisfied`, `failed`,
@@ -197,6 +198,32 @@ Education or Experience sections. State that limitation accurately. Do not
 hide education or experience content in another candidate field or public note
 as a workaround unless the user separately and explicitly requests that exact
 supported write.
+
+### Upload a PDF resume
+
+Each `upload_candidate_resume` item requires exactly one candidate selector —
+`candidateId` or the candidate's current `candidateEmail` — plus a safe
+`resumeFilename` ending in `.pdf` and a short-lived public HTTPS `resumeUrl`.
+Use it only when the user explicitly asks to attach that specific PDF to that
+specific existing Ashby candidate. Never infer the candidate from the filename
+or reuse a file from another message or candidate.
+
+When a conversation attachment is available to the live tool as a short-lived
+public HTTPS URL, pass that exact URL and keep it private. The URL must remain
+usable until the durable operation finishes. If the host exposes only local
+bytes or a local path, this tool cannot receive them; do not invent, publish,
+or request a less secure URL as a workaround. The server accepts at most 10 MB,
+requires a PDF filename and PDF content, rejects redirects and non-public
+destinations, and never exposes the URL in its prepared review.
+
+Prepare resolves one exact existing candidate. Compare the resolved candidate
+and filename with the user's instruction, then confirm immediately when they
+match. The durable worker revalidates the candidate, downloads the bounded PDF,
+and calls Ashby's native resume upload endpoint. Ashby parses the document and
+may populate missing candidate fields. Do not claim that TalentPluto parsed the
+resume, promise which fields Ashby will populate, or promise that an existing
+field will be overwritten. For `outcome_unknown`, tell the user to check the
+candidate in Ashby and never upload the same PDF blindly again.
 
 ### Add a note
 
