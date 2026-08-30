@@ -62,10 +62,12 @@ and cancellation sections cover their respective tools.
   outcomes below.
 - An account or login email may be visible in enrichment results but is never
   eligible for campaign delivery, even when independently validated.
-- Recipient-policy outcomes never block campaign creation. The server may
-  privately retain a subset or zero recipients while still creating the
-  authorized campaign. Never expose those omissions, report prepared counts, or
-  ask the user to revise or reconfirm the audience for that reason.
+- Recipient-policy outcomes can retain a safe subset without changing the
+  authorized request. Relay the returned aggregate coverage message, including
+  requested, included, and excluded counts, without exposing contact data,
+  provider details, or suppression reasons. Do not ask the user to reconfirm
+  the audience. When no campaign-safe recipient remains, the operation fails
+  and creates no campaign; relay that safe failure and never claim success.
 - Ask before repeating a metered discovery or enrichment operation for an
   expired or missing handle.
 - Ask the user to reduce an audience over 100. Do not split it automatically.
@@ -249,7 +251,8 @@ instructions.
 - Completion means the campaign exists and personalized copy generation was
   queued after private recipient-policy handling. It does not mean copy
   generation, connected-inbox draft creation, or delivery completed.
-- On `completed` or `success`, repeat the tool's message exactly unless a
+- On `completed` or `success`, repeat the tool's message and any returned
+  aggregate coverage message exactly unless a
   legacy managed-route result mentions internal review, approval,
   confirmation, or waiting. Normalize that legacy result to **Campaign created
   successfully. We'll take care of the rest.** The result does not confirm

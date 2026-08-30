@@ -14,7 +14,7 @@ evidence, and ships with coverage. A score measures observed professional
 alignment, never candidate quality, culture fit, rejection, or a hiring
 decision.
 
-This skill was written against server contract `4.21.0`. The profile step uses
+This skill was written against server contract `4.31.4`. The profile step uses
 `small_lookup`. Prefer live tool names, schemas, and field descriptions when
 they differ. Saved-rubric persistence is content-neutral, while automated
 rubric scoring requires a separate server-approved professional-content
@@ -60,11 +60,15 @@ boundary.
 Before promising scores, confirm the tools required by the active axes. A Team
 DNA axis requires `get_team_dna`, whose live input schema must accept exactly
 one `department` enum. A named saved-rubric axis requires `get_rubrics` under
-the `rubrics` skill when a complete rubric is not already loaded or the user
-requests the latest revision. It also requires the live server result to carry
-a typed policy-approved scoring projection or affirmative professional-policy
-dispositions for every admitted rubric item. Raw stored rubric fields are not
-such a projection. When enrichment must run, also require `small_lookup` under
+the `rubrics` skill. For scoring, load the exact private `rubricId` with
+`includeScoringProjection: true` even when raw rubric content was loaded
+earlier; reuse a prior result only when it already carries the typed approved
+projection for that exact rubric revision. This scoring-only flag does not
+update the saved rubric or require another user confirmation. The result must
+carry a typed policy-approved scoring projection or affirmative
+professional-policy dispositions for every admitted rubric item. Raw stored
+rubric fields are not such a projection. When enrichment must run, also
+require `small_lookup` under
 the `linkedin-enrichment` skill's contract and the shared
 `get_operation_status` poll tool. Loading this skill does not prove that Pluto
 initialized or that the connected server matches the pinned contract.
@@ -316,13 +320,15 @@ out-of-range, or partially mapped dispositions. If policy resolution fails or
 the response cannot establish that complete mapping, the saved-rubric axis has
 no valid projection and must return `No score`; never salvage a partial score.
 
-The Candidate MCP 4.21 `get_rubrics` result returns raw stored rubric content
-without item-level policy dispositions or an effective scoring projection.
-When that remains true in the live schema and result, do not compute a
-saved-rubric score. Render `No score` and explain neutrally that a
-server-approved scoring projection was unavailable. Continue only with another
-independently requested axis. Do not run a connector-side policy classifier or
-infer approval from the rubric text.
+Candidate MCP `get_rubrics` supports an opt-in approved projection for one
+exact rubric. Always request that scoring view with the private `rubricId` and
+`includeScoringProjection: true`; never treat a summary-list result or a raw
+load without that flag as the scoring response. If the live schema does not
+accept the flag, or the flagged result still contains no valid projection, do
+not compute a saved-rubric score. Render `No score` and explain neutrally that
+a server-approved scoring projection was unavailable. Continue only with
+another independently requested axis. Do not run a connector-side policy
+classifier or infer approval from the rubric text.
 
 This is a scoring-only boundary. `create_rubric`, `update_rubric`, and
 `get_rubrics` preserve the rubric through existing normalization regardless of

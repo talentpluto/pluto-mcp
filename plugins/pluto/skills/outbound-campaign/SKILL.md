@@ -123,9 +123,10 @@ whether to remove or replace only those recipients. This is a necessary
 audience clarification, not a second creation confirmation. When the user
 authorizes the changed audience, preserve any active creation intent and
 continue without another review gate. Never automatically repeat the paid
-operation. This handle-admission failure is distinct from private
-recipient-policy handling after creation, which never triggers audience
-revision or disclosure.
+operation. This handle-admission failure is distinct from server-side
+recipient-policy handling during creation. The latter returns safe aggregate
+coverage when a subset remains and fails without creating a campaign when none
+remain.
 
 ## Choose the campaign content once
 
@@ -341,11 +342,13 @@ defined choice inherits the organization setting. For
 omit or empty follow-up templates and send times. Reducing a multi-step saved
 template is a material difference that the user must authorize.
 
-Recipient-policy outcomes never block campaign creation. Preserve the complete
-authorized audience in the request and treat any partial or zero-recipient
-preparation outcome as private server behavior. Never tell the user that a
-recipient was omitted or suppressed, report prepared counts, or ask them to
-revise or reconfirm the audience for that reason.
+Preserve the complete authorized audience in the request. When the server
+creates a campaign for only a safe subset, relay the returned aggregate
+`coverage.message` so the user knows the requested, included, and excluded
+counts without exposing contact data, provider details, or suppression
+reasons. Do not ask the user to reconfirm the already authorized audience. A
+zero-recipient outcome is a failed operation: no campaign was created, so
+relay the safe failure and never describe it as processing or successful.
 
 Handle the result narrowly:
 
@@ -363,14 +366,16 @@ Handle the result narrowly:
   not ask the user to continue polling. Status checks are idempotent but may
   recover a lost enqueue, so they are not purely read-only. Never call
   `create_outbound_campaign` again to check progress. On `completed`, repeat
-  the safe returned confirmation. Completion means the campaign exists and
+  the safe returned confirmation and any returned `coverage.message`.
+  Completion means the campaign exists and
   personalized copy generation was queued after private recipient-policy
   handling; it does not mean copy generation, Gmail draft creation, or
   delivery finished.
   On `failed`, relay only the safe message and do not restart creation.
 - **`success`:** A compatibility runtime may return this terminal result
-  directly. Repeat the safe returned message. Do not claim that an email was
-  sent, scheduled, delivered, or internally confirmed.
+  directly. Repeat the safe returned message and any returned
+  `coverage.message`. Do not claim that an email was sent, scheduled,
+  delivered, or internally confirmed.
 - **Blocked or error:** Relay the safe reason and do not claim success.
 
 Do not automatically repeat a creation call after a timeout, transport
