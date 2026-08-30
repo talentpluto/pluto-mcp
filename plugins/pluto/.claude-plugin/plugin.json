@@ -1,6 +1,6 @@
 {
   "name": "pluto",
-  "version": "0.3.18",
+  "version": "0.3.19",
   "description": "Use TalentPluto's live recruiting workflows, privacy-filtered candidate discovery, bulk candidate work-email enrichment, small lookup of LinkedIn profiles, medium lookup with derived employment-company intelligence, heavy lookup adding cited public-web findings, client-shared candidate rubric creation and full-replacement editing with per-company preferences and priorities, candidate-to-Team DNA comparison, separate 0-100 candidate scoring against Team DNA, a supplied job description, or a loaded saved rubric when the server supplies a policy-approved professional scoring projection, outbound campaigns using an authorized Gmail inbox belonging to the requester or a coworker, or Pluto-managed delivery, explicitly directed Ashby candidate creation, bounded candidate-field updates, native PDF resume uploads, active-job choice resolution, public top-level notes, job consideration, and application-stage changes for up to 50 candidates per action through TalentPluto's stored Ashby connection, and privacy-thresholded market snapshots through a stable, authenticated Pluto connection.",
   "author": {
     "name": "Pluto"
