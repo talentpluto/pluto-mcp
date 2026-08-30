@@ -11,7 +11,7 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
-This skill is aligned through Candidate MCP server contract `4.20.0`.
+This skill is aligned through Candidate MCP server contract `4.32.0`.
 Every typed OR-list field publishes the same generous 256-value ceiling, and
 one complete spec may contain at most 256 list values in total. Preserve every
 value the user supplies instead of taking only the first N. Contract `4.14.3`
@@ -23,7 +23,10 @@ funding-recency fields, the `4.12.0` search-time `verifyBudget` flow, the
 `memberContext` block. Contract `4.19.0` renames the bundled profile
 packages to `small_lookup`, `medium_lookup`, and `heavy_lookup`.
 Contract `4.20.0` adds `network.membership` so a spec can require or
-prefer confirmed TalentPluto members.
+prefer confirmed TalentPluto members. Contract `4.32.0` lets a well-specified
+request skip preview, returns coverage and `planHash` from `search_people`,
+propagates the request deadline through federated retrieval, and adds
+first-class GitHub contribution and scholarly-publication predicates.
 
 If the user asks one supported private question about one explicitly selected
 in-network candidate, use the `candidate-question` skill instead. Never add a
@@ -62,7 +65,8 @@ Treat any bounded, public, professional people-search criterion as searchable
 through Pluto: roles and past roles, employers and past employers, company
 attributes (stage, size, funding, industry), schools and degrees, spoken
 languages, certifications, professional locations, experience bounds, OSS
-signals, confirmed TalentPluto membership, exclusions, and grouped logic.
+signals, public code contributions, scholarly publications, confirmed
+TalentPluto membership, exclusions, and grouped logic.
 
 Block direct people-search requests that use demographics or sensitive
 personal traits, compensation, work authorization or sponsorship, desired
@@ -89,11 +93,13 @@ people all live in that session and never survive outside it.
    it first. The server pins the exact company identity (domain) and
    discloses name ties; pinned identities inject into later specs so identity
    never degrades to name matching.
-2. **`preview_search`** (free) — compile the typed spec. Read the returned
-   counts, `planHash`, `notes`, and the per-predicate coverage report before
-   spending anything. Iterate the spec here — previews are free.
+2. **`preview_search`** (free and optional) — use this planning loop when
+   counts, unsupported predicates, or plan review could change the request.
+   Read the returned counts, `planHash`, `notes`, and per-predicate coverage.
+   A well-specified request may skip preview and call `search_people` directly.
 3. **`search_people`** (free; requires a positive organization balance and
-   provider-spend admission) — execute with the reviewed `planHash`. The
+   provider-spend admission) — execute with the reviewed `planHash` when a
+   preview was needed, or directly with the complete typed spec. The
    server fans out across its sources, merges people by identity, drops rows
    that decidably violate a required criterion, screens out the caller's own
    employees, and returns compact cards with opaque refs and decided
@@ -105,7 +111,8 @@ people all live in that session and never survive outside it.
    block reports credits spent, people enriched, and why verification stopped.
    Auto-verification and `enrich_person` share the same per-session, per-ref
    billing ledger, so a later manual enrichment of the same ref is not billed
-   again.
+   again. When the user wants results now, pass `presentTop` to collapse the
+   usual retrieval-plus-materialization flow into this same call.
 4. **`enrich_person`** (1 organization credit per person, never re-billed
    for the same ref in a session) — fetch one person's verified work and
    education history and re-verify them against the originating spec. This is
@@ -154,6 +161,18 @@ user's required-versus-preferred wording: `required` gates membership,
   required location is enough to bound an open-market search ("Pluto
   members in NYC") without a title. Do not send an unbounded members-only
   spec.
+- Public code evidence is the `github` block. Use `minStars` and `languages`
+  for owned-repository popularity/language asks. Use `repositories`,
+  `minCommits`, `minContributedRepositories`, `minMergedPullRequests`, and
+  `activeWithinMonths` for personal contribution asks. Never translate
+  contribution quality into stars: stars describe repository popularity, not
+  the person's collaboration. Required contribution evidence can define the
+  cited web-evidence lane without a title or employer anchor.
+- Scholarly evidence is the `publications` block: `topics`, `venues`,
+  `minPublications`, `minCitations`, `publishedWithinYears`, and literal
+  `authorPosition` (`any`, `first`, or `last`). Required publication evidence
+  can define the cited web-evidence lane. Treat its approximate coverage and
+  public citation as bounded evidence, never an exhaustive author index.
 - `semanticQuery` is plain-prose retrieval flavor only: boolean syntax is not
   parsed, and nothing stated there is ever gated or verified. Anything that
   must be true belongs in a field.
