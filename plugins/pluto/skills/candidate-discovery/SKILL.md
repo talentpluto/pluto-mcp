@@ -167,12 +167,17 @@ user's required-versus-preferred wording: `required` gates membership,
   `activeWithinMonths` for personal contribution asks. Never translate
   contribution quality into stars: stars describe repository popularity, not
   the person's collaboration. Required contribution evidence can define the
-  cited web-evidence lane without a title or employer anchor.
+  cited web-evidence lane without a title or employer anchor. The server binds
+  each returned citation to one opaque candidate ref through an exact LinkedIn
+  identity match. It still reports the predicate as `undecidable`: treat the
+  cited person as an unverified lead, not a contribution match.
 - Scholarly evidence is the `publications` block: `topics`, `venues`,
   `minPublications`, `minCitations`, `publishedWithinYears`, and literal
   `authorPosition` (`any`, `first`, or `last`). Required publication evidence
-  can define the cited web-evidence lane. Treat its approximate coverage and
-  public citation as bounded evidence, never an exhaustive author index.
+  can define the cited web-evidence lane. The server binds each citation to one
+  opaque candidate ref, but the predicate remains `undecidable` until a source
+  independently verifies every requested publication constraint. Treat it as
+  bounded discovery evidence, never a verified or exhaustive author index.
 - `semanticQuery` is plain-prose retrieval flavor only: boolean syntax is not
   parsed, and nothing stated there is ever gated or verified. Anything that
   must be true belongs in a field.
@@ -193,8 +198,10 @@ authoritative statement of enforcement:
 - `native` — compiled into the source query and enforced there (fidelity
   `exact` or `approximate`).
 - `post_filter` — decided by the server from returned fields after retrieval.
-- `undecidable` — NOT enforced at retrieval; rows are kept and only
-  `enrich_person` can decide it. A required-but-undecidable criterion means
+- `undecidable` — NOT enforced at retrieval; rows are kept and enrichment may
+  decide it when the needed professional fields are available. GitHub and
+  publication discovery citations remain unknown until a dedicated source
+  verifies their full predicate. A required-but-undecidable criterion means
   returned people are candidates for verification, not matches.
 - `unsupported` — no source in this plan can address it; disclosed, never
   guessed.

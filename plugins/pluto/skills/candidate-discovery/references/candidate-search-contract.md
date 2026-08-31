@@ -153,10 +153,12 @@ verified.
 
 Coverage statuses per predicate: `native` (compiled into the source query,
 fidelity exact or approximate), `post_filter` (decided from returned fields),
-`undecidable` (kept at retrieval; only enrichment can decide),
-`unsupported` (no capable source in this plan). Compile `notes` disclose
-fidelity hazards (loose word matching, counts that read high, fallback
-behavior).
+`undecidable` (kept at retrieval; enrichment may decide when it returns the
+needed professional fields), `unsupported` (no capable source in this plan).
+GitHub and publication web discoveries are identity-bound to an opaque ref by
+exact LinkedIn URL, but remain `undecidable` until a dedicated source verifies
+every constraint in the predicate. Compile `notes` disclose fidelity hazards
+(loose word matching, counts that read high, fallback behavior).
 
 Verdict statuses per person per predicate: `verified` (field evidence, cited),
 `violated` (decidable contradiction — the row drops at retrieval or is
