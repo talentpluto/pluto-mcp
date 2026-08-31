@@ -1,6 +1,6 @@
 # Candidate search contract
 
-Aligned through server contract `4.20.0`. Contract `4.14.2` removes the narrow
+Aligned through server contract `4.32.0`. Contract `4.14.2` removes the narrow
 field-specific item-count caps from typed candidate-search OR lists and
 preserves every supplied value through preview and retrieval compilation.
 Contract `4.14.3` publishes the same 256-value ceiling on every list, applies
@@ -13,11 +13,15 @@ Contract `4.18.1` adds optional `presentTop` on `search_people`. Contracts
 member cards. Contract `4.19.0` renames the bundled profile packages to
 `small_lookup`, `medium_lookup`, and `heavy_lookup`. Contract `4.20.0`
 adds `network.membership` so a spec can require or prefer confirmed
-TalentPluto members. When the live server reports a newer version, behaviors
-here may be incomplete; prefer the live tool descriptions and schema field
-descriptions on any conflict. If the live catalog exposes the retired
-bundled search operation instead of these tools, the server predates the
-granular contract: follow that live tool's own description and do not
+TalentPluto members. Contract `4.32.0` makes preview optional for a
+well-specified request, returns coverage plus `planHash` from `search_people`,
+and adds first-class GitHub contribution and scholarly-publication predicates
+on the cited evidence lane. When the live
+server reports a newer version, behaviors here may be incomplete; prefer the
+live tool descriptions and schema field descriptions on any conflict. If the
+live catalog exposes the retired bundled search operation instead of these
+tools, the server predates the granular contract: follow that live tool's own
+description and do not
 simulate the toolbox on top of it.
 
 ## Purpose
@@ -35,21 +39,24 @@ safety screening, session state (refs, cursors, budgets, presented people),
 and credit reservation and settlement.
 
 The connected agent owns: decomposing the recruiter request into a faithful
-typed spec, iterating it through free previews, deciding whom to verify with
-enrichment, choosing what to materialize, and honest presentation.
+typed spec, using free previews when plan review matters, deciding whom to
+verify with enrichment, choosing what to materialize, and honest presentation.
 
 ## Tools
 
 - `resolve_company` (free) — pins a named employer to an exact identity;
   discloses exact-name ties; pinned identities auto-inject into later specs.
-- `preview_search` (free) — compiles a spec; returns counts (with basis),
-  `planHash`, compile `notes`, and the per-predicate coverage report.
+- `preview_search` (free and optional) — compiles a spec; returns counts (with
+  basis), `planHash`, compile `notes`, and the per-predicate coverage report.
+  Use it when counts or plan review could change the request.
 - `search_people` (free; requires a positive organization balance and
   provider-spend admission) — executes a compiled plan. Returns compact cards
   (name, title, company, location, startedAt, opaque `ref`, decided `verdicts`)
-  plus `laneOutcomes`, filtered/withheld counts, an optional `nextCursor`, and
-  a session `recap`. Pass `planHash` from the reviewed preview; pass `cursor`
-  to page deeper without refetching held people. Optional `presentTop` is
+  plus the same coverage report and `planHash`, `laneOutcomes`,
+  filtered/withheld counts, an optional `nextCursor`, and a session `recap`.
+  A well-specified request may call this directly; pass `planHash` when a
+  preview was run and must be pinned. Pass `cursor` to page deeper without
+  refetching held people. Optional `presentTop` is
   an integer from 1 to 25: after retrieval the server materializes the
   top N returned cards in the same call, through the identical safety
   re-screen, session dedupe, and per-person billing as
@@ -99,8 +106,9 @@ rejected with the valid values named. Lane-defining blocks (at least one):
 `company` (current-employer cohort: stages, industries, size, funding, age,
 backing investors, deal recency, description keywords, lookalike `similarTo`),
 `namedPeople`, required `titles` or `department` (the anchor-less open-market
-lane), required `location` with `network.membership` `member`, or
-`semanticQuery`. Membership alone does not define a lane.
+lane), `achievement`, required `github` evidence, required `publications`,
+required `location` with `network.membership` `member`, or `semanticQuery`.
+Membership alone does not define a lane.
 
 Inside `company`, `investors` is a nonempty array of user-supplied investor
 firm names. Every named investor is required (AND semantics); an investor that
@@ -117,8 +125,11 @@ confirmed TalentPluto members, `preferred` ranks them first without
 dropping public profiles), `experience` (min/max total years, years in
 current role, recent-joiner window), `schools`, `education` (degrees,
 fields of study), `languages`, `certifications`, `keywords`, `github`
-(languages, stars), `signals` (leftCompanyWithinMonths, openToWork,
-profileUpdatedWithinMonths), `pastEmployers` (named companies,
+(languages, stars, repositories, minimum commits, minimum contributed
+repositories, minimum merged pull requests, and contribution recency),
+`publications` (topics, venues, minimum matching works, citations, publication
+recency, and literal author position), `signals` (leftCompanyWithinMonths,
+openToWork, profileUpdatedWithinMonths), `pastEmployers` (named companies,
 cross-scope AND), `pastCompany` (stage or description keywords of SOME
 past employer; when past-scope titles are also required the SAME stint
 must match both; attributes are as of TODAY, not as of the stint), and
@@ -142,10 +153,12 @@ verified.
 
 Coverage statuses per predicate: `native` (compiled into the source query,
 fidelity exact or approximate), `post_filter` (decided from returned fields),
-`undecidable` (kept at retrieval; only enrichment can decide),
-`unsupported` (no capable source in this plan). Compile `notes` disclose
-fidelity hazards (loose word matching, counts that read high, fallback
-behavior).
+`undecidable` (kept at retrieval; enrichment may decide when it returns the
+needed professional fields), `unsupported` (no capable source in this plan).
+GitHub and publication web discoveries are identity-bound to an opaque ref by
+exact LinkedIn URL, but remain `undecidable` until a dedicated source verifies
+every constraint in the predicate. Compile `notes` disclose fidelity hazards
+(loose word matching, counts that read high, fallback behavior).
 
 Verdict statuses per person per predicate: `verified` (field evidence, cited),
 `violated` (decidable contradiction — the row drops at retrieval or is
