@@ -272,12 +272,15 @@ this request.
   compatible inline server scores. Larger or multi-source selections use one
   read-only `score_rubric_candidates` operation for up to 200 profiles across
   up to 10 completed lookups, polled through `get_operation_status`. The
-  scoring operation does not start another profile lookup, and the connector
-  never recomputes, ranks, or drops returned per-candidate results. Unknown and
-  provisional criteria remain visible in possible full-rubric bounds but have
-  no synthetic score; all-unknown evidence produces no overall score. Evidence
-  adequacy, evidence coverage, rubric coverage, prerequisites, eligibility,
-  and recommendation remain separate server-returned dimensions.
+  server serializes these scoring jobs, evaluates sequential waves of up to 20
+  candidates, and retries invalid criterion coverage through its bounded judge
+  fallback before recording a candidate as failed. The operation does not
+  start another profile lookup, and the connector never recomputes, ranks,
+  retries, or drops returned per-candidate results. Unknown and provisional
+  criteria remain visible in possible full-rubric bounds but have no synthetic
+  score; all-unknown evidence produces no overall score. Evidence adequacy,
+  evidence coverage, rubric coverage, prerequisites, eligibility, and
+  recommendation remain separate server-returned dimensions.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and saved rubrics without candidate credits; profile enrichment it triggers
   uses one credit per newly admitted URL. An exact retry uses no additional
