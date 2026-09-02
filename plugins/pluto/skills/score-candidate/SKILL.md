@@ -16,13 +16,14 @@ evidence coverage, rubric coverage, and evidence adequacy separately. Every
 score measures observed professional alignment, never candidate quality,
 culture fit, rejection, or a hiring decision.
 
-This skill was written against server contract `4.36.0`. The profile step uses
-`small_lookup`. Prefer live tool names, schemas, and field descriptions when
-they differ. Saved-rubric persistence is content-neutral, while automated
-rubric scoring is server-owned: the server resolves one approved professional
-projection and returns the `candidateScores`. The server is authoritative;
-never recompute its policy judgment, criterion assessments, aggregation,
-eligibility, uncertainty bounds, or recommendation.
+This skill was written against server contract `4.36.0` and reviewed against
+patch `4.36.1`. The profile step uses `small_lookup`. Prefer live tool names,
+schemas, and field descriptions when they differ. Saved-rubric persistence is
+content-neutral, while automated rubric scoring is server-owned: the server
+resolves one approved professional projection and returns the
+`candidateScores`. The server is authoritative; never recompute its policy
+judgment, criterion assessments, aggregation, eligibility, uncertainty bounds,
+or recommendation.
 
 ## Keep neighboring requests on their own routes
 
@@ -367,6 +368,11 @@ Reuse that scoring `requestId` only for an exact retry of the same rubric,
 ordered source IDs, and optional ordered URL selection. If any of those change,
 generate a new UUID. Never split, parallelize, or fan out the scoring work in
 the host.
+
+The server serializes durable scoring jobs and evaluates sequential waves of
+up to 20 candidates. It rejects invalid criterion coverage inside its bounded
+judge fallback chain before recording a candidate as failed. This recovery is
+server-owned; never add host-side retries or parallel scoring operations.
 
 The start result may already be terminal. While it is `queued` or `running`,
 keep its opaque `operationId` private, wait at least `retryAfterMs`, and call
