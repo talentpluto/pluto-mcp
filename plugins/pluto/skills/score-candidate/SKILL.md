@@ -1,6 +1,6 @@
 ---
 name: score-candidate
-description: Use when a user explicitly asks Pluto to score, grade, rate, or assess explicitly identified candidates against their company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches candidates when needed, loads only requested scoring context, and returns separate evidence-cited 0-100 scores with coverage and unknowns. For saved rubrics, treats every score-affecting item as unvalidated unless the server returns an affirmative professional-policy disposition, omits every unapproved item, and permits a zero only for an approved exclusion with grounded exact-source evidence. Never presents a score as a culture-fit judgment, protected-trait proxy, rejection, or hiring decision.
+description: Use when a user explicitly asks Pluto to score, grade, rate, or assess explicitly identified candidates against their company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches candidates when needed and returns separate evidence-cited 0-100 scores with coverage and unknowns. For saved rubrics, uses compatible inline server scoring for at most 10 profiles from one completed small_lookup or one durable read-only operation for up to 200 profiles across up to 10 completed lookups, preserving requested order and per-candidate failures without recomputing server results. Never presents a score as a culture-fit judgment, protected-trait proxy, rejection, or hiring decision.
 ---
 
 # Score candidate
@@ -9,17 +9,19 @@ Use this skill when the user explicitly asks Pluto to score one or more
 specific candidates. Return one separate 0-100 score for each active axis —
 Team DNA alignment, job-description match, or a loaded saved rubric — when
 sufficient scoreable evidence exists, or report that no score is available.
-Each score follows the transparent method below, credits only cited explicit
-evidence, and ships with coverage. A score measures observed professional
+Team DNA and JD scores follow the transparent methods below and credit only
+cited explicit evidence. Saved-rubric scores come from the server, keep unknown
+criteria visible under its documented conservative prior, and report weighted
+evidence coverage separately. Every score measures observed professional
 alignment, never candidate quality, culture fit, rejection, or a hiring
 decision.
 
-This skill was written against server contract `4.31.4`. The profile step uses
+This skill was written against server contract `4.33.0`. The profile step uses
 `small_lookup`. Prefer live tool names, schemas, and field descriptions when
 they differ. Saved-rubric persistence is content-neutral, while automated
-rubric scoring requires a separate server-approved professional-content
-projection. Never substitute connector-side policy judgment for that server
-boundary.
+rubric scoring is server-owned: the server resolves the approved professional
+projection and returns the candidate scores. Never substitute connector-side
+policy judgment or arithmetic for that server boundary.
 
 ## Keep neighboring requests on their own routes
 
@@ -59,30 +61,36 @@ boundary.
 
 Before promising scores, confirm the tools required by the active axes. A Team
 DNA axis requires `get_team_dna`, whose live input schema must accept exactly
-one `department` enum. A named saved-rubric axis requires `get_rubrics` under
-the `rubrics` skill. For scoring, load the exact private `rubricId` with
-`includeScoringProjection: true` even when raw rubric content was loaded
-earlier; reuse a prior result only when it already carries the typed approved
-projection for that exact rubric revision. This scoring-only flag does not
-update the saved rubric or require another user confirmation. The result must
-carry a typed policy-approved scoring projection or affirmative
-professional-policy dispositions for every admitted rubric item. Raw stored
-rubric fields are not such a projection. When enrichment must run, also
-require `small_lookup` under
-the `linkedin-enrichment` skill's contract and the shared
-`get_operation_status` poll tool. Loading this skill does not prove that Pluto
-initialized or that the connected server matches the pinned contract.
+one `department` enum. Any named saved-rubric axis requires `get_rubrics` under
+the `rubrics` skill to resolve the exact private `rubricId`, plus completed
+`small_lookup` profile operations. Require the shared `get_operation_status`
+poll tool when a profile lookup must run or the durable scoring path is active.
+
+For one to 10 selected profiles from one completed `small_lookup`, keep the
+compatible inline path. The live `get_rubrics` schema must accept the exact
+`rubricId`, `includeScoringProjection: true`, that completed
+`candidateOperationId`, and an optional ordered `candidateLinkedinUrls`
+subset, and its result must carry server-computed `candidateScores`.
+
+For 11 to 200 profiles, or whenever the selected profiles require more than
+one completed source operation, require `score_rubric_candidates`. Its live
+schema must accept one exact `rubricId`, one to 10 ordered unique
+`candidateOperationIds`, one private UUID `requestId`, and an optional ordered
+selection of at most 200 unique `candidateLinkedinUrls`. The tool must be
+read-only and return one durable operation. Loading this skill does not prove
+that Pluto initialized or that the connected server matches the pinned
+contract.
 
 If a required tool is absent or its schema differs, follow the
 `connection-recovery` skill. If recovery does not expose what the request
 needs, report which part of scoring is unavailable; continue only with other
-independently requested axes whose contracts are complete. In particular, when
-`get_rubrics` returns only raw stored content, render the saved-rubric axis as
-`No score` because the server-approved projection is unavailable. A present
-raw-only `get_rubrics` tool is not a connection failure and does not justify an
-upgrade, reinstall, logout, or reconnect. Do not substitute a connector-side
-semantic classification, a team description recalled from memory, another data
-source, or web search.
+independently requested axes whose contracts are complete. A present
+`get_rubrics` tool that cannot return inline `candidateScores` is not a
+connection failure. For bulk work, never replace a missing
+`score_rubric_candidates` tool with many inline calls. Do not recommend an
+upgrade, reinstall, logout, or reconnect for either mismatch, and do not
+substitute connector-side rubric scoring, a team description recalled from
+memory, another data source, or web search.
 
 ## Gate the request and fix the inputs
 
@@ -134,12 +142,13 @@ resume or profile text — and reuse those facts without a new operation.
 Otherwise, when the candidate has a usable LinkedIn URL — one the user
 supplied, or the visible public URL of a returned candidate the user
 explicitly identified for scoring — run the `linkedin-enrichment` skill's
-async contract before scoring: one `profiles` batch covering every
-candidate in the request that needs enrichment, one private top-level UUID
-`requestId`, one call to `small_lookup`, then unchanged-ID
-`get_operation_status` polling through completion or failure and result
-validation exactly as that skill specifies. Never derive a URL from an opaque
-handle or guess one from a name.
+async contract before scoring. Use one ordered `profiles` batch when at most
+100 candidates need lookup. For a saved-rubric request of 101 to 200 profiles,
+use the fewest non-overlapping ordered batches allowed by that contract. Each
+batch gets one private top-level UUID `requestId`, one call to `small_lookup`,
+then unchanged-ID `get_operation_status` polling through completion or failure
+and result validation exactly as that skill specifies. Never derive a URL from
+an opaque handle or guess one from a name.
 Server-side freshness is automatic (a profile fetched within the last 3 months
 is reused internally). A newly admitted profile-enrichment operation uses one
 shared organization candidate credit per submitted URL. An exact retry uses
@@ -147,18 +156,26 @@ no additional credits; the `linkedin-enrichment` skill pins that admitted total.
 
 Handle enrichment outcomes per candidate:
 
-- `enriched`: score from the returned profile facts, plus any facts the
-  user pasted.
-- `not_found`: say so plainly. If the user pasted usable professional
-  facts for that candidate, score from those; otherwise report that there
-  is no evidence to score for that candidate and continue with the rest.
-  Never substitute a different person or invent a placeholder profile.
+- `enriched`: score Team DNA and JD axes from the returned profile facts plus
+  any facts the user pasted. For a saved-rubric axis, retain the completed
+  source operation for server scoring; pasted facts are not added to that
+  server snapshot.
+- `not_found`: say so plainly. If the user pasted usable professional facts
+  for that candidate, Team DNA and JD axes may score from those facts;
+  saved-rubric server scoring may not. Otherwise report that there is no
+  evidence to score for that candidate and continue with the rest. Never
+  substitute a different person or invent a placeholder profile.
 
 Search-returned candidates with rich public fields may be scored from
-those fields directly when they cover the dimensions below; enrich when
-the visible card is thin and a URL is available. A fact that is not
-present on the candidate side stays unknown; never fill an evidence gap
-from memory, another profile, or web search.
+those fields directly for Team DNA or JD axes when they cover the dimensions
+below; enrich when the visible card is thin and a URL is available. A
+saved-rubric axis still requires the candidate's successfully enriched profile
+inside a completed `small_lookup`. Reuse a completed operation from this
+conversation when its exact private ID remains available and it covers the
+selected profile; otherwise run the lookup. Keep the source operations
+non-overlapping. A fact that is not present on the candidate side stays
+unknown; never fill an evidence gap from memory, another profile, or web
+search.
 
 ## Read the Team DNA
 
@@ -287,130 +304,91 @@ earn nothing, and unverified items are listed with the score as the
 screening agenda — a low score with many unverified items means thin
 evidence, not a rejected candidate; say which it is.
 
-## Compute the saved-rubric score
+## Run server-owned saved-rubric scoring
 
 When the saved-rubric axis is active, preserve the complete loaded rubric
-unchanged. Build an ephemeral scoring view only from content carrying an
-affirmative server-returned professional-policy disposition. Do not update,
-normalize, rewrite, or reclassify the stored rubric as part of scoring.
+unchanged and keep its `rubricId` private. Raw rubric content never authorizes
+connector-side scoring. Only the server-returned `candidateScores` are scoring
+results; do not inspect raw fields to recreate the professional-policy
+projection, evaluate exclusions, assign criterion scores, or calculate a
+total.
 
-### Require the server-approved scoring projection first
+Use only successfully enriched profiles from completed `small_lookup`
+operations. Put source operation IDs in the order their profiles should appear.
+If the user supplied an explicit order, or the source operations contain other
+profiles, pass the exact selected normalized LinkedIn URLs in that order. Never
+submit overlapping source operations, duplicate URLs, a `not_found` URL, more
+than 10 source operations, or more than 200 selected profiles.
+If the user selects more than 200 profiles, ask them to choose at most 200;
+never split one scoring request into multiple durable or inline operations.
 
-Before looking at candidate evidence, treat every score-affecting item in the
-loaded rubric as unvalidated:
+### Keep the compatible inline path for at most 10 profiles
 
-- `roleContext`;
-- each criterion together with its evidence guide and importance;
-- `scoringNotes` or equivalent guidance;
-- each `preferredCompanies` entry, including its company string and priority;
-- each `excludedCompanies` entry, including high-priority vetoes; and
-- each `profileExclusions` entry.
+When one completed `small_lookup` covers all one to 10 scoreable profiles, call
+`get_rubrics` once with:
 
-An item may enter scoring only when the live server response affirmatively
-marks that exact item eligible for professional scoring or includes it in a
-typed policy-approved effective scorecard. A structured field, plausible
-employer name, familiar requirement, or the assistant's own semantic judgment
-is never approval. A server disposition of `ineligible` or `review_required`, a
-missing or malformed disposition, or policy-resolution failure leaves the item
-unvalidated and omitted.
+```yaml
+rubricId: <the exact private rubric ID>
+includeScoringProjection: true
+candidateOperationId: <the unchanged completed small_lookup operation ID>
+candidateLinkedinUrls: <ordered subset; omit only when the source contains exactly the selected profiles in the desired order>
+```
 
-Require the server response to prove a complete, unambiguous mapping between
-the loaded items and the approved projection. Do not accept duplicate,
-out-of-range, or partially mapped dispositions. If policy resolution fails or
-the response cannot establish that complete mapping, the saved-rubric axis has
-no valid projection and must return `No score`; never salvage a partial score.
+The result must have `status: found`, an approved scoring projection, and one
+server-computed `candidateScores` item per submitted profile in the requested
+order. If those results are absent or malformed, render the affected rubric
+scores as `No score` and explain that server scoring was unavailable. Never
+fall back to raw rubric content or connector-side arithmetic.
 
-Candidate MCP `get_rubrics` supports an opt-in approved projection for one
-exact rubric. Always request that scoring view with the private `rubricId` and
-`includeScoringProjection: true`; never treat a summary-list result or a raw
-load without that flag as the scoring response. If the live schema does not
-accept the flag, or the flagged result still contains no valid projection, do
-not compute a saved-rubric score. Render `No score` and explain neutrally that
-a server-approved scoring projection was unavailable. Continue only with
-another independently requested axis. Do not run a connector-side policy
-classifier or infer approval from the rubric text.
+### Use one durable operation for larger or multi-source work
 
-This is a scoring-only boundary. `create_rubric`, `update_rubric`, and
-`get_rubrics` preserve the rubric through existing normalization regardless of
-policy disposition. Omitted, ambiguous, or unvalidated content must not appear
-as candidate evidence, a criterion, context, guidance, a company signal, an
-exclusion outcome, a risk, a weakness, a score explanation, a weak-fit
-recommendation, or a rejection. Use only server-returned aggregate omission
-counts when available; do not repeat omitted text or invent item-level labels.
+For 11 to 200 scoreable profiles, or any valid selection spanning multiple
+completed source operations, do not preload the scoring projection. Use
+`get_rubrics` only to list or load the exact saved rubric and retain its private
+`rubricId`, then call `score_rubric_candidates` once with:
 
-Legitimate professional requirements such as United States residence, work
-authorization, or Irish market experience can enter scoring after affirmative
-server approval. Actual employer names in either company list require the same
-approval and do not bypass this boundary because their container is structured.
+```yaml
+rubricId: <the exact private rubric ID>
+candidateOperationIds: <one to 10 unique completed small_lookup IDs in source order>
+candidateLinkedinUrls: <ordered selection; omit only when every source profile is selected in source order>
+requestId: <one fresh private UUID for this exact rubric, source list, and selection>
+```
 
-### Evaluate approved profile exclusions
+Reuse that scoring `requestId` only for an exact retry of the same rubric,
+ordered source IDs, and optional ordered URL selection. If any of those change,
+generate a new UUID. Never split, parallelize, or fan out the scoring work in
+the host.
 
-Evaluate only profile exclusions in the server-approved projection, including
-approved high-priority `excludedCompanies` vetoes. Match an approved company
-rule against all confirmed employment evidence, including the candidate's
-current employer and prior employers. Classify each approved exclusion as:
+The start result may already be terminal. While it is `queued` or `running`,
+keep its opaque `operationId` private, wait at least `retryAfterMs`, and call
+`get_operation_status` with only that exact unchanged ID and no cursor. Every
+poll must echo the same ID and report `operationType: rubric_scoring`; follow
+returned timing and progress until `completed` or `failed` without asking the
+user to poll. A lost queue acknowledgement may be recovered only by the exact
+same scoring request and `requestId`.
 
-- `failed` only when one short exact excerpt from an identified permitted
-  candidate-evidence source directly establishes the excluded condition or
-  contradicts the requirement;
-- `passed` only when explicit candidate evidence establishes compliance; and
-- `unknown` when evidence is missing, ambiguous, inferred, paraphrased without
-  a groundable source excerpt, or otherwise ungrounded.
+On `completed`, require `candidateScores` in source or explicit selection
+order. Keep every item, including `scoringStatus: failed`; a failed candidate
+does not turn the completed operation into an overall failure and must not be
+retried or dropped. On operation-level `failed`, relay the safe returned
+message and stop only the saved-rubric axis; do not replace it with inline
+fan-out.
 
-For a failure, quote the exact contiguous source excerpt and identify its
-source. Verify that the excerpt appears in the supplied resume, public
-professional profile, or other evidence already permitted by this workflow.
-Without that grounding, change an attempted failure to `unknown`; it cannot
-produce a hard zero. Do not infer residence, work authorization, employment, or
-another condition from silence or a proxy. A bounded `candidate-question`
-answer remains separate and cannot be folded into the score.
+Present each returned numeric score, nullable score, recommendation,
+`knownCriteriaCount`, `totalCriteriaCount`, `evidenceCoverage`, summary, risks,
+failed and unknown profile exclusions, criterion scores, rationales, and proof
+points exactly as the server returned them. Never recompute, re-rank, average,
+or reinterpret them. Unknown criteria remain visibly unknown and the server's
+conservative prior is already included in its total; weighted evidence
+coverage remains a separate measure. Merge any unscoreable `not_found`
+candidates back into the final response in the user's original order as
+`No score`.
 
-### Score approved criteria and company signals
-
-Score only criteria included in the server-approved projection. Use approved
-role context and scoring guidance only when the server includes them in that
-projection. Score each approved criterion independently as:
-
-- `5` — exceptional direct evidence;
-- `4` — strong direct evidence;
-- `3` — meets the evidence guide;
-- `2` — partial evidence;
-- `1` — weak adjacent evidence;
-- `0` — explicit contradictory evidence; or
-- `unknown` — insufficient candidate evidence either way.
-
-Cite the exact candidate fact behind every numeric score and apply only approved
-scoring notes. Use importance weights `core = 1`, `high = 0.8`, `medium = 0.6`,
-and `supporting = 0.4`. Exclude unknown criteria from both the numerator and
-denominator. Policy-omitted criteria never enter either one.
-
-Classify approved company signals separately from criteria. Match only approved
-preferred companies and medium- or low-priority excluded companies against all
-confirmed employment evidence, including the candidate's current employer and
-prior employers. Preferred companies add +10 at high priority, +5 at medium,
-or +2 at low. Excluded companies subtract 5 at medium or 2 at low;
-server-approved high-priority matches were already handled as exclusions. Sum
-the soft adjustments and cap their combined effect between -10 and +10.
-Unapproved company entries and missing or ambiguous employment evidence produce
-no adjustment.
-
-If any server-approved exclusion has a grounded `failed` outcome, force the
-final rubric score to `0/100`, even when no approved criteria are known.
-Criterion strength and every company adjustment are ignored and cannot offset
-that zero. Explain the approved exclusion using the grounded exact source
-excerpt, but do not turn the result into a rejection or hiring decision.
-
-Otherwise, if no approved criteria are known, report no score rather than zero.
-When approved criteria are known, calculate their weighted average divided by
-5, multiply by 100, round to the nearest integer, add the capped approved soft
-company adjustment, and clamp the final result from 0 to 100. Always show known
-approved criteria out of total approved criteria and label coverage low when
-half or fewer are known. Ineligible, review-required, ambiguous, unvalidated,
-or ungrounded content never lowers the score or changes a recommendation.
-
-Keep every active score separate. Never average, blend, or roll Team DNA, JD,
-or rubric scores into one composite, and never convert one into a letter grade,
-tier, recommendation, rejection, or verdict.
+Keep every active axis separate. Never average or roll Team DNA, JD, or rubric
+scores into one composite. Do not invent a letter grade, tier, recommendation,
+rejection, or verdict; a server-returned rubric recommendation may be shown
+only as that rubric's professional-alignment output, never as a hiring
+decision.
 
 ## Present the scorecard
 
@@ -420,7 +398,7 @@ returned sample bounds. Otherwise lead with the exact JD or saved-rubric name
 in use. Then present one scorecard per candidate, scores first:
 
 ```markdown
-**<Candidate name> — Team DNA: <n>/100 (scored <k> of 8 dimensions) · JD match: <m>/100 (<met>/<total> requirements met, <u> unverified) · <rubric name>: [<r>/100 | No score] (<known>/<total> criteria known)**
+**<Candidate name> — Team DNA: <n>/100 (scored <k> of 8 dimensions) · JD match: <m>/100 (<met>/<total> requirements met, <u> unverified) · <rubric name>: [<r>/100 | No score] (<known>/<total> criteria known; evidence coverage <c>% | unavailable)**
 
 | Team DNA dimension | Alignment | Evidence |
 | --- | --- | --- |
@@ -428,36 +406,35 @@ in use. Then present one scorecard per candidate, scores first:
 | Requirement | Weight | Status | Evidence |
 | --- | --- | --- | --- |
 
-| Rubric criterion | Importance | Score | Evidence |
+| Rubric criterion | Weight | Server score | Rationale and proof points |
 | --- | --- | --- | --- |
 ```
 
 Omit every inactive axis, line, and table. When Team DNA came back
 `insufficient_data`, state that in place of the number. For an active rubric,
-render `<rubric name>: No score (server-approved scoring projection
-unavailable)` when only raw stored rubric content was returned. Do not show a
-criterion table or exclusion outcome from raw content.
+render the returned numeric score and recommendation when present. Render
+`No score` for a returned null score, `scoringStatus: failed`, a `not_found`
+profile, or unavailable server scoring, using the corresponding safe returned
+summary or message. Do not show a criterion table or exclusion outcome from raw
+rubric content.
 
-When the server did return an approved projection, show its aggregate omitted
-profile-exclusion and other scorecard-content counts when provided, then the
-approved failed, passed, and unknown exclusion outcomes before the approved
-criterion table. Do not list omitted content in those outcomes. When no
-approved rubric criteria are known and no approved exclusion has a grounded
-failure, render `<rubric name>: No score (0/<total> approved criteria known)`
-rather than zero. Render `0/100` with zero known criteria only when an approved
-exclusion failed with a grounded exact source excerpt; cite that excerpt and
-its source.
+Show returned failed and unknown profile exclusions before the returned
+criterion table. Keep nullable criterion scores visibly unknown, and show
+`evidenceCoverage` separately from the score rather than treating it as a
+confidence multiplier. Do not expose private rubric, request, source-operation,
+or scoring-operation IDs.
 
 Keep candidates in the user's stated order, or in returned order when they
 came from one Pluto search; a server-judged roster keeps its returned order and
 tiers, and these scores do not re-tier it. When the user asks which candidate
-scored highest, answer with the computed numbers and their coverage
-differences, framed as observed alignment, never as a hiring recommendation or
-proof one candidate is better.
+scored highest, answer with the Team DNA or JD numbers you computed and the
+rubric numbers the server returned, alongside their coverage differences.
+Frame the comparison as observed alignment, never as a hiring recommendation
+or proof one candidate is better.
 
-Close each scorecard with unknown dimensions, unverified requirements, unknown
-approved rubric criteria, and unknown approved exclusions framed as open
-screening questions rather than weaknesses.
+Close each scorecard with unknown dimensions, unverified requirements, and
+server-returned unknown rubric criteria or exclusions framed as open screening
+questions rather than weaknesses.
 
 ## Keep the privacy boundary
 

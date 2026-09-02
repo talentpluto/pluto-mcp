@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate scoring"
   short_description: "Score candidates against Team DNA, a JD, or a rubric"
-  default_prompt: "Use $score-candidate to score the explicitly identified candidates against the requested Team DNA, job description, or saved rubric; use only a server-approved rubric scoring projection, return no rubric score when it is absent, and permit zero only for an approved exclusion backed by a grounded exact source excerpt."
+  default_prompt: "Use $score-candidate to score the explicitly identified candidates against the requested Team DNA, job description, or saved rubric; for a saved rubric, keep at most 10 profiles from one completed small_lookup on compatible inline get_rubrics scoring, route larger or multi-source work through one score_rubric_candidates operation for up to 200 profiles, poll its unchanged operationId, preserve requested order and per-candidate failures, and present every server score without recomputing it."
 
 dependencies:
   tools:

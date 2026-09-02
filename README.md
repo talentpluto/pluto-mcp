@@ -36,9 +36,12 @@ work with the retrieved leads directly in the conversation.
   locations, schools, recent-joiner patterns, founder backgrounds, and
   published hiring-preference signals — with a separate 0-100 match score
   against your job description when you provide one, or against a loaded saved
-  rubric when the server supplies its policy-approved scoring projection. Every
-  credited match cites explicit evidence, and candidates are enriched first
-  when their profile facts are not already in the session.
+  rubric through server-owned scoring. Saved-rubric scoring stays inline for at
+  most 10 profiles from one completed small lookup and uses one durable
+  operation for up to 200 profiles across up to 10 completed lookups. Every
+  credited match cites explicit evidence, candidates are enriched first when
+  needed, and durable results preserve requested order and per-candidate
+  failures.
 - Draft, review, or create an email campaign for selected candidates.
   Pluto reuses completed email enrichment, prepares only missing recipient
   emails, and asks at most once between a saved template and custom content. A
@@ -262,10 +265,15 @@ this request.
   failure has a grounded exact excerpt from an identified permitted evidence
   source. Missing, ambiguous, or ungrounded evidence remains unknown and never
   becomes a zero.
-- Candidate MCP 4.21 `get_rubrics` currently returns raw stored content without
-  the server-approved scoring projection. Until the live server exposes that
-  projection, the connector reports no saved-rubric score instead of recreating
-  the policy judge client-side.
+- Saved-rubric scoring reuses completed `small_lookup` profile snapshots. For
+  at most 10 profiles from one completed lookup, `get_rubrics` returns the
+  compatible inline server scores. Larger or multi-source selections use one
+  read-only `score_rubric_candidates` operation for up to 200 profiles across
+  up to 10 completed lookups, polled through `get_operation_status`. The
+  scoring operation does not start another profile lookup, and the connector
+  never recomputes or drops returned per-candidate results. Unknown approved
+  criteria remain visible and use the server's conservative 2/5 prior in the
+  total while weighted evidence coverage stays separate.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and saved rubrics without candidate credits; profile enrichment it triggers
   uses one credit per newly admitted URL. An exact retry uses no additional
