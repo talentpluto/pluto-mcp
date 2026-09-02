@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate rubrics"
   short_description: "Create or update complete candidate rubrics"
-  default_prompt: "Use $rubrics to draft or edit one complete candidate rubric, including every preferred and avoided company with its high, medium, or low priority, preserve every confirmed field through existing normalization, explain that automated scoring uses only server-approved professional content, show the full proposal, and save only after I confirm it."
+  default_prompt: "Use $rubrics to draft or edit one complete candidate rubric, including every preferred and avoided company with its high, medium, or low priority and every criterion's type, evidence-source minimum, optional prerequisite minimum, and criterion-specific score anchors. Preserve complete loaded criterion metadata through existing normalization, explain that company lists are informational context only and automated scoring uses only a server-approved professional projection, show the full proposal, and save only after I confirm it."
 
 dependencies:
   tools:
