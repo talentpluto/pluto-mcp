@@ -1,6 +1,8 @@
 # Candidate search contract
 
-Aligned through server contract `4.32.0`. Contract `4.14.2` removes the narrow
+Aligned through server contract `4.32.4`. Contract `4.32.4` bounds the
+member-suggestion rail and every provider timeout by the call deadline, so
+`memberSuggestions` are best-effort. Contract `4.14.2` removes the narrow
 field-specific item-count caps from typed candidate-search OR lists and
 preserves every supplied value through preview and retrieval compilation.
 Contract `4.14.3` publishes the same 256-value ceiling on every list, applies
@@ -70,7 +72,8 @@ verify with enrichment, choosing what to materialize, and honest presentation.
   ledger as `enrich_person`, so later manual enrichment of an auto-verified ref
   is not re-billed. Cards for accepted talent-network members carry
   `network: "member"` plus `memberContext`. First pages may also carry
-  `memberSuggestions`.
+  `memberSuggestions`; the rail is best-effort and bounded by the call
+  deadline, so their absence never signals an error.
 - `enrich_person` — verifies one ref's work and education history and
   re-verifies the originating spec, returning `updatedVerdicts` and
   cross-verified fields. Bills 1 organization credit per person; an exact

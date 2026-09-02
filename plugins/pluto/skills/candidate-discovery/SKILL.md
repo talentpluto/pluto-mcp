@@ -11,7 +11,7 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
-This skill is aligned through Candidate MCP server contract `4.32.0`.
+This skill is aligned through Candidate MCP server contract `4.32.4`.
 Every typed OR-list field publishes the same generous 256-value ceiling, and
 one complete spec may contain at most 256 list values in total. Preserve every
 value the user supplies instead of taking only the first N. Contract `4.14.3`
@@ -27,6 +27,9 @@ prefer confirmed TalentPluto members. Contract `4.32.0` lets a well-specified
 request skip preview, returns coverage and `planHash` from `search_people`,
 propagates the request deadline through federated retrieval, and adds
 first-class GitHub contribution and scholarly-publication predicates.
+Contract `4.32.4` bounds the member-suggestion rail and every provider
+timeout by the call deadline, so first-page `memberSuggestions` are
+best-effort and may be absent when the rail misses its budget.
 
 If the user asks one supported private question about one explicitly selected
 in-network candidate, use the `candidate-question` skill instead. Never add a
@@ -264,8 +267,10 @@ a profile URL. Never name any external data provider. When a card has
 member and use every field in `memberContext` (about, highlights,
 confirmed career, education, past roles, segments, years) so they see
 the full confirmed profile, not a public-search row. First-page
-`memberSuggestions` are additional private member refs; materialize any
-you intend to present. Escape table-breaking Markdown in returned text.
+`memberSuggestions`, when present, are additional private member refs;
+materialize any you intend to present. The rail is best-effort — a page
+without suggestions is complete, not an error. Escape table-breaking
+Markdown in returned text.
 A names-only table is never sufficient — carry current role, location,
 and the verified evidence that justifies inclusion.
 
