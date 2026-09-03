@@ -7,7 +7,7 @@ description: Use when a user asks Pluto to create, draft, save, browse, load, ed
 
 Create or update one client-shared candidate rubric through a complete,
 review-first flow. This skill is aligned through Candidate MCP server contract
-`4.38.0`. Contract `4.16.0` adds full-replacement edits through
+`4.36.0`. Contract `4.16.0` adds full-replacement edits through
 `update_rubric`, contract `4.17.0` adds per-company priorities, and contract
 `4.18.0` makes company conflict normalization deterministic.
 Contract `4.19.0` renames the bundled profile packages, contract `4.20.0` adds
@@ -60,12 +60,11 @@ history is an actual role requirement, represent it as a separately reviewed
 professional criterion or profile exclusion instead of deriving scoring logic
 from a company list.
 
-A server-approved professional profile exclusion can pass or create a
-requirement concern only when the candidate-side result is grounded by one
-short exact excerpt from an identified permitted evidence source. Never infer
-residence, work authorization, citizenship, or similar requirements from an
-employer, school, name, or other proxy. Missing, ambiguous, duplicated, or
-ungrounded candidate evidence remains unknown.
+A server-approved profile exclusion can create a requirement concern only when
+the candidate-side failure is grounded by a short exact excerpt from an
+identified permitted evidence source. Missing, ambiguous, or ungrounded
+candidate evidence remains unknown and causes no score, eligibility, or
+recommendation effect.
 
 Compare company names case-insensitively when preparing a write. Repeated
 entries in one list collapse to their strongest priority. If the same company
