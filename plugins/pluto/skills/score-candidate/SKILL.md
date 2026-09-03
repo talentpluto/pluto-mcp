@@ -1,6 +1,6 @@
 ---
 name: score-candidate
-description: Use when a user explicitly asks Pluto to score, grade, rate, or assess explicitly identified candidates against their company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches candidates when needed and returns separate evidence-cited 0-100 scores with coverage and unknowns. For saved rubrics, uses compatible inline server scoring for at most 10 profiles from one completed small_lookup or one durable read-only operation for up to 200 profiles across up to 10 completed lookups, preserving requested order and per-candidate failures without recomputing server results. Never presents a score as a culture-fit judgment, protected-trait proxy, rejection, or hiring decision.
+description: Use when a user explicitly asks Pluto to score, grade, rate, or assess explicitly identified candidates against their company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches candidates when needed and returns separate evidence-cited 0-100 scores with coverage and unknowns. For saved rubrics, uses compatible inline server scoring for at most 10 profiles from one completed small_lookup, medium_lookup, or heavy_lookup, or one durable read-only operation for up to 200 profiles across up to 10 completed lookups, preserving requested order and per-candidate failures without recomputing server results. Never presents a score as a culture-fit judgment, protected-trait proxy, rejection, or hiring decision.
 ---
 
 # Score candidate
@@ -16,14 +16,19 @@ evidence coverage, rubric coverage, and evidence adequacy separately. Every
 score measures observed professional alignment, never candidate quality,
 culture fit, rejection, or a hiring decision.
 
-This skill was written against server contract `4.36.0` and reviewed against
-patch `4.36.1`. The profile step uses `small_lookup`. Prefer live tool names,
-schemas, and field descriptions when they differ. Saved-rubric persistence is
-content-neutral, while automated rubric scoring is server-owned: the server
-resolves one approved professional projection and returns the
-`candidateScores`. The server is authoritative; never recompute its policy
-judgment, criterion assessments, aggregation, eligibility, uncertainty bounds,
-or recommendation.
+This skill was written against server contract `4.36.0` and reviewed through
+patch `4.36.6`. New profile work for scoring alone uses `small_lookup`.
+Completed `medium_lookup` and `heavy_lookup` operations are also valid
+saved-rubric sources. Medium sources retain privacy-filtered company evidence;
+heavy sources retain company plus public-web evidence. Reuse one when it
+already covers the selected profiles or the user separately requested that
+deeper package; never start or upgrade to a more expensive lookup merely to
+score. Prefer live tool names, schemas, and field descriptions when they
+differ. Saved-rubric persistence is content-neutral, while automated rubric
+scoring is server-owned: the server resolves one approved professional
+projection and returns the `candidateScores`. The server is authoritative;
+never recompute its policy judgment, criterion assessments, aggregation,
+eligibility, uncertainty bounds, or recommendation.
 
 ## Keep neighboring requests on their own routes
 
@@ -35,9 +40,11 @@ or recommendation.
 - Full professional profile details for supplied URLs, with no scoring ask, use
   the `linkedin-enrichment` skill directly; this skill runs that skill's
   contract as its enrichment step and adds scoring on top.
-- A request for the combined profile, validated-email, and derived
-  employment-company package uses `deep-enrichment`; do not substitute that
-  higher-cost package merely to score a candidate.
+- A request for the combined profile and derived employment-company package
+  uses `deep-enrichment`; adding cited public-web findings uses the live
+  `heavy_lookup` route described there. Do not substitute either higher-cost
+  package merely to score a candidate. When the user separately requests one,
+  reuse its completed operation for saved-rubric scoring.
 - While presenting a search, per-candidate Team DNA reasoning is part of
   the `candidate-discovery` skill. Use this skill for a standalone
   scoring request about explicitly identified candidates.
@@ -65,19 +72,22 @@ Before promising scores, confirm the tools required by the active axes. A Team
 DNA axis requires `get_team_dna`, whose live input schema must accept exactly
 one `department` enum. Any named saved-rubric axis requires `get_rubrics` under
 the `rubrics` skill to resolve the exact private `rubricId`, plus completed
-`small_lookup` profile operations. Require the shared `get_operation_status`
-poll tool when a profile lookup must run or the durable scoring path is active.
+`small_lookup`, `medium_lookup`, or `heavy_lookup` profile operations. Require
+the shared `get_operation_status` poll tool when a profile lookup must run or
+the durable scoring path is active.
 
-For one to 10 selected profiles from one completed `small_lookup`, keep the
-compatible inline path. The live `get_rubrics` schema must accept the exact
-`rubricId`, `includeScoringProjection: true`, that completed
-`candidateOperationId`, and an optional ordered `candidateLinkedinUrls`
-subset, and its result must carry server-computed `candidateScores`.
+For one to 10 selected profiles from one completed `small_lookup`,
+`medium_lookup`, or `heavy_lookup`, keep the compatible inline path. The live
+`get_rubrics` schema must accept the exact `rubricId`,
+`includeScoringProjection: true`, that completed `candidateOperationId`, and an
+optional ordered `candidateLinkedinUrls` subset, and its result must carry
+server-computed `candidateScores`.
 
 For 11 to 200 profiles, or whenever the selected profiles require more than
 one completed source operation, require `score_rubric_candidates`. Its live
 schema must accept one exact `rubricId`, one to 10 ordered unique
-`candidateOperationIds`, one private UUID `requestId`, and an optional ordered
+`candidateOperationIds` issued by completed `small_lookup`, `medium_lookup`, or
+`heavy_lookup` operations, one private UUID `requestId`, and an optional ordered
 selection of at most 200 unique `candidateLinkedinUrls`. The tool must be
 read-only and return one durable operation. Loading this skill does not prove
 that Pluto initialized or that the connected server matches the pinned
@@ -136,10 +146,10 @@ question before calling any tool.
 ## Enrich each candidate that needs it
 
 Scoring uses the fullest explicit candidate facts already in this
-conversation. Treat a candidate as already enriched when the session
-holds their full professional profile — from a completed `linkedin-enrichment`
-result for the same normalized URL, an earlier scoring pass, or pasted
-resume or profile text — and reuse those facts without a new operation.
+conversation. Treat a candidate as already enriched when the session holds
+their full professional profile — from a completed small-, medium-, or
+heavy-lookup result for the same normalized URL, an earlier scoring pass, or
+pasted resume or profile text — and reuse those facts without a new operation.
 
 Otherwise, when the candidate has a usable LinkedIn URL — one the user
 supplied, or the visible public URL of a returned candidate the user
@@ -151,10 +161,17 @@ batch gets one private top-level UUID `requestId`, one call to `small_lookup`,
 then unchanged-ID `get_operation_status` polling through completion or failure
 and result validation exactly as that skill specifies. Never derive a URL from
 an opaque handle or guess one from a name.
-Server-side freshness is automatic (a profile fetched within the last 3 months
-is reused internally). A newly admitted profile-enrichment operation uses one
-shared organization candidate credit per submitted URL. An exact retry uses
-no additional credits; the `linkedin-enrichment` skill pins that admitted total.
+
+If the user explicitly combines scoring with a deeper enrichment request,
+follow the `deep-enrichment` contract for `medium_lookup` or its handoff to the
+general `index` skill for `heavy_lookup`, including the 50-profile batch limit
+and exact credit disclosure. Reuse the resulting completed operation for
+scoring instead of starting a separate `small_lookup`. Server-side profile
+freshness is automatic (a profile fetched within the last 3 months is reused
+internally). The default small-lookup path uses one shared organization
+candidate credit per submitted URL; medium and heavy lookups retain their own
+three- and five-credit prices. An exact retry uses no additional credits under
+the selected lookup's contract.
 
 Handle enrichment outcomes per candidate:
 
@@ -162,6 +179,9 @@ Handle enrichment outcomes per candidate:
   any facts the user pasted. For a saved-rubric axis, retain the completed
   source operation for server scoring; pasted facts are not added to that
   server snapshot.
+- `partial`: score from the safe profile facts that were returned and disclose
+  every limitation. For a saved-rubric axis, retain the completed source
+  operation when it contains that profile; missing sections remain unknown.
 - `not_found`: say so plainly. If the user pasted usable professional facts
   for that candidate, Team DNA and JD axes may score from those facts;
   saved-rubric server scoring may not. Otherwise report that there is no
@@ -171,10 +191,11 @@ Handle enrichment outcomes per candidate:
 Search-returned candidates with rich public fields may be scored from
 those fields directly for Team DNA or JD axes when they cover the dimensions
 below; enrich when the visible card is thin and a URL is available. A
-saved-rubric axis still requires the candidate's successfully enriched profile
-inside a completed `small_lookup`. Reuse a completed operation from this
-conversation when its exact private ID remains available and it covers the
-selected profile; otherwise run the lookup. Keep the source operations
+saved-rubric axis still requires the candidate's enriched or profile-bearing
+partial result inside a completed `small_lookup`, `medium_lookup`, or
+`heavy_lookup`. Reuse a completed operation from this conversation when its
+exact private ID remains available and it covers the selected profile;
+otherwise run the default small lookup. Keep the source operations
 non-overlapping. A fact that is not present on the candidate side stays
 unknown; never fill an evidence gap from memory, another profile, or web
 search.
@@ -323,24 +344,37 @@ full-rubric bounds, coverage values, criterion states, and source-labelled
 proof points. These are separate decision dimensions, not inputs for a new
 connector-side composite.
 
-Use only successfully enriched profiles from completed `small_lookup`
-operations. Put source operation IDs in the order their profiles should appear.
-If the user supplied an explicit order, or the source operations contain other
-profiles, pass the exact selected normalized LinkedIn URLs in that order. Never
-submit overlapping source operations, duplicate URLs, a `not_found` URL, more
-than 10 source operations, or more than 200 selected profiles.
+Use only enriched or profile-bearing partial results from completed
+`small_lookup`, `medium_lookup`, or `heavy_lookup` operations. Put source
+operation IDs in the order their profiles should appear. If the user supplied
+an explicit order, or the source operations contain other profiles, pass the
+exact selected normalized LinkedIn URLs in that order. Never submit overlapping
+source operations, duplicate URLs, a `not_found` URL, more than 10 source
+operations, or more than 200 selected profiles.
 If the user selects more than 200 profiles, ask them to choose at most 200;
 never split one scoring request into multiple durable or inline operations.
 
+The server preserves the privacy-filtered source package: medium sources retain
+company evidence and heavy sources retain company plus public-web evidence.
+For an explicit employer-related criterion, the server may also enrich the
+candidate's exact profile-identified employers through the company-intelligence
+endpoints shared with search. Positive company profiles are shared for 30 days;
+empty search and batch results refresh after 12 hours. Every company-evidence
+item stays bound to the stable `criterionId` that requested it and cannot
+support another criterion or a profile exclusion. Do not reassign company
+facts, infer prestige from employer identity, funding, stage, investors, or
+headcount alone, or create a connector-side company score. Missing or ambiguous
+company evidence stays unknown.
+
 ### Keep the compatible inline path for at most 10 profiles
 
-When one completed `small_lookup` covers all one to 10 scoreable profiles, call
-`get_rubrics` once with:
+When one completed `small_lookup`, `medium_lookup`, or `heavy_lookup` covers all
+one to 10 scoreable profiles, call `get_rubrics` once with:
 
 ```yaml
 rubricId: <the exact private rubric ID>
 includeScoringProjection: true
-candidateOperationId: <the unchanged completed small_lookup operation ID>
+candidateOperationId: <the unchanged completed small, medium, or heavy lookup operation ID>
 candidateLinkedinUrls: <ordered subset; omit only when the source contains exactly the selected profiles in the desired order>
 ```
 
@@ -359,7 +393,7 @@ completed source operations, do not preload the scoring projection. Use
 
 ```yaml
 rubricId: <the exact private rubric ID>
-candidateOperationIds: <one to 10 unique completed small_lookup IDs in source order>
+candidateOperationIds: <one to 10 unique completed small, medium, or heavy lookup IDs in source order>
 candidateLinkedinUrls: <ordered selection; omit only when every source profile is selected in source order>
 requestId: <one fresh private UUID for this exact rubric, source list, and selection>
 ```

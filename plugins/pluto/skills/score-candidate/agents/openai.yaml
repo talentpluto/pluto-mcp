@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto candidate scoring"
   short_description: "Score candidates against Team DNA, a JD, or a rubric"
-  default_prompt: "Use $score-candidate to assess the explicitly identified candidates against the requested Team DNA, job description, or saved rubric; for a saved rubric, keep at most 10 profiles from one completed small_lookup on compatible inline get_rubrics scoring, route larger or multi-source work through one score_rubric_candidates operation for up to 200 profiles, poll its unchanged operationId, preserve requested order and per-candidate failures, and present the server-authoritative evidence-aware assessment exactly as returned; do not recompute or rank saved-rubric results. When all criteria are unknown, report no overall score."
+  default_prompt: "Use $score-candidate to assess the explicitly identified candidates against the requested Team DNA, job description, or saved rubric; for saved-rubric scoring, reuse completed small_lookup, medium_lookup, or heavy_lookup operations, default new scoring-only profile work to small_lookup unless I separately requested deeper enrichment, keep at most 10 profiles from one completed lookup on compatible inline get_rubrics scoring, route larger or multi-source work through one score_rubric_candidates operation for up to 200 profiles, poll its unchanged operationId, preserve requested order and per-candidate failures, and present the server-authoritative evidence-aware assessment exactly as returned; do not recompute or rank saved-rubric results. When all criteria are unknown, report no overall score."
 
 dependencies:
   tools:
