@@ -39,14 +39,16 @@ work with the retrieved leads directly in the conversation.
   published hiring-preference signals — with a separate 0-100 match score
   against your job description when you provide one, or against a loaded saved
   rubric through server-owned scoring. Saved-rubric scoring stays inline for at
-  most 10 profiles from one completed small lookup and uses one durable
-  operation for up to 200 profiles across up to 10 completed lookups. Every
-  assessed criterion cites explicit evidence, candidates are enriched first
-  when needed, and durable results preserve requested order and per-candidate
-  failures. Missing evidence stays unknown; saved-rubric output separates
-  observed alignment, possible full-rubric bounds, evidence adequacy, rubric
-  coverage, prerequisites, eligibility, and recommendation instead of
-  collapsing them into one verdict.
+  most 10 profiles from one completed small, medium, or heavy lookup and uses
+  one durable operation for up to 200 profiles across up to 10 completed
+  lookups. Medium sources retain privacy-filtered company evidence, and heavy
+  sources retain company plus public-web evidence; new scoring-only profile
+  work still defaults to a small lookup. Every assessed criterion cites
+  explicit evidence, candidates are enriched first when needed, and durable
+  results preserve requested order and per-candidate failures. Missing evidence
+  stays unknown; saved-rubric output separates observed alignment, possible
+  full-rubric bounds, evidence adequacy, rubric coverage, prerequisites,
+  eligibility, and recommendation instead of collapsing them into one verdict.
 - Draft, review, or create an email campaign for selected candidates.
   Pluto reuses completed email enrichment, prepares only missing recipient
   emails, and asks at most once between a saved template and custom content. A
@@ -263,28 +265,39 @@ this request.
   undisposed, or policy-resolution-failed authored content remains stored but
   blocks candidate scoring until it is resolved. Company-list entries stay
   outside scoring regardless of priority.
-- A server-approved exclusion can create a requirement concern only when the
-  candidate failure has a grounded exact excerpt and source label. Missing,
-  ambiguous, or ungrounded evidence remains unknown and never becomes a zero
-  or an inferred pass.
-- Saved-rubric scoring reuses completed `small_lookup` profile snapshots. For
-  at most 10 profiles from one completed lookup, `get_rubrics` returns the
-  compatible inline server scores. Larger or multi-source selections use one
-  read-only `score_rubric_candidates` operation for up to 200 profiles across
-  up to 10 completed lookups, polled through `get_operation_status`. The
-  server serializes these scoring jobs, evaluates sequential waves of up to 20
-  candidates, and retries invalid criterion coverage through its bounded judge
-  fallback before recording a candidate as failed. The operation does not
-  start another profile lookup, and the connector never recomputes, ranks,
-  retries, or drops returned per-candidate results. Unknown and provisional
-  criteria remain visible in possible full-rubric bounds but have no synthetic
-  score; all-unknown evidence produces no overall score. Evidence adequacy,
-  evidence coverage, rubric coverage, prerequisites, eligibility, and
-  recommendation remain separate server-returned dimensions.
+- A server-approved professional exclusion can pass or create a requirement
+  concern only when the candidate result has one grounded exact excerpt and
+  source label. Missing, ambiguous, duplicated, proxy-based, or ungrounded
+  evidence remains unknown and never becomes a zero or an inferred result.
+- Saved-rubric scoring reuses completed `small_lookup`, `medium_lookup`, or
+  `heavy_lookup` profile snapshots. For at most 10 profiles from one completed
+  lookup, `get_rubrics` returns the compatible inline server scores. Larger or
+  multi-source selections use one read-only `score_rubric_candidates`
+  operation for up to 200 profiles across up to 10 completed lookups, polled
+  through `get_operation_status`. Medium and heavy snapshots retain their
+  privacy-filtered company and public-web evidence. New scoring-only profile
+  work still defaults to small lookup; Pluto does not silently upgrade it to a
+  higher-cost package. For explicit employer-related criteria, the server can
+  enrich exact profile-identified employers through the same shared company
+  path used by search. Positive company profiles are reused for 30 days, and
+  every company-evidence item remains bound to the criterion that requested it
+  instead of becoming a general prestige score. The server serializes durable
+  scoring jobs, evaluates sequential waves of up to 20 candidates, and retries
+  invalid criterion coverage through its bounded judge fallback before
+  recording a candidate as failed. The connector never recomputes, ranks,
+  retries, or drops returned per-candidate results. The server returns overall
+  comparison and observed alignment separately after at least one criterion is
+  grounded. Unknown and provisional criteria remain visible in possible
+  full-rubric bounds but have no synthetic criterion score; all-unknown
+  evidence produces neither score. Evidence adequacy, evidence coverage,
+  rubric coverage, prerequisites, eligibility, recommendation, and automated
+  action readiness remain separate dimensions.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
-  and saved rubrics without candidate credits; profile enrichment it triggers
-  uses one credit per newly admitted URL. An exact retry uses no additional
-  credits. Scores are separate 0-100 measures of cited professional overlap —
+  and saved rubrics without candidate credits. New scoring-only profile work
+  defaults to small lookup at one credit per admitted URL; separately requested
+  medium and heavy enrichment retain their advertised three- and five-credit
+  prices. An exact retry uses no additional credits. Scores are separate 0-100
+  measures of cited professional overlap —
   background familiarity with your team and evidence-verified match to your job
   description or saved rubric — never a culture-fit judgment, protected-trait
   proxy, rejection, or hiring decision, and non-founder employees appear only
