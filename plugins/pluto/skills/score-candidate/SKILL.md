@@ -10,14 +10,15 @@ specific candidates. Return one separate 0-100 score for each active axis —
 Team DNA alignment, job-description match, or a loaded saved rubric — when
 sufficient scoreable evidence exists, or report that no score is available.
 Team DNA and JD scores follow the transparent methods below and credit only
-cited explicit evidence. Saved-rubric assessments come from the server, keep
-unknown and provisional criteria visible without a synthetic score, and report
-evidence coverage, rubric coverage, and evidence adequacy separately. Every
-score measures observed professional alignment, never candidate quality,
-culture fit, rejection, or a hiring decision.
+cited explicit evidence. Saved-rubric assessments come from the server and
+return the server-computed overall comparison and observed alignment as
+separate fields. They keep unknown and provisional criteria visible without a
+synthetic criterion score and report evidence coverage, rubric coverage, and
+evidence adequacy separately. Every score measures professional alignment,
+never candidate quality, culture fit, rejection, or a hiring decision.
 
-This skill was written against server contract `4.36.0` and reviewed through
-patch `4.36.6`. New profile work for scoring alone uses `small_lookup`.
+This skill was written against server contract `4.38.0`. New profile work for
+scoring alone uses `small_lookup`.
 Completed `medium_lookup` and `heavy_lookup` operations are also valid
 saved-rubric sources. Medium sources retain privacy-filtered company evidence;
 heavy sources retain company plus public-web evidence. Reuse one when it
@@ -423,17 +424,21 @@ retried or dropped. On operation-level `failed`, relay the safe returned
 message and stop only the saved-rubric axis; do not replace it with inline
 fan-out.
 
-Present each returned numeric score, nullable score, recommendation,
+Present each returned `overallScore`, observed `score`, recommendation,
 `eligibilityStatus`, `evidenceAdequacy`, `essentialCriteriaStatus`,
 `knownCriteriaCount`, `totalCriteriaCount`, `evidenceCoverage`,
 `rubricCoverage`, alignment bounds, summary, risks, failed and unknown profile
 exclusions, criterion states, scores, rationales, and proof points exactly as
 the server returned them. Never recompute, re-rank, average, or reinterpret
-them. Unknown and provisional criteria remain visibly unknown in the possible
+them. A returned overall comparison may exist after the first grounded
+criterion even when coverage is incomplete; `scoringStatus` describes whether
+the assessment produced a score, not whether an automated action is allowed.
+Unknown and provisional criteria remain visibly unknown in the possible
 full-rubric bounds; those bounds are not statistical confidence. If all
-criteria are unknown, present no overall score and the returned `Needs
-evidence` recommendation. Merge any unscoreable `not_found` candidates back
-into the final response in the user's original order as `No score`.
+criteria are unknown, present no overall score or observed score and the
+returned `Needs evidence` recommendation. Merge any unscoreable `not_found`
+candidates back into the final response in the user's original order as `No
+score`.
 
 Keep every active axis separate. Never average or roll Team DNA, JD, or rubric
 scores into one composite. Do not invent a letter grade, tier, recommendation,
@@ -449,7 +454,7 @@ returned sample bounds. Otherwise lead with the exact JD or saved-rubric name
 in use. Then present one scorecard per candidate, scores first:
 
 ```markdown
-**<Candidate name> — Team DNA: <n>/100 (scored <k> of 8 dimensions) · JD match: <m>/100 (<met>/<total> requirements met, <u> unverified) · <rubric name>: [<r>/100 observed | No score] (possible range <lower>-<upper>; evidence <adequacy>; rubric coverage <c>%)**
+**<Candidate name> — Team DNA: <n>/100 (scored <k> of 8 dimensions) · JD match: <m>/100 (<met>/<total> requirements met, <u> unverified) · <rubric name>: [<o>/100 overall · <r>/100 observed | No score] (possible range <lower>-<upper>; evidence <adequacy>; rubric coverage <c>%)**
 
 | Team DNA dimension | Alignment | Evidence |
 | --- | --- | --- |
@@ -463,11 +468,11 @@ in use. Then present one scorecard per candidate, scores first:
 
 Omit every inactive axis, line, and table. When Team DNA came back
 `insufficient_data`, state that in place of the number. For an active rubric,
-render the returned numeric score and recommendation when present. Render
-`No score` for a returned null score, `scoringStatus: failed`, a `not_found`
-profile, or unavailable server scoring, using the corresponding safe returned
-summary or message. Do not show a criterion table or exclusion outcome from raw
-rubric content.
+render the returned overall comparison, observed alignment, and recommendation
+when present. Render `No score` when both returned score fields are null, for
+`scoringStatus: failed`, a `not_found` profile, or unavailable server scoring,
+using the corresponding safe returned summary or message. Do not show a
+criterion table or exclusion outcome from raw rubric content.
 
 Show returned eligibility, essential-criteria status, recommendation, failed
 and unknown profile exclusions before the returned criterion table. Keep

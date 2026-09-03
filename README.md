@@ -265,10 +265,10 @@ this request.
   undisposed, or policy-resolution-failed authored content remains stored but
   blocks candidate scoring until it is resolved. Company-list entries stay
   outside scoring regardless of priority.
-- A server-approved exclusion can create a requirement concern only when the
-  candidate failure has a grounded exact excerpt and source label. Missing,
-  ambiguous, or ungrounded evidence remains unknown and never becomes a zero
-  or an inferred pass.
+- A server-approved professional exclusion can pass or create a requirement
+  concern only when the candidate result has one grounded exact excerpt and
+  source label. Missing, ambiguous, duplicated, proxy-based, or ungrounded
+  evidence remains unknown and never becomes a zero or an inferred result.
 - Saved-rubric scoring reuses completed `small_lookup`, `medium_lookup`, or
   `heavy_lookup` profile snapshots. For at most 10 profiles from one completed
   lookup, `get_rubrics` returns the compatible inline server scores. Larger or
@@ -285,11 +285,13 @@ this request.
   scoring jobs, evaluates sequential waves of up to 20 candidates, and retries
   invalid criterion coverage through its bounded judge fallback before
   recording a candidate as failed. The connector never recomputes, ranks,
-  retries, or drops returned per-candidate results. Unknown and provisional
-  criteria remain visible in possible full-rubric bounds but have no synthetic
-  score; all-unknown evidence produces no overall score. Evidence adequacy,
-  evidence coverage, rubric coverage, prerequisites, eligibility, and
-  recommendation remain separate server-returned dimensions.
+  retries, or drops returned per-candidate results. The server returns overall
+  comparison and observed alignment separately after at least one criterion is
+  grounded. Unknown and provisional criteria remain visible in possible
+  full-rubric bounds but have no synthetic criterion score; all-unknown
+  evidence produces neither score. Evidence adequacy, evidence coverage,
+  rubric coverage, prerequisites, eligibility, recommendation, and automated
+  action readiness remain separate dimensions.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and saved rubrics without candidate credits. New scoring-only profile work
   defaults to small lookup at one credit per admitted URL; separately requested
