@@ -17,8 +17,8 @@ synthetic criterion score and report evidence coverage, rubric coverage, and
 evidence adequacy separately. Every score measures professional alignment,
 never candidate quality, culture fit, rejection, or a hiring decision.
 
-This skill was written against server contract `4.38.0`. New profile work for
-scoring alone uses `small_lookup`.
+This skill was written against server contract `4.38.0` and reviewed through
+patch `4.38.1`. New profile work for scoring alone uses `small_lookup`.
 Completed `medium_lookup` and `heavy_lookup` operations are also valid
 saved-rubric sources. Medium sources retain privacy-filtered company evidence;
 heavy sources retain company plus public-web evidence. Reuse one when it
@@ -357,15 +357,16 @@ never split one scoring request into multiple durable or inline operations.
 
 The server preserves the privacy-filtered source package: medium sources retain
 company evidence and heavy sources retain company plus public-web evidence.
-For an explicit employer-related criterion, the server may also enrich the
-candidate's exact profile-identified employers through the company-intelligence
-endpoints shared with search. Positive company profiles are shared for 30 days;
-empty search and batch results refresh after 12 hours. Every company-evidence
-item stays bound to the stable `criterionId` that requested it and cannot
-support another criterion or a profile exclusion. Do not reassign company
-facts, infer prestige from employer identity, funding, stage, investors, or
-headcount alone, or create a connector-side company score. Missing or ambiguous
-company evidence stays unknown.
+For an explicit employer-related criterion, it first reuses company profiles
+already present in those deeper lookups. It resolves the remaining unique exact
+profile-identified employer identities and fetches their structured facts once
+in bounded batches through the company path shared with search. It does not run
+broad or natural-language company searches. Every company-evidence item stays
+bound to the stable `criterionId` that requested it and cannot support another
+criterion or a profile exclusion. Do not reassign company facts, infer prestige
+from employer identity, funding, stage, investors, or headcount alone, or create
+a connector-side company score. Missing or ambiguous company evidence stays
+unknown.
 
 ### Keep the compatible inline path for at most 10 profiles
 

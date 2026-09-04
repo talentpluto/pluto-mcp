@@ -277,10 +277,12 @@ this request.
   through `get_operation_status`. Medium and heavy snapshots retain their
   privacy-filtered company and public-web evidence. New scoring-only profile
   work still defaults to small lookup; Pluto does not silently upgrade it to a
-  higher-cost package. For explicit employer-related criteria, the server can
-  enrich exact profile-identified employers through the same shared company
-  path used by search. Positive company profiles are reused for 30 days, and
-  every company-evidence item remains bound to the criterion that requested it
+  higher-cost package. For explicit employer-related criteria, the server
+  reuses company profiles already present in medium or heavy snapshots, then
+  resolves and fetches the remaining unique exact profile-identified employers
+  once in bounded batches through the structured company path used by search.
+  It does not run broad or natural-language company searches. Every
+  company-evidence item remains bound to the criterion that requested it
   instead of becoming a general prestige score. The server serializes durable
   scoring jobs, evaluates sequential waves of up to 20 candidates, and retries
   invalid criterion coverage through its bounded judge fallback before
