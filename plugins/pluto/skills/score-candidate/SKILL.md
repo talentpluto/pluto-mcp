@@ -18,18 +18,21 @@ evidence adequacy separately. Every score measures professional alignment,
 never candidate quality, culture fit, rejection, or a hiring decision.
 
 This skill was written against server contract `4.38.0` and reviewed through
-patch `4.38.1`. New profile work for scoring alone uses `small_lookup`.
-Completed `medium_lookup` and `heavy_lookup` operations are also valid
-saved-rubric sources. Medium sources retain privacy-filtered company evidence;
-heavy sources retain company plus public-web evidence. Reuse one when it
-already covers the selected profiles or the user separately requested that
-deeper package; never start or upgrade to a more expensive lookup merely to
-score. Prefer live tool names, schemas, and field descriptions when they
-differ. Saved-rubric persistence is content-neutral, while automated rubric
-scoring is server-owned: the server resolves one approved professional
-projection and returns the `candidateScores`. The server is authoritative;
-never recompute its policy judgment, criterion assessments, aggregation,
-eligibility, uncertainty bounds, or recommendation.
+patch `4.38.2`. Reuse a completed `small_lookup`, `medium_lookup`, or
+`heavy_lookup` operation when it already covers the selected profiles. For any
+candidate without reusable evidence, default new scoring-only profile work to
+`heavy_lookup` so the scorer receives the professional profile,
+employment-company package, and cited public-web findings. Heavy lookup uses
+exactly five shared organization candidate credits per newly admitted profile.
+State the exact maximum charge before starting, then proceed under the explicit
+scoring request without a redundant tier confirmation. Do not replace a
+reusable completed lookup merely to upgrade its depth for scoring. Prefer live
+tool names, schemas, and field descriptions when they differ. Saved-rubric
+persistence is content-neutral, while automated rubric scoring is server-owned:
+the server resolves one approved professional projection and returns the
+`candidateScores`. The server is authoritative; never recompute its policy
+judgment, criterion assessments, aggregation, eligibility, uncertainty bounds,
+or recommendation.
 
 ## Keep neighboring requests on their own routes
 
@@ -39,13 +42,14 @@ eligibility, uncertainty bounds, or recommendation.
 - One profile URL plus "find more people like this person" is a discovery
   request; use the `candidate-discovery` skill's reference-profile search.
 - Full professional profile details for supplied URLs, with no scoring ask, use
-  the `linkedin-enrichment` skill directly; this skill runs that skill's
-  contract as its enrichment step and adds scoring on top.
+  the `linkedin-enrichment` skill directly. A scoring request does not inherit
+  that skill's small-lookup default; use the heavy scoring path below when new
+  profile work is required.
 - A request for the combined profile and derived employment-company package
   uses `deep-enrichment`; adding cited public-web findings uses the live
-  `heavy_lookup` route described there. Do not substitute either higher-cost
-  package merely to score a candidate. When the user separately requests one,
-  reuse its completed operation for saved-rubric scoring.
+  `heavy_lookup` route described there. Scoring deliberately defaults new
+  profile work to `heavy_lookup`; when a separate enrichment request already
+  produced a compatible completed operation, reuse it for saved-rubric scoring.
 - While presenting a search, per-candidate Team DNA reasoning is part of
   the `candidate-discovery` skill. Use this skill for a standalone
   scoring request about explicitly identified candidates.
@@ -154,25 +158,25 @@ pasted resume or profile text — and reuse those facts without a new operation.
 
 Otherwise, when the candidate has a usable LinkedIn URL — one the user
 supplied, or the visible public URL of a returned candidate the user
-explicitly identified for scoring — run the `linkedin-enrichment` skill's
-async contract before scoring. Use one ordered `profiles` batch when at most
-100 candidates need lookup. For a saved-rubric request of 101 to 200 profiles,
-use the fewest non-overlapping ordered batches allowed by that contract. Each
-batch gets one private top-level UUID `requestId`, one call to `small_lookup`,
-then unchanged-ID `get_operation_status` polling through completion or failure
-and result validation exactly as that skill specifies. Never derive a URL from
-an opaque handle or guess one from a name.
+explicitly identified for scoring — run `heavy_lookup` before scoring. Use the
+fewest non-overlapping ordered `profiles` batches of at most 50 candidates,
+with no more than 200 candidates for a saved-rubric request. Each batch gets one
+private top-level UUID `requestId`, one call to `heavy_lookup`, then unchanged-ID
+`get_operation_status` polling through completion or failure. Before the first
+start, state that every newly admitted profile uses exactly five shared
+organization candidate credits and give the maximum charge for the submitted
+profiles; the explicit scoring request authorizes this default without another
+tier question. Never derive a URL from an opaque handle or guess one from a
+name.
 
-If the user explicitly combines scoring with a deeper enrichment request,
-follow the `deep-enrichment` contract for `medium_lookup` or its handoff to the
-general `index` skill for `heavy_lookup`, including the 50-profile batch limit
-and exact credit disclosure. Reuse the resulting completed operation for
-scoring instead of starting a separate `small_lookup`. Server-side profile
-freshness is automatic (a profile fetched within the last 3 months is reused
-internally). The default small-lookup path uses one shared organization
-candidate credit per submitted URL; medium and heavy lookups retain their own
-three- and five-credit prices. An exact retry uses no additional credits under
-the selected lookup's contract.
+If the user explicitly combines scoring with a medium enrichment request,
+follow the `deep-enrichment` contract for `medium_lookup` and reuse its
+completed operation instead of starting a separate heavy lookup. A separately
+completed heavy enrichment is reusable too. Server-side profile freshness is
+automatic (a profile fetched within the last 3 months is reused internally).
+The default new scoring path uses five shared organization candidate credits
+per submitted URL; reused completed operations and exact retries use no
+additional credits under the selected lookup's contract.
 
 Handle enrichment outcomes per candidate:
 
@@ -196,7 +200,7 @@ saved-rubric axis still requires the candidate's enriched or profile-bearing
 partial result inside a completed `small_lookup`, `medium_lookup`, or
 `heavy_lookup`. Reuse a completed operation from this conversation when its
 exact private ID remains available and it covers the selected profile;
-otherwise run the default small lookup. Keep the source operations
+otherwise run the default heavy lookup. Keep the source operations
 non-overlapping. A fact that is not present on the candidate side stays
 unknown; never fill an evidence gap from memory, another profile, or web
 search.

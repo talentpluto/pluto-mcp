@@ -42,11 +42,13 @@ work with the retrieved leads directly in the conversation.
   most 10 profiles from one completed small, medium, or heavy lookup and uses
   one durable operation for up to 200 profiles across up to 10 completed
   lookups. Medium sources retain privacy-filtered company evidence, and heavy
-  sources retain company plus public-web evidence; new scoring-only profile
-  work still defaults to a small lookup. Every assessed criterion cites
-  explicit evidence, candidates are enriched first when needed, and durable
-  results preserve requested order and per-candidate failures. Missing evidence
-  stays unknown; saved-rubric output separates observed alignment, possible
+  sources retain company plus public-web evidence. Completed compatible
+  lookups are reused; new scoring-only profile work defaults to a heavy lookup
+  at five shared organization credits per admitted profile. Every assessed
+  criterion cites explicit evidence, candidates are enriched first when
+  needed, and durable results preserve requested order and per-candidate
+  failures. Missing evidence stays unknown; saved-rubric output separates
+  observed alignment, possible
   full-rubric bounds, evidence adequacy, rubric coverage, prerequisites,
   eligibility, and recommendation instead of collapsing them into one verdict.
 - Draft, review, or create an email campaign for selected candidates.
@@ -275,9 +277,10 @@ this request.
   multi-source selections use one read-only `score_rubric_candidates`
   operation for up to 200 profiles across up to 10 completed lookups, polled
   through `get_operation_status`. Medium and heavy snapshots retain their
-  privacy-filtered company and public-web evidence. New scoring-only profile
-  work still defaults to small lookup; Pluto does not silently upgrade it to a
-  higher-cost package. For explicit employer-related criteria, the server
+  privacy-filtered company and public-web evidence. Completed compatible
+  lookups are reused. New scoring-only profile work defaults to heavy lookup at
+  exactly five shared organization candidate credits per newly admitted
+  profile. For explicit employer-related criteria, the server
   reuses company profiles already present in medium or heavy snapshots, then
   resolves and fetches the remaining unique exact profile-identified employers
   once in bounded batches through the structured company path used by search.
@@ -296,9 +299,9 @@ this request.
   action readiness remain separate dimensions.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and saved rubrics without candidate credits. New scoring-only profile work
-  defaults to small lookup at one credit per admitted URL; separately requested
-  medium and heavy enrichment retain their advertised three- and five-credit
-  prices. An exact retry uses no additional credits. Scores are separate 0-100
+  defaults to heavy lookup at five credits per admitted URL so company and
+  public-web evidence are available. Compatible completed lookups are reused,
+  and an exact retry uses no additional credits. Scores are separate 0-100
   measures of cited professional overlap —
   background familiarity with your team and evidence-verified match to your job
   description or saved rubric — never a culture-fit judgment, protected-trait
