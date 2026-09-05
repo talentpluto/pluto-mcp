@@ -1,6 +1,6 @@
 ---
 name: score-candidate
-description: Use when a user explicitly asks Pluto to score, grade, rate, or assess explicitly identified candidates against their company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches candidates when needed and returns separate evidence-cited 0-100 scores with coverage and unknowns. For saved rubrics, uses compatible inline server scoring for at most 10 profiles from one completed small_lookup, medium_lookup, or heavy_lookup, or one durable read-only operation for up to 200 profiles across up to 10 completed lookups, preserving requested order and per-candidate failures without recomputing server results. Never presents a score as a culture-fit judgment, protected-trait proxy, rejection, or hiring decision.
+description: Use when a user explicitly asks Pluto to score, grade, rate, or assess explicitly identified candidates against their company's Team DNA, a supplied job description, a loaded saved rubric, or any combination. Enriches candidates when needed and returns separate evidence-cited 0-100 scores with coverage and unknowns. For saved rubrics, uses one get_rubrics scoring call for at most 10 profiles from one completed small_lookup, medium_lookup, or heavy_lookup, which returns a durable scoring operation to poll, or one durable read-only score_rubric_candidates operation for up to 200 profiles across up to 10 completed lookups, preserving requested order and per-candidate failures without recomputing server results. Never presents a score as a culture-fit judgment, protected-trait proxy, rejection, or hiring decision.
 ---
 
 # Score candidate
@@ -17,9 +17,14 @@ synthetic criterion score and report evidence coverage, rubric coverage, and
 evidence adequacy separately. Every score measures professional alignment,
 never candidate quality, culture fit, rejection, or a hiring decision.
 
-This skill was written against server contract `4.38.0` and reviewed through
-patch `4.38.2`. Reuse a completed `small_lookup`, `medium_lookup`, or
-`heavy_lookup` operation when it already covers the selected profiles. For any
+This skill was written against server contract `4.40.0`. Contract `4.39.0`
+hands `get_rubrics` candidate scoring to the durable scorer: the call returns
+within seconds with a `scoring` operation to poll instead of holding the
+connection open, and an identical repeat returns the same operation. A server
+still on server contract `4.38.0` returns `candidateScores` inline from that
+same call; read whichever the response carries. Reuse a completed
+`small_lookup`, `medium_lookup`, or `heavy_lookup` operation when it already
+covers the selected profiles. For any
 candidate without reusable evidence, default new scoring-only profile work to
 `heavy_lookup` so the scorer receives the professional profile,
 employment-company package, and cited public-web findings. Heavy lookup uses
@@ -82,11 +87,12 @@ the shared `get_operation_status` poll tool when a profile lookup must run or
 the durable scoring path is active.
 
 For one to 10 selected profiles from one completed `small_lookup`,
-`medium_lookup`, or `heavy_lookup`, keep the compatible inline path. The live
-`get_rubrics` schema must accept the exact `rubricId`,
+`medium_lookup`, or `heavy_lookup`, keep the single `get_rubrics` scoring call.
+The live `get_rubrics` schema must accept the exact `rubricId`,
 `includeScoringProjection: true`, that completed `candidateOperationId`, and an
-optional ordered `candidateLinkedinUrls` subset, and its result must carry
-server-computed `candidateScores`.
+optional ordered `candidateLinkedinUrls` subset. Its result must carry either a
+`scoring` operation handle whose scores arrive through `get_operation_status`,
+or server-computed `candidateScores` directly.
 
 For 11 to 200 profiles, or whenever the selected profiles require more than
 one completed source operation, require `score_rubric_candidates`. Its live
@@ -101,10 +107,11 @@ contract.
 If a required tool is absent or its schema differs, follow the
 `connection-recovery` skill. If recovery does not expose what the request
 needs, report which part of scoring is unavailable; continue only with other
-independently requested axes whose contracts are complete. A present
-`get_rubrics` tool that cannot return inline `candidateScores` is not a
-connection failure. For bulk work, never replace a missing
-`score_rubric_candidates` tool with many inline calls. Do not recommend an
+independently requested axes whose contracts are complete. A `get_rubrics`
+result that returns a `scoring` operation instead of inline `candidateScores`
+is the current contract, not a connection failure: poll it. For bulk work,
+never replace a missing `score_rubric_candidates` tool with many `get_rubrics`
+calls. Do not recommend an
 upgrade, reinstall, logout, or reconnect for either mismatch, and do not
 substitute connector-side rubric scoring, a team description recalled from
 memory, another data source, or web search.
@@ -372,7 +379,7 @@ from employer identity, funding, stage, investors, or headcount alone, or create
 a connector-side company score. Missing or ambiguous company evidence stays
 unknown.
 
-### Keep the compatible inline path for at most 10 profiles
+### Score at most 10 profiles from one lookup through `get_rubrics`
 
 When one completed `small_lookup`, `medium_lookup`, or `heavy_lookup` covers all
 one to 10 scoreable profiles, call `get_rubrics` once with:
@@ -384,11 +391,32 @@ candidateOperationId: <the unchanged completed small, medium, or heavy lookup op
 candidateLinkedinUrls: <ordered subset; omit only when the source contains exactly the selected profiles in the desired order>
 ```
 
-The result must have `status: found`, an approved scoring projection, and one
-server-computed `candidateScores` item per submitted profile in the requested
-order. If those results are absent or malformed, render the affected rubric
-scores as `No score` and explain that server scoring was unavailable. Never
-fall back to raw rubric content or connector-side arithmetic.
+The result must have `status: found` and an approved scoring projection. The
+server hands the selection to the durable scorer and returns within seconds,
+so the response carries one of:
+
+- `scoring` with `status: queued` or `running`: keep its opaque `operationId`
+  private, wait at least `retryAfterMs`, and call `get_operation_status` with
+  only that exact unchanged ID until it is `completed` or `failed`. Every poll
+  must echo the same ID and report `operationType: rubric_scoring`. Never hold
+  the `get_rubrics` call open waiting for scores, and never ask the user to
+  poll. Repeating the identical `get_rubrics` call returns the same operation
+  rather than scoring again, so a host retry after its own timeout is safe but
+  never necessary.
+- `scoring` with `status: completed` plus `candidateScores` inline: the
+  operation for this exact selection and rubric revision already finished.
+- `scoring` with `status: failed`: relay the safe returned message, render the
+  affected rubric scores as `No score`, and do not retry through
+  `get_rubrics`; a fresh `score_rubric_candidates` request with a new
+  `requestId` is the only way to score again.
+- `candidateScores` without `scoring`: an older server scored inline; present
+  them directly.
+
+On completion, require one server-computed `candidateScores` item per
+submitted profile in the requested order. If neither `scoring` nor
+`candidateScores` is present, or the results are malformed, render the affected
+rubric scores as `No score` and explain that server scoring was unavailable.
+Never fall back to raw rubric content or connector-side arithmetic.
 
 ### Use one durable operation for larger or multi-source work
 

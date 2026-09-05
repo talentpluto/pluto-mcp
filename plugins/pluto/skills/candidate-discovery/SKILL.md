@@ -11,7 +11,13 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
-This skill is aligned through Candidate MCP server contract `4.32.0`.
+This skill is aligned through Candidate MCP server contract `4.40.0`.
+Contract `4.39.0` expands `FDE` and forward-deployed engineer title shorthand
+and discloses in plan `notes` that funding stages are evaluated as of today.
+Contract `4.40.0` adds `experience.minYearsAtCurrentCompany` so time at the
+current employer compiles natively beside `company.stages`, stops a headline
+mention from verifying a title the person does not hold, and points plan
+`notes` at `verifyBudget` when a required predicate is undecidable.
 Every typed OR-list field publishes the same generous 256-value ceiling, and
 one complete spec may contain at most 256 list values in total. Preserve every
 value the user supplies instead of taking only the first N. Contract `4.14.3`
@@ -117,7 +123,11 @@ people all live in that session and never survive outside it.
    for the same ref in a session) — fetch one person's verified work and
    education history and re-verify them against the originating spec. This is
    how undecided requirements become decided. Enrich the deciding few in
-   priority order, not the whole page.
+   priority order, not the whole page, and call it one ref at a time: calls
+   in the same session contend for the session record, so parallel
+   `enrich_person` calls are rejected except one. When coverage reports a
+   REQUIRED predicate as `undecidable` for the whole page, decide it with
+   `verifyBudget` on `search_people` in one call instead.
 5. **`materialize_candidates`** (1 organization credit per unique newly
    presented person, never re-billed in the session) — the ONLY door from
    session refs to presentable candidates. The server re-screens employer
@@ -147,7 +157,23 @@ user's required-versus-preferred wording: `required` gates membership,
 - Past-employer attributes ("worked at a seed-stage fintech") are
   `pastCompany` with `stages` or `keywords`. When past-scope titles are also
   required, the server pairs them: the SAME stint must match both. These are
-  never decidable at retrieval — plan on enrichment deciding them.
+  never decidable at retrieval — plan on `verifyBudget` or enrichment deciding
+  them — and there is no tenure bound for a past stint. When the ask is about
+  the CURRENT employer, do not use `pastCompany`; see the next bullet.
+- Tenure has three spellings, and the sentence usually only fits one. Time at
+  the current employer ("at their company for 2+ years", "has been at a
+  Series C company for 2+ years") is `experience.minYearsAtCurrentCompany`,
+  paired with `company.stages` when a stage is named; both compile natively.
+  Years holding the current title ("an FDE for 2+ years") is
+  `experience.minYearsInCurrentRole`, which is stricter because an internal
+  move resets it. Total career length ("2+ years of experience") is
+  `experience.minTotalYears`. Read "been at a … company for" as employer
+  tenure, and say which reading you compiled.
+- `company.stages` matches the employer's funding stage TODAY, not at hire. A
+  person who joined a `series_c` company two years ago is often at a
+  `series_d`+ company now, so when a stage is paired with any tenure bound,
+  propose a range of later rounds (`series_c` through `series_e`) instead of
+  one stage, and relay the server's `notes` when the page is thin.
 - A current role combined with a past role ("GTM now, founder before") is one
   spec: put the current role in `titles` and the previous role in
   `pastTitles`. Both compile natively into the same search.
@@ -271,6 +297,20 @@ and the verified evidence that justifies inclusion.
 
 Report the exact returned credit and budget fields when the user asks about
 cost; never calculate credit usage from result counts or provider pricing.
+
+## Say what you searched before you spend
+
+A recruiter's sentence often contains more than one search. "FDEs in NYC who
+have been at a Series C company for 2+ years" is 1,200 people if the tenure is
+total experience, tens if it is time at the current employer, and a handful if
+it is time holding the FDE title at a company that is still Series C today.
+Whenever a request could be read more than one way, or pairs a funding stage
+with a tenure bound, run `preview_search` first and, before spending credits,
+tell the user in one or two sentences which reading you compiled, the count the
+preview returned, and the widenings the server's `notes` propose. A small count
+is a fact about the filter, not a failed search: never present a thin page as
+the market without naming the clause that narrowed it, and never silently
+switch to a broader reading.
 
 ## Refine without changing the goal
 

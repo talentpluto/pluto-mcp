@@ -1,6 +1,10 @@
 # Candidate search contract
 
-Aligned through server contract `4.32.0`. Contract `4.14.2` removes the narrow
+Aligned through server contract `4.40.0`. Contract `4.40.0` adds
+`experience.minYearsAtCurrentCompany` (years at the current employer, native
+on every people surface, distinct from years in the current role) and reports
+it under the `tenure` predicate; contract `4.39.0` discloses in plan `notes`
+that `company.stages` is evaluated as of today. Contract `4.14.2` removes the narrow
 field-specific item-count caps from typed candidate-search OR lists and
 preserves every supplied value through preview and retrieval compilation.
 Contract `4.14.3` publishes the same 256-value ceiling on every list, applies
@@ -122,8 +126,9 @@ Person-scope criteria: `titles` (terms, `match` words|phrase, `scope`
 current|past), `seniority`, `location` (city, state, or preset metro,
 OR-set), `network` (`membership: "member"`; `required` keeps only
 confirmed TalentPluto members, `preferred` ranks them first without
-dropping public profiles), `experience` (min/max total years, years in
-current role, recent-joiner window), `schools`, `education` (degrees,
+dropping public profiles), `experience` (min/max total years, years at the
+current employer via `minYearsAtCurrentCompany`, years in the current role via
+`minYearsInCurrentRole`, recent-joiner window), `schools`, `education` (degrees,
 fields of study), `languages`, `certifications`, `keywords`, `github`
 (languages, stars, repositories, minimum commits, minimum contributed
 repositories, minimum merged pull requests, and contribution recency),
