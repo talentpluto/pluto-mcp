@@ -38,10 +38,11 @@ work with the retrieved leads directly in the conversation.
   locations, schools, recent-joiner patterns, founder backgrounds, and
   published hiring-preference signals — with a separate 0-100 match score
   against your job description when you provide one, or against a loaded saved
-  rubric through server-owned scoring. Saved-rubric scoring stays inline for at
-  most 10 profiles from one completed small, medium, or heavy lookup and uses
-  one durable operation for up to 200 profiles across up to 10 completed
-  lookups. Medium sources retain privacy-filtered company evidence, and heavy
+  rubric through server-owned scoring. Saved-rubric scoring runs as a durable
+  operation the agent polls: one `get_rubrics` call for at most 10 profiles
+  from one completed small, medium, or heavy lookup, or one
+  `score_rubric_candidates` operation for up to 200 profiles across up to 10
+  completed lookups. Medium sources retain privacy-filtered company evidence, and heavy
   sources retain company plus public-web evidence. Completed compatible
   lookups are reused; new scoring-only profile work defaults to a heavy lookup
   at five shared organization credits per admitted profile. Every assessed
@@ -273,8 +274,10 @@ this request.
   evidence remains unknown and never becomes a zero or an inferred result.
 - Saved-rubric scoring reuses completed `small_lookup`, `medium_lookup`, or
   `heavy_lookup` profile snapshots. For at most 10 profiles from one completed
-  lookup, `get_rubrics` returns the compatible inline server scores. Larger or
-  multi-source selections use one read-only `score_rubric_candidates`
+  lookup, `get_rubrics` hands the selection to the durable scorer and returns
+  a `scoring` operation within seconds; the scores arrive through
+  `get_operation_status`, and an identical repeat returns the same operation.
+  Larger or multi-source selections use one read-only `score_rubric_candidates`
   operation for up to 200 profiles across up to 10 completed lookups, polled
   through `get_operation_status`. Medium and heavy snapshots retain their
   privacy-filtered company and public-web evidence. Completed compatible

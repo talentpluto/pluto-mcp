@@ -7,14 +7,18 @@ description: Use when a user asks Pluto to create, draft, save, browse, load, ed
 
 Create or update one client-shared candidate rubric through a complete,
 review-first flow. This skill is aligned through Candidate MCP server contract
-`4.38.0`. Contract `4.16.0` adds full-replacement edits through
+`4.40.0` and is unchanged since server contract `4.38.0`, so it remains valid
+against either. Contract `4.16.0` adds full-replacement edits through
 `update_rubric`, contract `4.17.0` adds per-company priorities, and contract
 `4.18.0` makes company conflict normalization deterministic.
 Contract `4.19.0` renames the bundled profile packages, contract `4.20.0` adds
 membership-aware discovery, and contract `4.21.0` establishes the separate
 server-approved scoring boundary used below. Contract `4.36.0` adds stable
 criterion metadata and evidence-aware scoring while making company preferences
-informational context only.
+informational context only. Contract `4.39.0` hands `get_rubrics` candidate
+scoring to the durable scorer and returns a `scoring` operation to poll instead
+of inline scores; the `score-candidate` skill owns that flow, and loading or
+editing a rubric through this skill is unchanged.
 
 Rubric persistence remains content-neutral for compatibility. `create_rubric`,
 `update_rubric`, and `get_rubrics` must preserve the substance of every
