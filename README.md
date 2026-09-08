@@ -48,10 +48,11 @@ work with the retrieved leads directly in the conversation.
   at five shared organization credits per admitted profile. Every assessed
   criterion cites explicit evidence, candidates are enriched first when
   needed, and durable results preserve requested order and per-candidate
-  failures. Missing evidence stays unknown; saved-rubric output separates
-  observed alignment, possible
-  full-rubric bounds, evidence adequacy, rubric coverage, prerequisites,
-  eligibility, and recommendation instead of collapsing them into one verdict.
+  failures. New saved-rubric results use the complete supplied work history for
+  a Luna scouting score with separate confidence, source-linked criterion
+  narratives, and critical unknowns. Verification is not run: no criterion
+  scores, coverage, passed prerequisites, or eligibility are inferred. Scouting
+  supports human review and never authorizes automatic promotion.
 - Draft, review, or create an email campaign for selected candidates.
   Pluto reuses completed email enrichment, prepares only missing recipient
   emails, and asks at most once between a saved template and custom content. A
@@ -268,10 +269,10 @@ this request.
   undisposed, or policy-resolution-failed authored content remains stored but
   blocks candidate scoring until it is resolved. Company-list entries stay
   outside scoring regardless of priority.
-- A server-approved professional exclusion can pass or create a requirement
-  concern only when the candidate result has one grounded exact excerpt and
-  source label. Missing, ambiguous, duplicated, proxy-based, or ungrounded
-  evidence remains unknown and never becomes a zero or an inferred result.
+- A server-approved professional exclusion has its own criterion in scouting.
+  It remains unverified; its narrative can flag evidence or an open screening
+  question but never establishes a pass or failure. Historical V2 exclusion
+  results retain their grounded exact excerpts and source labels.
 - Saved-rubric scoring reuses completed `small_lookup`, `medium_lookup`, or
   `heavy_lookup` profile snapshots. For at most 10 profiles from one completed
   lookup, `get_rubrics` hands the selection to the durable scorer and returns
@@ -291,24 +292,31 @@ this request.
   company-evidence item remains bound to the criterion that requested it
   instead of becoming a general prestige score. The server serializes durable
   scoring jobs, evaluates sequential waves of up to 20 candidates, and retries
-  invalid criterion coverage through its bounded judge fallback before
-  recording a candidate as failed. The connector never recomputes, ranks,
-  retries, or drops returned per-candidate results. The server returns overall
-  comparison and observed alignment separately after at least one criterion is
-  grounded. Unknown and provisional criteria remain visible in possible
-  full-rubric bounds but have no synthetic criterion score; all-unknown
-  evidence produces neither score. Evidence adequacy, evidence coverage,
-  rubric coverage, prerequisites, eligibility, recommendation, and automated
-  action readiness remain separate dimensions.
+  invalid authored-criterion coverage and citations within Luna's bounded
+  recovery path before recording a processing failure. The connector never
+  recomputes, ranks, retries, or drops returned per-candidate results. Contract
+  4.41.0 returns `rubric-v3-scouting.1`: `score` and `overallScore` are the same
+  holistic Luna scouting estimate. The native receipt includes confidence,
+  narratives and citations for every authored criterion, reasons, and the
+  critical unknown. The entire supplied work history, descriptions, dates,
+  education, skills, and summary travel through private scoring snapshots.
+  Presentation highlights never replace the history; oversized or unavailable
+  complete snapshots fail explicitly without silent truncation. Verification
+  is not run. Criterion scores, coverage, and alignment bounds are null;
+  eligibility and prerequisites remain unverified. Scouting is for human review
+  and never authorizes automatic promotion. Historical `evidence-aware-v2`
+  receipts retain their original overall comparison, observed alignment,
+  coverage, and unknowns.
 - Candidate scoring reads your company's stored, bounded Team DNA projection
   and saved rubrics without candidate credits. New scoring-only profile work
   defaults to heavy lookup at five credits per admitted URL so company and
   public-web evidence are available. Compatible completed lookups are reused,
   and an exact retry uses no additional credits. Scores are separate 0-100
   measures of cited professional overlap —
-  background familiarity with your team and evidence-verified match to your job
-  description or saved rubric — never a culture-fit judgment, protected-trait
-  proxy, rejection, or hiring decision, and non-founder employees appear only
+  background familiarity with your team, evidence-verified match to your job
+  description, or a scouting estimate against your saved rubric — never a
+  culture-fit judgment, protected-trait proxy, rejection, or hiring decision,
+  and non-founder employees appear only
   as aggregate patterns.
 - Connected-inbox campaigns are always one email per recipient. Pluto creates
   one Gmail draft per recipient in the selected authorized inbox belonging to

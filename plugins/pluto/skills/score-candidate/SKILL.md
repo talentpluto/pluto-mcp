@@ -10,14 +10,14 @@ specific candidates. Return one separate 0-100 score for each active axis —
 Team DNA alignment, job-description match, or a loaded saved rubric — when
 sufficient scoreable evidence exists, or report that no score is available.
 Team DNA and JD scores follow the transparent methods below and credit only
-cited explicit evidence. Saved-rubric assessments come from the server and
-return the server-computed overall comparison and observed alignment as
-separate fields. They keep unknown and provisional criteria visible without a
-synthetic criterion score and report evidence coverage, rubric coverage, and
-evidence adequacy separately. Every score measures professional alignment,
+cited explicit evidence. Saved-rubric assessments come from the server as a
+Luna scouting score with separate confidence, source-linked criterion narratives,
+and critical unknowns. Verification is not run. The score is a hypothesis for
+human review, not a verified qualification or calibrated probability. Every
+score concerns professional alignment,
 never candidate quality, culture fit, rejection, or a hiring decision.
 
-This skill was written against server contract `4.40.0`. Contract `4.39.0`
+This skill was written against server contract `4.41.0`. Contract `4.39.0`
 hands `get_rubrics` candidate scoring to the durable scorer: the call returns
 within seconds with a `scoring` operation to poll instead of holding the
 connection open, and an identical repeat returns the same operation. A server
@@ -348,13 +348,23 @@ results; do not inspect raw fields to recreate the professional-policy
 projection, evaluate exclusions, assign criterion scores, or calculate a
 total.
 
-Require each returned assessment to identify `scoringVersion` as
-`evidence-aware-v2` and preserve its `rubricRevision`, `policyVersion`, policy
-status and projection hash, `eligibilityStatus`, `evidenceAdequacy`,
-`essentialCriteriaStatus`, `recommendation`, observed alignment, possible
-full-rubric bounds, coverage values, criterion states, and source-labelled
-proof points. These are separate decision dimensions, not inputs for a new
-connector-side composite.
+Read `scoringVersion` before interpreting the assessment. New results use
+`rubric-v3-scouting.1`: `score` and `overallScore` are the same holistic Luna
+scouting score. Preserve `scouting.confidence`, `scouting.criteria`, reasons,
+critical unknowns, and `scouting.verificationStatus` (`not_run`). Each authored
+criterion has a narrative and source-labelled proof points. Criterion scores,
+coverage, and alignment bounds are null; eligibility and prerequisites are
+unverified. Null criterion scores do not erase an available scouting score.
+Do not call the score observed alignment or evidence coverage. Scouting never
+authorizes automatic promotion, rejection, or a hiring decision.
+
+Preserve `rubricRevision`, `policyVersion`, policy status and projection hash,
+`eligibilityStatus`, `evidenceAdequacy`, `essentialCriteriaStatus`, and
+`recommendation`. Historical `evidence-aware-v2` assessments retain their
+separate overall comparison, observed alignment, coverage, and possible range.
+For those historical results only, when all criteria are unknown there is no
+overall score or observed score. Never substitute either version's formula for
+the server's returned values.
 
 Use only enriched or profile-bearing partial results from completed
 `small_lookup`, `medium_lookup`, or `heavy_lookup` operations. Put source
@@ -366,15 +376,20 @@ operations, or more than 200 selected profiles.
 If the user selects more than 200 profiles, ask them to choose at most 200;
 never split one scoring request into multiple durable or inline operations.
 
-The server preserves the privacy-filtered source package: medium sources retain
-company evidence and heavy sources retain company plus public-web evidence.
+The server scores the complete supplied work history, descriptions, dates,
+education, skills, and profile summary from private source snapshots. It never
+replaces that history with public presentation highlights. Oversized or
+unavailable complete snapshots fail explicitly without silently truncating
+history. Medium sources retain company evidence and heavy sources retain
+company plus public-web evidence.
 For an explicit employer-related criterion, it first reuses company profiles
 already present in those deeper lookups. It resolves the remaining unique exact
 profile-identified employer identities and fetches their structured facts once
 in bounded batches through the company path shared with search. It does not run
 broad or natural-language company searches. Every company-evidence item stays
 bound to the stable `criterionId` that requested it and cannot support another
-criterion or a profile exclusion. Do not reassign company facts, infer prestige
+criterion or exclusion. An approved employer-related exclusion receives its
+own separately requested evidence. Do not reassign company facts, infer prestige
 from employer identity, funding, stage, investors, or headcount alone, or create
 a connector-side company score. Missing or ambiguous company evidence stays
 unknown.
@@ -457,21 +472,16 @@ retried or dropped. On operation-level `failed`, relay the safe returned
 message and stop only the saved-rubric axis; do not replace it with inline
 fan-out.
 
-Present each returned `overallScore`, observed `score`, recommendation,
-`eligibilityStatus`, `evidenceAdequacy`, `essentialCriteriaStatus`,
-`knownCriteriaCount`, `totalCriteriaCount`, `evidenceCoverage`,
-`rubricCoverage`, alignment bounds, summary, risks, failed and unknown profile
-exclusions, criterion states, scores, rationales, and proof points exactly as
-the server returned them. Never recompute, re-rank, average, or reinterpret
-them. A returned overall comparison may exist after the first grounded
-criterion even when coverage is incomplete; `scoringStatus` describes whether
-the assessment produced a score, not whether an automated action is allowed.
-Unknown and provisional criteria remain visibly unknown in the possible
-full-rubric bounds; those bounds are not statistical confidence. If all
-criteria are unknown, present no overall score or observed score and the
-returned `Needs evidence` recommendation. Merge any unscoreable `not_found`
-candidates back into the final response in the user's original order as `No
-score`.
+Present the returned score using its scoring version, with summary, risks,
+recommendation, source-linked criterion narratives, and unknowns exactly as
+returned. Never recompute, re-rank, average, or reinterpret them. V3 confidence
+does not multiply down the scouting score. Its null verification metrics mean
+verification was not run, not zero evidence or low candidate fit. Invalid
+criterion coverage, invented citations, and unavailable output are processing
+failures: report `No score` and the safe returned message. Never relabel them
+as candidate unknowns. `scoringStatus` reports completion, not action readiness.
+Merge any unscoreable `not_found` candidates into the user's original order as
+`No score`.
 
 Keep every active axis separate. Never average or roll Team DNA, JD, or rubric
 scores into one composite. Do not invent a letter grade, tier, recommendation,
@@ -487,7 +497,7 @@ returned sample bounds. Otherwise lead with the exact JD or saved-rubric name
 in use. Then present one scorecard per candidate, scores first:
 
 ```markdown
-**<Candidate name> — Team DNA: <n>/100 (scored <k> of 8 dimensions) · JD match: <m>/100 (<met>/<total> requirements met, <u> unverified) · <rubric name>: [<o>/100 overall · <r>/100 observed | No score] (possible range <lower>-<upper>; evidence <adequacy>; rubric coverage <c>%)**
+**<Candidate name> — Team DNA: <n>/100 (scored <k> of 8 dimensions) · JD match: <m>/100 (<met>/<total> requirements met, <u> unverified) · <rubric name>: [<r>/100 scouting fit | No score] (<confidence> confidence; verification not run)**
 
 | Team DNA dimension | Alignment | Evidence |
 | --- | --- | --- |
@@ -495,33 +505,34 @@ in use. Then present one scorecard per candidate, scores first:
 | Requirement | Weight | Status | Evidence |
 | --- | --- | --- | --- |
 
-| Rubric criterion | Weight | Server score | Rationale and proof points |
-| --- | --- | --- | --- |
+| Rubric criterion | Scouting assessment | Sources and open questions |
+| --- | --- | --- |
 ```
 
 Omit every inactive axis, line, and table. When Team DNA came back
 `insufficient_data`, state that in place of the number. For an active rubric,
-render the returned overall comparison, observed alignment, and recommendation
-when present. Render `No score` when both returned score fields are null, for
+render the returned scouting score, confidence, and recommendation when present.
+For historical V2 results, show overall comparison and observed alignment with
+their coverage and possible range instead. Render `No score` when both score
+fields are null, for
 `scoringStatus: failed`, a `not_found` profile, or unavailable server scoring,
 using the corresponding safe returned summary or message. Do not show a
 criterion table or exclusion outcome from raw rubric content.
 
-Show returned eligibility, essential-criteria status, recommendation, failed
-and unknown profile exclusions before the returned criterion table. Keep
-nullable and provisional criterion scores visibly unknown. Show
-`evidenceCoverage`, `rubricCoverage`, and `evidenceAdequacy` separately from
-observed alignment rather than treating any of them as a confidence
-multiplier. Do not expose private rubric, request, source-operation, or
-scoring-operation IDs.
+Show important unknowns and unverified requirements alongside the criterion
+narratives. V3 has no verified criterion mini-scores, coverage percentages, or
+alignment range: do not fill these null fields with invented values. For V2,
+keep its returned `evidenceCoverage`, `rubricCoverage`, and `evidenceAdequacy`
+separate from observed alignment. Do not expose private rubric, request,
+source-operation, or scoring-operation IDs.
 
 Keep candidates in the user's stated order, or in returned order when they
 came from one Pluto search; a server-judged roster keeps its returned order and
 tiers, and these assessments do not re-tier it. Never rank candidates by a
-saved-rubric observed score or its uncertainty bounds. If the user asks which
-candidate scored highest, present the saved-rubric assessments side by side in
-their existing order, explain the evidence and coverage differences, and do
-not designate a winner. Frame every comparison as observed alignment, never as
+saved-rubric scouting score, observed score, or uncertainty bounds. If the user
+asks which candidate scored highest, present the saved-rubric assessments side by side in
+their existing order, explain the evidence and confidence differences, and do
+not designate a winner. Describe scouting as a hypothesis, never as
 a hiring recommendation or proof one candidate is better.
 
 Close each scorecard with unknown dimensions, unverified requirements, and
