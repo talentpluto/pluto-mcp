@@ -333,13 +333,18 @@ this request.
 
 ## Connection help
 
-- If Pluto is missing from a task that was already open, start one new task or
-  session to refresh the available tools.
-- Sign in again only when Codex or Claude Code reports an authentication
-  problem. Use **Connect Pluto** in Codex desktop, `codex mcp login pluto` in
-  the Codex CLI, or `/mcp` in Claude Code.
+- If Pluto's tools are missing, its connection-recovery skill checks the live
+  tool catalog and current startup status or local logs. Installed skill files
+  can still load when the authenticated tool connection fails.
+- For a confirmed authentication failure, Codex starts
+  `codex mcp login pluto` automatically when shell execution is available, or
+  uses **Connect Pluto** otherwise. Claude Code uses `/mcp`. You complete the
+  browser sign-in, organization selection, and consent.
+- After sign-in succeeds, the agent rechecks the tools and resumes your task.
+  Start a new task only if the host cannot refresh the current task's tools.
 - If Pluto is still unavailable in a fresh task and there is no authentication
-  error, restart the client once.
+  error after checking startup diagnostics, restart the client once. A rejected
+  refresh token requires sign-in; a restart alone will not repair it.
 
 Routine server updates do not require reinstalling Pluto or signing in again.
 

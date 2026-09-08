@@ -1,7 +1,7 @@
 interface:
   display_name: "Pluto connection recovery"
-  short_description: "Recover a missing or disconnected Pluto tool"
-  default_prompt: "Use $connection-recovery to distinguish Pluto initialization from authentication, recheck once, and launch native connection only for a confirmed auth failure."
+  short_description: "Diagnose missing Pluto tools and start required sign-in"
+  default_prompt: "Use $connection-recovery to inspect missing Pluto tools and current startup errors, run codex mcp login pluto immediately for a confirmed Codex authentication failure, and resume my original task after recovery."
 
 dependencies:
   tools:

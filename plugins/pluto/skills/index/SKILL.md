@@ -40,9 +40,10 @@ tool contract.
 ## Recover without reinstalling
 
 If a required Pluto tool is missing or unusable, follow the
-`connection-recovery` skill. It owns the single live-catalog recheck,
-authentication handoff, initialization recovery, and fresh-task-or-session
-limit. Return to this routing skill if recovery exposes a suitable live tool.
+`connection-recovery` skill. It owns the live-catalog recheck, startup-log
+diagnosis, automatic login initiation for confirmed authentication failures,
+and fresh-task-or-session limit. Return to this routing skill if recovery
+exposes a suitable live tool.
 
 Do not diagnose authentication from a missing tool alone, repeat
 fresh-task-or-session advice, reinstall Pluto, or clear saved authorization as
