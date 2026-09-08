@@ -5,6 +5,11 @@ description: Use when a user asks Pluto to create or update an Ashby candidate, 
 
 # Ashby sourcing with Pluto
 
+For unavailable tools, a timeout, or a lost connection during this workflow,
+follow `connection-recovery` and preserve the existing preparation and operation
+references. Recovery must not replay an uncertain external action or bypass the
+item-level authorization and outcome rules below.
+
 Use this skill for one bounded Ashby job read and the six actions exposed by
 Candidate MCP server contract `4.31.1`:
 

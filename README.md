@@ -336,12 +336,22 @@ this request.
 - If Pluto's tools are missing, its connection-recovery skill checks the live
   tool catalog and current startup status or local logs. Installed skill files
   can still load when the authenticated tool connection fails.
-- For a confirmed authentication failure, Codex starts
-  `codex mcp login pluto` automatically when shell execution is available, or
-  uses **Connect Pluto** otherwise. Claude Code uses `/mcp`. You complete the
-  browser sign-in, organization selection, and consent.
-- After sign-in succeeds, the agent rechecks the tools and resumes your task.
-  Start a new task only if the host cannot refresh the current task's tools.
+- For a confirmed authentication failure, Codex uses **Connect Pluto** when
+  available or starts `mcp login pluto` with the current host's Codex executable.
+  Desktop recovery uses the app's bundled CLI; a separate older CLI on PATH can
+  save credentials that the app cannot refresh. Claude Code uses `/mcp`. You
+  complete the browser sign-in, organization selection, and consent.
+- After sign-in or a connection reload, the agent verifies a read before
+  resuming your task. Login success or visible tool names alone do not prove
+  that a closed connection recovered.
+- Existing operation and request IDs are preserved. Recovery resumes submitted
+  jobs rather than starting duplicate paid work. A `Transport closed` error
+  alone does not establish an authentication failure.
+- The same recovery rules apply to every operation: preserve sessions and
+  cursors for reads, poll submitted jobs, replay only documented deduplicated
+  requests with identical inputs, and reconcile uncertain writes before any
+  repeat. Transient failures use bounded retries and the server's retry delay;
+  terminal outcomes and unresolved external effects are not replayed blindly.
 - If Pluto is still unavailable in a fresh task and there is no authentication
   error after checking startup diagnostics, restart the client once. A rejected
   refresh token requires sign-in; a restart alone will not repair it.
