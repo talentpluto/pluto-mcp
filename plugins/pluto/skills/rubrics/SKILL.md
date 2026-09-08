@@ -7,7 +7,7 @@ description: Use when a user asks Pluto to create, draft, save, browse, load, ed
 
 Create or update one client-shared candidate rubric through a complete,
 review-first flow. This skill is aligned through Candidate MCP server contract
-`4.40.0` and is unchanged since server contract `4.38.0`, so it remains valid
+`4.41.0` and is unchanged since server contract `4.38.0`, so it remains valid
 against either. Contract `4.16.0` adds full-replacement edits through
 `update_rubric`, contract `4.17.0` adds per-company priorities, and contract
 `4.18.0` makes company conflict normalization deterministic.
