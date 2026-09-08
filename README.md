@@ -339,7 +339,9 @@ this request.
 - For a confirmed authentication failure, Codex starts
   `codex mcp login pluto` automatically when shell execution is available, or
   uses **Connect Pluto** otherwise. Claude Code uses `/mcp`. You complete the
-  browser sign-in, organization selection, and consent.
+  browser sign-in, organization selection, and consent. The Codex login command
+  can open your default browser itself. The agent polls that same login process
+  and opens another sign-in page only if browser launch failed or you ask.
 - After sign-in succeeds, the agent rechecks the tools and resumes your task.
   Start a new task only if the host cannot refresh the current task's tools.
 - If Pluto is still unavailable in a fresh task and there is no authentication
