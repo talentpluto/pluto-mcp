@@ -5,6 +5,10 @@ description: Use when a user asks Pluto to create, draft, save, browse, load, ed
 
 # Create or update a candidate rubric
 
+For unavailable tools, a timeout, or a lost connection during this workflow,
+follow `connection-recovery`. Reconcile saved contents and revisions before
+repeating a write whose response was lost; keep the confirmed rubric intact.
+
 Create or update one client-shared candidate rubric through a complete,
 review-first flow. This skill is aligned through Candidate MCP server contract
 `4.41.0` and is unchanged since server contract `4.38.0`, so it remains valid
