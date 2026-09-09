@@ -8,7 +8,7 @@ and cancellation sections cover their respective tools.
 ## Audience and campaign boundaries
 
 - `campaignName` must contain from 1 through 160 characters after trimming.
-- Accept one to 100 explicitly selected candidates regardless of network
+- Accept one to 500 explicitly selected candidates regardless of network
   status.
 - Use the fresh `candidateRef` and `selectionToken` returned together by a
   completed email-enrichment result. A legacy discovery pair can start the
@@ -70,7 +70,7 @@ and cancellation sections cover their respective tools.
   and creates no campaign; relay that safe failure and never claim success.
 - Ask before repeating a metered discovery or enrichment operation for an
   expired or missing handle.
-- Ask the user to reduce an audience over 100. Do not split it automatically.
+- Ask the user to reduce an audience over 500. Do not split it automatically.
 - One exact outreach role applies to the campaign. It is copy context only.
   Never look up or pass `projectId`.
 - Do not ask for or pass `campaignType`. The server records MCP campaigns as

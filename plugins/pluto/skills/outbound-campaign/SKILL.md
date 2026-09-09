@@ -1,6 +1,6 @@
 ---
 name: outbound-campaign
-description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 100 explicitly selected candidates; browse, reuse, save, update, or delete an outbound campaign template; or cancel or stop an existing campaign. Loads campaign setup, enriches only recipients without reusable email-enrichment results, asks at most one compact saved-template-or-custom content question, preserves clear creation intent through preparation and required clarifications, and calls create_outbound_campaign without a redundant confirmation turn. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
+description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 500 explicitly selected candidates; browse, reuse, save, update, or delete an outbound campaign template; or cancel or stop an existing campaign. Loads campaign setup, enriches only recipients without reusable email-enrichment results, asks at most one compact saved-template-or-custom content question, preserves clear creation intent through preparation and required clarifications, and calls create_outbound_campaign without a redundant confirmation turn. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
 ---
 
 # Outbound campaigns
