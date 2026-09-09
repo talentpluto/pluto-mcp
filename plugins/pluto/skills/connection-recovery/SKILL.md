@@ -75,6 +75,22 @@ restriction and the host's execution permissions. Use a persistent process
 session so the login can wait for the user's browser interaction; yield short
 waits instead of imposing a short hard timeout or launching duplicate logins.
 
+The Codex login command can open the user's default browser and still print an
+authorization URL. That printed URL is not evidence that browser launch failed
+or an instruction to open another page. Follow the same login process while
+the user completes the browser flow. Do not copy the URL into a Codex browser
+side panel or open a duplicate tab merely because it appears in command output.
+
+Poll the existing process before telling the user sign-in is still pending or
+taking any fallback browser action. If it reports successful login, proceed
+directly to the tool-catalog refresh below without opening a page or requesting
+sign-in again. While it remains pending, let the already-open browser flow
+finish. Manually open the same authorization URL only if the command explicitly
+reports that browser launch failed or the user asks you to open it; check the
+process again immediately before doing so and stop if login has completed.
+Use the user's default browser for that fallback unless they explicitly request
+a different browser or a Codex browser panel.
+
 If a Pluto login is already running, continue that same attempt. If shell
 execution or the Codex CLI is unavailable, use the host-provided **Connect
 Pluto** or **Reconnect Pluto** action once instead. Use one login route, not
