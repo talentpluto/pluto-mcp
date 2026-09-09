@@ -276,8 +276,24 @@ instructions.
   exact loaded settings without a post-load confirmation. Preserve all loaded
   settings and whether `emailPriority` is absent (organization-default
   inheritance) or present (template override) until the user requests a
-  change. Campaign creation receives the defined `sequenceSettings`, never a
-  `templateId`.
+  change. Campaign creation receives the defined `sequenceSettings`. Server
+  contract `4.42.0` also requires `sourceTemplate`: pass the loaded private
+  `templateId` inside `{ templateId, expectedUpdatedAt }`, preserving the exact
+  loaded `updatedAt` string as `expectedUpdatedAt` without converting it to a
+  date or reducing its precision. Do not add a top-level `templateId` field.
+- Preserve the source reference through user-requested template customizations.
+  Pass `sourceTemplate: null` only for custom copy that does not use a saved
+  template. A changed or deleted template blocks creation. Reload the latest
+  copy and settings, resolve any unauthorized material change, and retry with
+  a new `requestId` under the existing creation intent. Never attach a newer
+  revision to old copy, drop the source reference, or use `null` to bypass a
+  stale-template result. The rejection does not authorize another paid
+  enrichment operation.
+- Inspect the live input schema during rollout. If an older schema does not
+  expose `sourceTemplate`, omit that unsupported field and reload the selected
+  template immediately before creation; do not claim that the older server
+  enforces revision freshness. A stale-template rejection is never permission
+  to fall back to this older-schema behavior.
 - A template stores reusable generation guidance, fixed copy, variable
   overrides, step count, cadence, optional send times, and optional email
   priority. It excludes recipients, handles, campaign name, delivery route,
