@@ -325,6 +325,25 @@ Revalidate the complete payload against the contract reference and inspect the
 live input schema. Keep the campaign projectless: never look up, retain, or
 pass `projectId`; `create_outbound_campaign` does not return `needs_role`.
 
+Server contract `4.42.0` requires `sourceTemplate` on creation. When the live
+schema exposes that field, pass the selected template's private `templateId`
+and its unchanged, lossless loaded `updatedAt` as
+`sourceTemplate: { templateId, expectedUpdatedAt }`. Keep this reference when
+applying user-requested customizations. Use `sourceTemplate: null` only for
+custom copy that does not use a saved template. Keep these fields private.
+
+If the server rejects a changed or deleted template, reload the latest
+template, use its latest copy and settings, and retry with a new `requestId`
+under the existing creation intent. Explain any material change and resolve
+an unauthorized material choice before creating. Never keep old copy with a
+new revision, drop the reference, or switch to custom copy to bypass this
+check. A stale-template rejection never authorizes repeating paid enrichment.
+
+For an older live schema without `sourceTemplate`, omit that unsupported field
+and reload the selected template immediately before creation. Do not claim
+server-enforced revision protection on that older schema. Never interpret a
+stale-template rejection as permission to use this older-schema path.
+
 Call `create_outbound_campaign` once the user has clearly authorized creation
 and the campaign definition faithfully implements that request. Map connected
 Gmail drafts to `connected_inbox` with the selected private `connectionId` and
