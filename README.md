@@ -53,7 +53,7 @@ work with the retrieved leads directly in the conversation.
   narratives, and critical unknowns. Verification is not run: no criterion
   scores, coverage, passed prerequisites, or eligibility are inferred. Scouting
   supports human review and never authorizes automatic promotion.
-- Draft, review, or create an email campaign for selected candidates.
+- Draft, review, or create an email campaign for up to 500 selected candidates.
   Pluto reuses completed email enrichment, prepares only missing recipient
   emails, and asks at most once between a saved template and custom content. A
   clear creation request proceeds after a compact summary without another
