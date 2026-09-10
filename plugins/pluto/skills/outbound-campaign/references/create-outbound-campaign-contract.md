@@ -231,7 +231,25 @@ instructions.
 - Use a fresh UUID for another campaign or any material setup change outside
   the explicit sender continuation, including a recipient email-priority
   change.
-- Never automatically retry an ambiguous timeout or transport failure.
+- Recover automatically under the existing creation authorization after an
+  unreadable response, timeout, or transport failure. Do not ask the user to
+  say "retry campaign creation" or confirm again. If the operation ID is
+  known, resume polling it. With live server contract `4.43.0` or later
+  advertising this recovery alias, a lost operation ID can be recovered by
+  calling `get_operation_status` with
+  `operationId: "outbound-request:<original requestId>"`, without a cursor,
+  under the original organization, user, and OAuth client. Use the real
+  operation ID returned for subsequent polls. This reads/reconciles the same
+  operation; it never creates a campaign or restarts a terminal failure.
+- A missing request does not prove that no campaign exists; the lookup may
+  have expired. For a missing or temporarily unavailable lookup, wait at least
+  20 seconds and retry up to three times in total, honoring longer retry
+  delays. If unresolved, preserve completed enrichment and report an
+  unconfirmed creation outcome. Never automatically resubmit creation,
+  generate a replacement request ID, or repeat paid enrichment. If the live
+  contract lacks request recovery, keep the same uncertainty instead of
+  sending an unsupported alias. A missing dashboard or campaign-list entry
+  is not proof that creation failed.
 - Call the tool once for each explicitly authorized campaign. Do not merge
   separate campaign requests.
 - The prerequisite email-enrichment batch may use up to one shared
@@ -243,7 +261,8 @@ instructions.
 - A `queued` result returns an opaque `operationId` with `retryAfterMs`. Keep the
   operation ID hidden, wait at least `retryAfterMs`, and poll
   `get_operation_status` with it unchanged while status is `queued` or
-  `running`. Every response must echo that unchanged `operationId` and carry
+  `running`. Ordinary polls echo that unchanged `operationId`; request-ID
+  recovery returns the real operation ID to use next. Every response carries
   `operationType: outbound_campaign`. Continue automatically until
   `completed` or `failed`; do not impose a caller-side poll cap or ask the user
   to continue. Polling is idempotent and never creates another campaign, but it

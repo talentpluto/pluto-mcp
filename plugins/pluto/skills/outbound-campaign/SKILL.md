@@ -397,8 +397,37 @@ Handle the result narrowly:
   delivered, or internally confirmed.
 - **Blocked or error:** Relay the safe reason and do not claim success.
 
-Do not automatically repeat a creation call after a timeout, transport
-failure, or ambiguous result. The first request may have been processed.
+## Recover an unreadable or missing creation response
+
+Before creation, retain its original request ID, exact payload, and completed
+enrichment handle pairs privately. An unreadable response, timeout, or
+disconnect does not establish that creation failed.
+
+Recover automatically under the existing creation authorization; do not ask
+the user to say "retry campaign creation" or confirm the campaign again.
+If the operation ID arrived, resume polling that unchanged ID. When the live
+`get_operation_status` contract supports campaign request recovery (server
+contract `4.43.0`), recover a lost operation ID by passing
+`operationId: "outbound-request:<original requestId>"`, without a cursor,
+using the original creation request ID and the same authenticated organization,
+user, and OAuth client. This resolves the existing operation; it does not
+create a campaign, restart a failed job, or repeat email enrichment. Switch
+to the real operation ID returned and poll until completed or failed.
+
+For a missing or temporarily unavailable recovery lookup, wait at least
+20 seconds and retry the status lookup up to three times in total, honoring
+any longer retry delay. A missing request does not prove that no campaign
+exists: its stored lookup may have expired. If recovery remains unresolved,
+preserve completed enrichment and report that the creation outcome is
+unconfirmed. Do not automatically resubmit creation, generate a new request
+ID, or rerun paid enrichment. A terminal failed result remains terminal;
+relay its safe message without restarting it. A campaign list or dashboard
+that does not show the campaign is not proof of failure.
+
+If the host transport is unavailable, follow `connection-recovery`, then
+resume this lookup after recovery. On an older live contract without the
+request-recovery alias, preserve progress and report the unconfirmed outcome
+instead of sending an unsupported identifier or assuming no campaign exists.
 
 ## Cancel an existing campaign
 
