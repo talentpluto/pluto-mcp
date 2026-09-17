@@ -1,6 +1,6 @@
 ---
 name: outbound-campaign
-description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 500 explicitly selected candidates; browse, reuse, save, update, or delete an outbound campaign template; or cancel or stop an existing campaign. Loads campaign setup, enriches only recipients without reusable email-enrichment results, asks at most one compact saved-template-or-custom content question, preserves clear creation intent through preparation and required clarifications, and calls create_outbound_campaign without a redundant confirmation turn. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
+description: Use when a user asks Pluto to draft, refine, review, create, or launch an outbound recruiting email campaign for one to 1,000 explicitly selected candidates; browse, reuse, save, update, or delete an outbound campaign template; or cancel or stop an existing campaign. Loads campaign setup, enriches only recipients without reusable email-enrichment results, asks at most one compact saved-template-or-custom content question, preserves clear creation intent through preparation and required clarifications, and calls create_outbound_campaign without a redundant confirmation turn. Cancels one existing campaign through cancel_outbound_campaign's list-then-confirm flow only after the user confirms the exact campaign.
 ---
 
 # Outbound campaigns
@@ -112,7 +112,11 @@ validation, and bounded `get_operation_status` polling. Call `enrich_email`
 once for the missing subset, keep the returned addresses and opaque handles
 private, and do not render the standalone email table or CSV unless the user
 also asked to receive the addresses. Retain each successful result's fresh
-handle pair for campaign creation.
+handle pair for campaign creation. One `enrich_email` operation accepts at
+most 500 items, while a campaign accepts up to 1,000 recipients: when more
+than 500 recipients need preparation, run consecutive `enrich_email` calls of
+at most 500 each under the same authorization, poll each to completion, and
+build the campaign only once every batch has returned.
 
 Every selected recipient needs a usable handle pair before Pluto can build the
 campaign request. If prerequisite enrichment returns
@@ -289,6 +293,26 @@ whether `emailPriority` is absent and inherits the organization setting or is
 an explicit `work` or `personal` override. Never add `templateId` to campaign
 creation; pass the resulting reviewed `sequenceSettings` directly.
 
+A saved template owns the copy of every campaign created from it. Server
+contract `4.47.0` enforces this: a campaign that carries `sourceTemplate`
+sends the template's subject, initial body, follow-up bodies, and the link
+variables its copy references exactly, and sends no more steps than the
+template defines. The campaign may still set its own name, audience, delivery
+route, sender, cadence (`followUpDelays`, `followUpSendTimes`), recipient
+email priority, generation guidance, and a shorter sequence. When the user
+asks to change the subject, a body, a follow-up, or a link while using a saved
+template, do not edit the copy in the campaign request. Ask one focused
+question with the two honest paths: update the saved template first (review
+and save the changed copy with `save_reusable_outreach_template`, reload it,
+and create with its new `updatedAt`), or create this campaign as custom copy
+with `sourceTemplate: null`, which the template will not track. Never silently
+switch to custom copy to get past the server's check. If the server returns
+`copy_differs`, it names the differing fields: nothing was created, so resolve
+them through one of those two paths and retry with a new `requestId` under the
+existing creation intent. `unreadable_template` means the stored template
+could not be read: reload it with `get_outbound_campaign_templates`, save it
+again, and retry, or offer custom copy.
+
 Use `save_reusable_outreach_template` or
 `delete_outbound_campaign_template` only when the user explicitly asks for
 that exact mutation and the live catalog exposes the required tool. A new save
@@ -298,9 +322,18 @@ it never stores recipients, campaign name, delivery route, or sender inbox.
 Before saving or updating, label the review **Template review — no campaign
 will be created** and say plainly: **This saves reusable template prefill only.
 It will not create a campaign, add recipients, prepare drafts, schedule
-follow-ups, or send email.** End with **Save this reusable template?** and ask
-the user to reply `save template` or request changes. A bare “yes” counts only
-when it directly answers that exact question and no edit or topic change
+follow-ups, or send email.** When the save UPDATES an existing template and
+changes its copy (subject, a body, a follow-up, a link variable the copy
+references, or the step count), add before asking: **Up to twenty eligible
+draft campaigns built from this template that have not launched will have
+their planned emails regenerated with the new copy; any manual edits to those
+planned emails will be replaced. Other attached drafts keep their previous
+copy until a further save or because they cannot be re-rendered, and Pluto
+cannot see how many drafts are attached or eligible until the save
+completes.** A cadence-, sender-, or guidance-only update does not regenerate
+copy and needs no such warning. End with **Save this reusable template?** and
+ask the user to reply `save template` or request changes. A bare “yes” counts
+only when it directly answers that exact question and no edit or topic change
 intervened. Template approval never authorizes `create_outbound_campaign`.
 
 To update, first load the exact template, review the complete changed settings,
@@ -313,6 +346,20 @@ After a successful save, say that the reusable template was saved and that no
 campaign was created. Continue into campaign creation only when the user also
 clearly asked to create the campaign; do not require them to repeat that
 request.
+
+Updating an existing template also reaches the campaigns built from it. From
+server contract `4.47.0`, saving changed copy re-renders the draft campaigns
+that have not launched and whose current template is the one saved, at most
+twenty per save: their planned emails regenerate before anything is sent,
+replacing any manual edits made to those planned emails. A save that changed
+only cadence, sender, or generation guidance leaves planned copy alone. The
+save result's message says which drafts are regenerating, which keep the
+previous copy and why (for example, a draft whose delivery preparation
+already exists), and whether more attached drafts remain for a further save;
+relay that part of the message verbatim, offer to save again when it says
+more remain, and do not offer to recreate a campaign the message says is
+regenerating. Do not promise updated copy for a draft the message did not
+name. A launched campaign keeps its copy; changing it means a new campaign.
 
 To delete, load the exact template, show its name, description, and cadence,
 explain that deletion cannot be undone but does not affect existing campaigns,
@@ -328,16 +375,20 @@ pass `projectId`; `create_outbound_campaign` does not return `needs_role`.
 Server contract `4.42.0` requires `sourceTemplate` on creation. When the live
 schema exposes that field, pass the selected template's private `templateId`
 and its unchanged, lossless loaded `updatedAt` as
-`sourceTemplate: { templateId, expectedUpdatedAt }`. Keep this reference when
-applying user-requested customizations. Use `sourceTemplate: null` only for
-custom copy that does not use a saved template. Keep these fields private.
+`sourceTemplate: { templateId, expectedUpdatedAt }`. Keep this reference
+through campaign-level customizations (name, audience, route, sender, cadence,
+email priority, generation guidance, a shorter sequence). A copy change is not
+a campaign-level customization: it goes through the saved template or becomes
+custom copy, as described above. Use `sourceTemplate: null` only for custom
+copy that does not use a saved template. Keep these fields private.
 
 If the server rejects a changed or deleted template, reload the latest
 template, use its latest copy and settings, and retry with a new `requestId`
 under the existing creation intent. Explain any material change and resolve
 an unauthorized material choice before creating. Never keep old copy with a
 new revision, drop the reference, or switch to custom copy to bypass this
-check. A stale-template rejection never authorizes repeating paid enrichment.
+check or the `copy_differs` check. A stale-template or `copy_differs`
+rejection never authorizes repeating paid enrichment.
 
 For an older live schema without `sourceTemplate`, omit that unsupported field
 and reload the selected template immediately before creation. Do not claim

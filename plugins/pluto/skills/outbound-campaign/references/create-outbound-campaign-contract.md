@@ -8,7 +8,7 @@ and cancellation sections cover their respective tools.
 ## Audience and campaign boundaries
 
 - `campaignName` must contain from 1 through 160 characters after trimming.
-- Accept one to 500 explicitly selected candidates regardless of network
+- Accept one to 1,000 explicitly selected candidates regardless of network
   status.
 - Use the fresh `candidateRef` and `selectionToken` returned together by a
   completed email-enrichment result. A legacy discovery pair can start the
@@ -70,7 +70,11 @@ and cancellation sections cover their respective tools.
   and creates no campaign; relay that safe failure and never claim success.
 - Ask before repeating a metered discovery or enrichment operation for an
   expired or missing handle.
-- Ask the user to reduce an audience over 500. Do not split it automatically.
+- Ask the user to reduce an audience over 1,000. Do not split it
+  automatically. Prerequisite `enrich_email` accepts at most 500 items per
+  operation, so a missing-email subset above 500 runs as consecutive batches
+  of at most 500 under the same authorization before the single creation
+  call.
 - One exact outreach role applies to the campaign. It is copy context only.
   Never look up or pass `projectId`.
 - Do not ask for or pass `campaignType`. The server records MCP campaigns as
@@ -300,14 +304,38 @@ instructions.
   `templateId` inside `{ templateId, expectedUpdatedAt }`, preserving the exact
   loaded `updatedAt` string as `expectedUpdatedAt` without converting it to a
   date or reducing its precision. Do not add a top-level `templateId` field.
-- Preserve the source reference through user-requested template customizations.
-  Pass `sourceTemplate: null` only for custom copy that does not use a saved
+- Preserve the source reference through campaign-level customizations: name,
+  audience, delivery, sender, `followUpDelays`, `followUpSendTimes`,
+  `emailPriority`, `generationPrompt`, and a shorter `totalStepCount`. Pass
+  `sourceTemplate: null` only for custom copy that does not use a saved
   template. A changed or deleted template blocks creation. Reload the latest
   copy and settings, resolve any unauthorized material change, and retry with
   a new `requestId` under the existing creation intent. Never attach a newer
   revision to old copy, drop the source reference, or use `null` to bypass a
   stale-template result. The rejection does not authorize another paid
   enrichment operation.
+- Server contract `4.47.0` makes the saved template own the copy. With
+  `sourceTemplate` present, `initialSubjectTemplate`, `initialBodyTemplate`,
+  every `followUpTemplates[].bodyTemplate` the campaign sends, and every
+  `templateVariableOverrides` key the template's copy references must equal
+  the loaded template's values, and `totalStepCount` may not exceed the
+  template's; a follow-up the template fixes may not be omitted for a step
+  the campaign sends. A mismatch returns `copy_differs` listing the fields and
+  creates nothing. Resolve it by updating the saved template first
+  (`save_reusable_outreach_template`, reload, create with the new
+  `updatedAt`) or by creating custom copy with `sourceTemplate: null` when
+  the user chooses that; never edit the copy in place under the reference.
+  `unreadable_template` means the stored template could not be parsed: reload
+  and save it again, then retry, or use custom copy.
+- From contract `4.47.0`, an update through `save_reusable_outreach_template`
+  re-renders the not-yet-launched draft campaigns whose current template is
+  the saved one when the copy changed (subject, bodies, referenced link
+  variables, step count); cadence-, sender-, or guidance-only saves do not
+  regenerate copy. The saved result's `message` names the drafts being
+  re-rendered and the drafts that keep the previous copy with the reason;
+  relay that sentence verbatim. Regeneration replaces manual edits to those
+  drafts' planned emails. At most twenty drafts re-render per save; the
+  message says when more remain and a further save continues.
 - Inspect the live input schema during rollout. If an older schema does not
   expose `sourceTemplate`, omit that unsupported field and reload the selected
   template immediately before creation; do not claim that the older server
@@ -321,8 +349,14 @@ instructions.
   or update the exact reviewed reusable settings. Immediately before asking
   for confirmation, state that this saves template prefill only and does not
   create a campaign, add recipients, prepare drafts, schedule follow-ups, or
-  send email. Ask **Save this reusable template?** and treat template approval
-  as separate from campaign launch approval. Omit `templateId` and
+  send email. For an update that changes copy, also state before asking that
+  up to twenty eligible not-yet-launched draft campaigns built from this
+  template will have their planned emails regenerated, that manual edits to
+  those planned emails will be replaced, that other attached drafts keep
+  their previous copy (until a further save, or because they cannot be
+  re-rendered), and that the number of attached or eligible drafts is not
+  known until the save completes. Ask **Save this reusable template?** and
+  treat template approval as separate from campaign launch approval. Omit `templateId` and
   `expectedUpdatedAt` for a new save. For an update, load the exact template
   first and pass both its private `templateId` and unchanged `updatedAt`. A
   `stale` or `name_conflict` result means no write occurred; load and review

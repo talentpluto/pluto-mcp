@@ -1,6 +1,16 @@
 # Candidate search contract
 
-Aligned through server contract `4.40.0`. Contract `4.40.0` adds
+Aligned through server contract `4.47.0`. Contract `4.46.0` adds
+`pastTitles.minYears` (minimum whole years, 1–40, in ONE past stint that
+carried one of the `pastTitles.terms`; the same stint must match title and
+duration; native where the people index stores per-stint tenure, otherwise
+decided from the stint dates each source returns or from the fused history
+after enrichment) and `exclude.employmentTypes` (employment types of the
+CURRENT role that disqualify, from `apprenticeship`, `contract`, `freelance`,
+`full_time`, `internship`, `part_time`, `seasonal`, `self_employed`; an exact
+NOT where the index stores employment type, reported unavailable rather than
+weakened elsewhere; the verifier also rejects a stated employer or title that
+literally says Self-employed or Freelance). Contract `4.40.0` adds
 `experience.minYearsAtCurrentCompany` (years at the current employer, native
 on every people surface, distinct from years in the current role) and reports
 it under the `tenure` predicate; contract `4.39.0` discloses in plan `notes`
@@ -135,11 +145,14 @@ repositories, minimum merged pull requests, and contribution recency),
 `publications` (topics, venues, minimum matching works, citations, publication
 recency, and literal author position), `signals` (leftCompanyWithinMonths,
 openToWork, profileUpdatedWithinMonths), `pastEmployers` (named companies,
-cross-scope AND), `pastCompany` (stage or description keywords of SOME
+cross-scope AND), `pastTitles` (terms for SOME previous role; optional
+`minYears` requires that same stint to have lasted N+ whole years),
+`pastCompany` (stage or description keywords of SOME
 past employer; when past-scope titles are also required the SAME stint
-must match both; attributes are as of TODAY, not as of the stint), and
+must match both; attributes are as of TODAY, not as of the stint; a tenure
+bound on that stint is `pastTitles.minYears`), and
 `exclude` (companies with current/ever scope, title terms, locations,
-keywords).
+keywords, and `employmentTypes` of the current role).
 
 Typed OR-list fields share a 256-value public ceiling, and one complete spec
 may contain at most 256 list values in total. Preserve every user-supplied term,

@@ -11,7 +11,18 @@ executes, verifies, and prices deterministic search plans, and the agent owns
 decomposing the recruiter request, iterating the plan, deciding whom to
 verify, and presenting the materialized roster honestly.
 
-This skill is aligned through Candidate MCP server contract `4.40.0`.
+This skill is aligned through Candidate MCP server contract `4.47.0`.
+Contract `4.46.0` adds `pastTitles.minYears`, a tenure bound on ONE past
+stint ("previously a software engineer for 2+ years": the same stint must
+carry the title and the duration), and `exclude.employmentTypes`, an exact
+disqualifier on the CURRENT role's employment type ("no freelancers or
+self-employed"). Both compile natively on people surfaces that store
+per-stint tenure and employment type; elsewhere the server decides tenure
+from the stint dates each source returns, and reports a required
+employment-type exclusion as unavailable rather than weakening it. A
+compound ask such as "SWE in NYC, 2+ years at their current company,
+previously a SWE for 2+ years, no freelancers" is therefore ONE spec and one
+pass, not a search followed by manual checking.
 Contract `4.39.0` expands `FDE` and forward-deployed engineer title shorthand
 and discloses in plan `notes` that funding stages are evaluated as of today.
 Contract `4.40.0` adds `experience.minYearsAtCurrentCompany` so time at the
@@ -158,17 +169,29 @@ user's required-versus-preferred wording: `required` gates membership,
   `pastCompany` with `stages` or `keywords`. When past-scope titles are also
   required, the server pairs them: the SAME stint must match both. These are
   never decidable at retrieval — plan on `verifyBudget` or enrichment deciding
-  them — and there is no tenure bound for a past stint. When the ask is about
-  the CURRENT employer, do not use `pastCompany`; see the next bullet.
-- Tenure has three spellings, and the sentence usually only fits one. Time at
+  them. A tenure bound on a past stint is `pastTitles.minYears`, never a
+  `pastCompany` field. When the ask is about the CURRENT employer, do not use
+  `pastCompany`; see the next bullet.
+- Tenure has four spellings, and the sentence usually only fits one. Time at
   the current employer ("at their company for 2+ years", "has been at a
   Series C company for 2+ years") is `experience.minYearsAtCurrentCompany`,
   paired with `company.stages` when a stage is named; both compile natively.
   Years holding the current title ("an FDE for 2+ years") is
   `experience.minYearsInCurrentRole`, which is stricter because an internal
-  move resets it. Total career length ("2+ years of experience") is
+  move resets it. Years in a PAST role ("previously a software engineer for
+  2+ years", "spent at least three years as an SDR before") is
+  `pastTitles.minYears` beside the `pastTitles.terms` that name the role; the
+  same stint must satisfy both, and a person whose only qualifying stint was
+  shorter does not match. Total career length ("2+ years of experience") is
   `experience.minTotalYears`. Read "been at a … company for" as employer
   tenure, and say which reading you compiled.
+- Past-role tenure is native on the people surfaces whose index stores
+  per-stint tenure and is decided from stint dates elsewhere, so a plan may
+  show it `native` on one source and `undecidable` on another. Read the
+  coverage report, keep the bound required, and let `verifyBudget` or
+  enrichment decide the undecided rows; do not drop the bound to widen a thin
+  page, and do not verify it by hand from profile text the server already
+  judged.
 - `company.stages` matches the employer's funding stage TODAY, not at hire. A
   person who joined a `series_c` company two years ago is often at a
   `series_d`+ company now, so when a stage is paired with any tenure bound,
@@ -176,9 +199,29 @@ user's required-versus-preferred wording: `required` gates membership,
   one stage, and relay the server's `notes` when the page is thin.
 - A current role combined with a past role ("GTM now, founder before") is one
   spec: put the current role in `titles` and the previous role in
-  `pastTitles`. Both compile natively into the same search.
+  `pastTitles`, adding `minYears` when the past role must have lasted. Both
+  go into the same search; the title pairing compiles natively everywhere,
+  while the `minYears` bound is native only where the source stores per-stint
+  tenure. Read the returned coverage per source, and let `verifyBudget` or
+  enrichment decide the bound where it is reported `undecidable`.
 - Exclusions ride the `exclude` block; named people ride `namedPeople`
-  (names must come from the user's request — never invent one).
+  (names must come from the user's request — never invent one). "No
+  freelancers", "no self-employed", "no contractors" is
+  `exclude.employmentTypes` on the CURRENT role — `freelance`,
+  `self_employed`, `contract`, and the other typed values — never a keyword
+  or a title term. It compiles to an exact NOT where the source stores
+  employment type, and the server also rejects a stated employer or title
+  that literally says Self-employed or Freelance. A "Contract Manager" is
+  not a contractor: the exclusion reads the employment type, not words in
+  the title.
+- The compound ask decides in one pass. "Software engineers in NYC, 2+ years
+  at their current company, previously a SWE for 2+ years, no freelancers"
+  is `titles` (software engineer), `location` (New York metro),
+  `experience.minYearsAtCurrentCompany: 2`, `pastTitles` (`terms` software
+  engineer, `minYears: 2`), and `exclude.employmentTypes: ["freelance",
+  "self_employed"]` in ONE spec. Present the roster from that plan's coverage
+  and verdicts; do not run the search without the past-role or exclusion
+  bounds and then screen the results yourself.
 - Confirmed TalentPluto members are `network: { membership: "member" }`.
   `required` (the default) keeps only accepted members; `preferred` ranks
   members first without dropping public profiles. Membership does not
