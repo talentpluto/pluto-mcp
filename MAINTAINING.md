@@ -37,6 +37,14 @@ explicit breaking tool rename or removal, merge the paired connector update
 first when webapp CI validates against `pluto-mcp@main`, then merge and deploy
 the server change immediately afterward to keep the mismatch window bounded.
 
+## Polaris server
+
+`polaris` points at the Orbit MCP (`/api/mcp/orbit` in the webapp,
+`lib/mcp/orbit`). It has its own OAuth resource and the scopes `orbit:read`,
+`orbit:write` and `orbit:intro`, which can never be combined with recruiting
+or personal-profile scopes. It is gated by the `orbitMcp` feature flag and the
+Orbit allow list. Its guidance is the `polaris` skill.
+
 ## OAuth callbacks
 
 Anthropic uses different OAuth callbacks across client surfaces:

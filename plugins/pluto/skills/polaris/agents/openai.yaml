@@ -1,0 +1,12 @@
+interface:
+  display_name: "Polaris"
+  short_description: "Review and refine your Polaris searches"
+  default_prompt: "Use $polaris to show me what Polaris found since last time so I can go through it."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "polaris"
+      description: "Polaris, the Orbit member's own people-finding assistant"
+      transport: "streamable_http"
+      url: "https://app.talentpluto.com/api/mcp/orbit"

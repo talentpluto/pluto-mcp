@@ -14,6 +14,20 @@
       "http_headers": {
         "x-talentpluto-codex-oauth-compatibility": "missing-callback-issuer-v1"
       }
+    },
+    "polaris": {
+      "type": "http",
+      "url": "https://app.talentpluto.com/api/mcp/orbit",
+      "scopes": [
+        "orbit:read",
+        "orbit:write",
+        "orbit:intro",
+        "offline_access"
+      ],
+      "oauth_resource": "https://app.talentpluto.com/api/mcp/orbit",
+      "http_headers": {
+        "x-talentpluto-codex-oauth-compatibility": "missing-callback-issuer-v1"
+      }
     }
   }
 }
